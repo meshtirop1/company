@@ -1,0 +1,244 @@
+/* Calendar Navigation */
+.calendar-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
+}
+
+.nav-link {
+    color: #005bac;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    transition: background 0.2s ease;
+}
+
+.nav-link:hover {
+    background: #e6f0fa;
+}
+
+.nav-link:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 91, 172, 0.3);
+}
+
+.month-year {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+/* Calendar Table */
+.calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
+    background: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.calendar-table th,
+.calendar-table td {
+    padding: 0.5rem;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+}
+
+.calendar-table th {
+    background: #f3f4f6;
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 0.95rem;
+}
+
+.calendar-table td {
+    font-size: 0.9rem;
+    color: #333;
+    vertical-align: top;
+    height: 100px;
+}
+
+.calendar-table .day-number {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.calendar-table .hours {
+    font-size: 0.85rem;
+    color: #2d3748;
+}
+
+.calendar-table .holiday-name {
+    font-size: 0.85rem;
+    color: #155724;
+    background: #d4edda;
+    border-radius: 3px;
+    padding: 0.2rem 0.4rem;
+    margin: 0.2rem 0;
+}
+
+.calendar-table .absence-note {
+    font-size: 0.85rem;
+    color: #721c24;
+    background: #f8d7da;
+    border-radius: 3px;
+    padding: 0.2rem 0.4rem;
+    margin: 0.2rem 0;
+}
+
+.calendar-table .holiday {
+    background: #e6f4ea;
+}
+
+.calendar-table .absence {
+    background: #f9e2e4;
+}
+
+/* Summary */
+.summary {
+    font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
+    font-size: 1rem;
+    color: #2d3748;
+}
+
+.summary p {
+    margin: 0.5rem 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .calendar-nav {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .nav-link {
+        font-size: 0.95rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .month-year {
+        font-size: 1.1rem;
+    }
+
+    .calendar-table th,
+    .calendar-table td {
+        padding: 0.4rem;
+        font-size: 0.85rem;
+    }
+
+    .calendar-table td {
+        height: 80px;
+    }
+
+    .calendar-table .day-number {
+        font-size: 0.9rem;
+    }
+
+    .calendar-table .hours,
+    .calendar-table .holiday-name,
+    .calendar-table .absence-note {
+        font-size: 0.8rem;
+    }
+
+    .summary {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .calendar-table th,
+    .calendar-table td {
+        padding: 0.3rem;
+        font-size: 0.8rem;
+    }
+
+    .calendar-table td {
+        height: 60px;
+    }
+
+    .calendar-table .day-number {
+        font-size: 0.85rem;
+    }
+
+    .calendar-table .hours,
+    .calendar-table .holiday-name,
+    .calendar-table .absence-note {
+        font-size: 0.75rem;
+        padding: 0.15rem 0.3rem;
+    }
+
+    .nav-link {
+        font-size: 0.9rem;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .month-year {
+        font-size: 1rem;
+    }
+
+    .summary {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .calendar-table th,
+    .calendar-table td {
+        padding: 0.2rem;
+        font-size: 0.75rem;
+    }
+
+    .calendar-table td {
+        height: 50px;
+    }
+
+    .calendar-table .day-number {
+        font-size: 0.8rem;
+    }
+
+    .calendar-table .hours,
+    .calendar-table .holiday-name,
+    .calendar-table .absence-note {
+        font-size: 0.7rem;
+        padding: 0.1rem 0.2rem;
+    }
+
+    .nav-link {
+        font-size: 0.85rem;
+        padding: 0.2rem 0.5rem;
+    }
+
+    .month-year {
+        font-size: 0.95rem;
+    }
+
+    .summary {
+        font-size: 0.85rem;
+    }
+}
+
+/* Accessibility */
+.nav-link:focus,
+.calendar-table td:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 91, 172, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-link,
+    .calendar-table td {
+        transition: none;
+    }
+}

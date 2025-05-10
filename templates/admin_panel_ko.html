@@ -1,0 +1,20 @@
+{% extends 'base_ko.html' %}
+{% load static %}
+
+{% block title %}관리자 대시보드{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_panel.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>관리자 대시보드</h2>
+<div class="dashboard-links">
+    <h3>근무 시간 및 결근 관리</h3>
+    <ul>
+        <li><a href="{% url 'bulk_hours' %}" class="button-primary">일괄 근무 시간 업데이트</a></li>
+        <li><a href="{% url 'individual_hours' %}" class="button-primary">개인 근무 시간 업데이트</a></li>
+        <li><a href="{% url 'bulk_absence' %}" class="button-danger">일괄 결근 업데이트</a></li>
+    </ul>
+</div>
+{% endblock %}

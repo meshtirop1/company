@@ -1,0 +1,17 @@
+{% extends 'base_en.html' %}
+{% load static %}
+
+{% block title %}Login{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/manage_holidays.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>Login</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="button-primary">Login</button>
+</form>
+{% endblock %}

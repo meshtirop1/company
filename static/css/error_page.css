@@ -1,0 +1,124 @@
+/* static/css/error_page.css */
+
+/* General body styling for error pages, ensuring consistency if base styles are minimal */
+body.error-page-body { /* You might need to add this class to <body> in base_{lang}.html if needed, or style body directly */
+    font-family: 'Noto Sans KR', 'Nanum Gothic', Arial, sans-serif; /* Match your site's font */
+    line-height: 1.6;
+    color: #333;
+    background-color: #f4f4f4; /* Light gray background for the whole page */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensure footer (if any from base) stays down */
+}
+
+.error-page-main-content { /* Add this class to the block content wrapper in base template if needed */
+    flex-grow: 1;
+    display: flex;
+    align-items: center; /* Vertically center the content box */
+    justify-content: center; /* Horizontally center the content box */
+    padding: 20px;
+}
+
+.error-page-container {
+    max-width: 700px;
+    width: 100%;
+    margin: 20px; /* Margin for smaller screens */
+    padding: 30px 40px;
+    text-align: center;
+    background-color: #ffffff; /* White background for the content box */
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.error-page-container .error-icon {
+    max-width: 120px; /* Adjust size as needed */
+    margin-bottom: 25px;
+    opacity: 0.8;
+}
+
+.error-page-container h1 {
+    font-size: 2.8em; /* e.g., ~45px if base is 16px */
+    margin-bottom: 0.5em;
+    font-weight: 600; /* Match your site's font weight */
+}
+
+.error-page-container h1.error-code-404 {
+    color: #ffc107; /* A warning yellow/orange for 404 */
+}
+
+.error-page-container h1.error-code-500 {
+    color: #dc3545; /* A danger red for 500 */
+}
+
+.error-page-container p {
+    font-size: 1.1em;
+    color: #555;
+    margin-bottom: 1em;
+}
+
+.error-page-container p.lead {
+    font-size: 1.3em;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 1.5em;
+}
+
+.error-page-container hr {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 30px 0;
+}
+
+.error-page-container ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin-bottom: 1.5em;
+}
+
+.error-page-container ul li {
+    margin-bottom: 0.8em;
+    font-size: 1em;
+}
+
+.error-page-container a {
+    color: #007bff; /* Your site's primary link color */
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.error-page-container a:hover,
+.error-page-container a:focus {
+    text-decoration: underline;
+    color: #0056b3; /* Darker shade on hover */
+}
+
+.error-page-container .home-button {
+    display: inline-block;
+    padding: 12px 25px;
+    margin-top: 20px;
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+}
+
+.error-page-container .home-button:hover,
+.error-page-container .home-button:focus {
+    background-color: #0056b3;
+    text-decoration: none;
+    transform: translateY(-1px); /* Slight lift effect */
+}
+
+.error-page-container p.request-path-info {
+    font-size: 0.85em;
+    color: #888;
+    margin-top: 30px;
+    display: block;
+}

@@ -1,0 +1,28 @@
+{% extends 'base_en.html' %}
+{% load static %}
+
+{% block title %}Page Not Found{% endblock %}
+
+{% block css %}
+    {{ block.super }} {# Includes CSS from base_en.html #}
+    <link rel="stylesheet" href="{% static 'css/error_page.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="error-page-main-content">
+    <div class="error-page-container">
+        <img src="{% static 'images/404_icon.png' %}" alt="Not Found Icon" class="error-icon">
+        <h1 class="error-code-404">Oops! Page Not Found (404)</h1>
+        <p class="lead">We're sorry, but the page you were looking for doesn't exist or has been moved.</p>
+        <p>It might be due to a mistyped URL or an outdated link.</p>
+        <hr>
+        <p>Here are a few things you can try:</p>
+        <ul>
+            <li>Double-check the URL for typos.</li>
+            <li>Return to the <a href="{% url 'home' %}" class="home-button">Homepage</a>.</li>
+            <li>If you believe this is an error, please <a href="mailto:mtirop345@gmail.com">contact support</a>.</li>
+        </ul>
+        <p class="request-path-info"><small>Request path: {{ request.path }}</small></p>
+    </div>
+</div>
+{% endblock %}

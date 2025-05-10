@@ -1,0 +1,21 @@
+{% extends 'base_en.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/admin_panel.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>Admin Dashboard</h2>
+<div class="dashboard-links">
+    <h3>Manage Hours and Absences</h3>
+    <ul>
+        <li><a href="{% url 'bulk_hours' %}" class="button-primary">Bulk Hours Update</a></li>
+        <li><a href="{% url 'individual_hours' %}" class="button-primary">Individual Hours Update</a></li>
+        <li><a  href="{% url 'manage_holidays' %}" class="button-primary">Manage Holidays</a></li>
+        <li><a href="{% url 'bulk_absence' %}" class="button-danger">Bulk Absence Update</a></li>
+    </ul>
+</div>
+{% endblock %}

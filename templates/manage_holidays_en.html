@@ -1,0 +1,49 @@
+{% extends 'base_en.html' %}
+{% load static %}
+
+{% block title %}Manage Holidays{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/manage_holidays.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>Manage Holidays</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="date">Date</label>
+        <input type="date" name="date" id="date" class="input-field" required>
+    </div>
+    <div class="form-group">
+        <label for="name">Holiday Name</label>
+        <input type="text" name="name" id="name" class="input-field" required>
+    </div>
+    <button type="submit" class="button-primary">Add Holiday</button>
+</form>
+<h3>Existing Holidays</h3>
+<table class="table-custom">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for holiday in holidays %}
+            <tr>
+                <td>{{ holiday.date }}</td>
+                <td>{{ holiday.name }}</td>
+                <td>
+                    <form method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="delete_holiday" value="{{ holiday.id }}">
+                        <button type="submit" class="button-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

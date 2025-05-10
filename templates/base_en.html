@@ -1,0 +1,184 @@
+{#{% load static %}#}
+{#<!DOCTYPE html>#}
+{#<html lang="en">#}
+{#<head>#}
+{#    <meta name="apple-mobile-web-app-capable" content="yes">#}
+{#    <meta name="apple-mobile-web-app-status-bar-style" content="default">#}
+{#    <link rel="apple-touch-icon" href="{% static 'images/icon-192x192.jpeg' %}">#}
+{#    <meta charset="UTF-8">#}
+{#    <meta name="viewport" content="width=device-width, initial-scale=1.0">#}
+{#    <title>{% block title %}Employee Hours Tracking{% endblock %}</title>#}
+{#    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Nanum+Gothic:wght@400;700&display=swap" rel="stylesheet">#}
+{#    <link rel="stylesheet" href="{% static 'css/base.css' %}">#}
+{#    <link rel="icon" href="{% static 'images/favicon.png' %}">#}
+{#    <link rel="manifest" href="{% static 'manifest/site.webmanifest' %}">#}
+{#    <meta name="theme-color" content="#007bff">#}
+{#    {% block css %}#}
+{#    {% endblock %}#}
+{#</head>#}
+{#<script>#}
+{#    if ('serviceWorker' in navigator) {#}
+{#        navigator.serviceWorker.register('/static/js/sw.js')#}
+{#            .then(reg => console.log('Service Worker registered', reg))#}
+{#            .catch(err => console.error('Service Worker registration failed', err));#}
+{#    }#}
+{#</script>#}
+{#<body>#}
+{#    <nav class="navbar">#}
+{#        <div class="container">#}
+{#            <a class="navbar-brand" href="{% url 'home' %}">Hours Tracker</a>#}
+{#            <button class="navbar-toggle" aria-expanded="false" aria-label="Menu Toggle">#}
+{#                <span class="navbar-toggle-icon">☰</span>#}
+{#            </button>#}
+{#            <ul class="nav-list">#}
+{#                {% if user.is_authenticated %}#}
+{#                    <li class="nav-item">#}
+{#                        <a class="nav-link" href="{% url 'calendar' %}">My Calendar</a>#}
+{#                    </li>#}
+{#                    {% if user.is_admin %}#}
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{% url 'admin_panel' %}">Admin Dashboard</a>#}
+{#                        </li>#}
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{% url 'manage_users' %}">Manage Users</a>#}
+{#                        </li>#}
+{#                    {% endif %}#}
+{#                    {% if user.is_superuser %}#}
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{% url 'superuser_dashboard' %}">Superuser Dashboard</a>#}
+{#                        </li>#}
+{#                        <li class="nav-item">#}
+{#                            <a class="nav-link" href="{% url 'manage_holidays' %}">Manage Holidays</a>#}
+{#                        </li>#}
+{#                    {% endif %}#}
+{#                    <li class="nav-item">#}
+{#                        <form action="{% url 'logout' %}" method="post" style="display:inline;">#}
+{#                            {% csrf_token %}#}
+{#                            <button type="submit" class="nav-link btn btn-link">Logout</button>#}
+{#                        </form>#}
+{#                    </li>#}
+{#                {% else %}#}
+{#                    <li class="nav-item">#}
+{#                        <a class="nav-link" href="{% url 'login' %}">Login</a>#}
+{#                    </li>#}
+{#                {% endif %}#}
+{#                <li class="nav-item language-switcher">#}
+{#                    <form action="{% url 'set_language' %}" method="post" id="language-form">#}
+{#                        {% csrf_token %}#}
+{#                        <input name="next" type="hidden" value="{{ request.get_full_path }}">#}
+{#                        <label for="language-select" class="sr-only">Language Select</label>#}
+{#                        <select name="language" id="language-select">#}
+{#                            <option value="en" {% if request.session.language == 'en' %}selected{% endif %}>English</option>#}
+{#                            <option value="ko" {% if request.session.language == 'ko' %}selected{% endif %}>Korean</option>#}
+{#                        </select>#}
+{#                        <button type="submit" style="margin-left: 10px;">Switch Language</button>#}
+{#                    </form>#}
+{#                </li>#}
+{#            </ul>#}
+{#        </div>#}
+{#    </nav>#}
+{#    <div class="container">#}
+{#        {% block content %}#}
+{#        {% endblock %}#}
+{#    </div>#}
+{#    <script src="{% static 'js/base.js' %}"></script>#}
+{#</body>#}
+{#</html>#}
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="{% static 'images/icon-192x192.jpeg' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Employee Hours Tracking{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Nanum+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="icon" href="{% static 'images/favicon.png' %}">
+    <link rel="manifest" href="{% static 'manifest/site.webmanifest' %}">
+    <meta name="theme-color" content="#007bff">
+    {% block css %}
+    {% endblock %}
+</head>
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/js/sw.js')
+            .then(reg => console.log('Service Worker registered', reg))
+            .catch(err => console.error('Service Worker registration failed', err));
+    }
+</script>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">Hours Tracker</a>
+            <button class="navbar-toggle" aria-expanded="false" aria-label="Menu Toggle">
+                <span class="navbar-toggle-icon">☰</span>
+            </button>
+            <ul class="nav-list">
+                {% if user.is_authenticated %}
+                    {% if user.is_superuser %}
+                        {# Superuser only sees this link in the main navigation #}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'superuser_dashboard' %}">Superuser Dashboard</a>
+                        </li>
+                    {% elif user.is_admin %}
+                        {# Admin (but not Superuser) sees these links #}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'calendar' %}">My Calendar</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_panel' %}">Admin Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'manage_users' %}">Manage Users</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'manage_holidays' %}">Manage Holidays</a>
+                        </li>
+                    {% else %}
+                        {# Regular authenticated user (not admin, not superuser) #}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'calendar' %}">My Calendar</a>
+                        </li>
+                    {% endif %}
+
+                    {# Logout button for all authenticated users #}
+                    <li class="nav-item">
+                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-link btn btn-link">Logout</button>
+                        </form>
+                    </li>
+                {% else %}
+                    {# For unauthenticated users #}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                {% endif %}
+
+                {# Language switcher - visible to all #}
+                <li class="nav-item language-switcher">
+                    <form action="{% url 'set_language' %}" method="post" id="language-form">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                        <label for="language-select" class="sr-only">Language Select</label>
+                        <select name="language" id="language-select" onchange="this.form.submit()">
+                            <option value="en" {% if request.session.language == 'en' or not request.session.language and LANGUAGE_CODE == 'en' %}selected{% endif %}>English</option>
+                            <option value="ko" {% if request.session.language == 'ko' or not request.session.language and LANGUAGE_CODE == 'ko' %}selected{% endif %}>Korean</option>
+                        </select>
+                        <button type="submit" style="margin-left: 10px;">Switch Language</button> {# Or remove this button if onchange works for you #}
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+    <script src="{% static 'js/base.js' %}"></script>
+</body>
+</html>

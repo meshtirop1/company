@@ -1,0 +1,49 @@
+{% extends 'base_ko.html' %}
+{% load static %}
+
+{% block title %}휴일 관리{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/manage_holidays.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>휴일 관리</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="date">날짜</label>
+        <input type="date" name="date" id="date" class="input-field" required>
+    </div>
+    <div class="form-group">
+        <label for="name">휴일 이름</label>
+        <input type="text" name="name" id="name" class="input-field" required>
+    </div>
+    <button type="submit" class="button-primary">휴일 추가</button>
+</form>
+<h3>기존 휴일</h3>
+<table class="table-custom">
+    <thead>
+        <tr>
+            <th>날짜</th>
+            <th>이름</th>
+            <th>작업</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for holiday in holidays %}
+            <tr>
+                <td>{{ holiday.date }}</td>
+                <td>{{ holiday.name }}</td>
+                <td>
+                    <form method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="delete_holiday" value="{{ holiday.id }}">
+                        <button type="submit" class="button-danger">삭제</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

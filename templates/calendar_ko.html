@@ -1,0 +1,62 @@
+{% extends 'base_ko.html' %}
+{% load static %}
+
+{% block title %}캘린더{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/calender.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>
+    {% if employee_email %}
+        {{ employee_email }}의 캘린더
+    {% else %}
+        내 캘린더
+    {% endif %}
+</h2>
+<div class="calendar-nav">
+    <a href="{% url 'calendar' %}?year={{ prev_year }}&month={{ prev_month }}" class="nav-link">이전</a>
+    <span class="month-year">{{ month_name }} {{ year }}</span>
+    <a href="{% url 'calendar' %}?year={{ next_year }}&month={{ next_month }}" class="nav-link">다음</a>
+</div>
+<table class="calendar-table">
+    <thead>
+        <tr>
+            <th>월</th>
+            <th>화</th>
+            <th>수</th>
+            <th>목</th>
+            <th>금</th>
+            <th>토</th>
+            <th>일</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for week in weeks %}
+            <tr>
+                {% for day in week %}
+                    <td {% if day.holiday %}class="holiday"{% elif day.is_absence %}class="absence"{% endif %}>
+                        {% if day.day %}
+                            <div class="day-number">{{ day.day }}</div>
+                            {% if day.hours is not None %}
+                                <div class="hours">{{ day.hours }} 시간</div>
+                            {% endif %}
+                            {% if day.holiday %}
+                                <div class="holiday-name">{{ day.holiday }}</div>
+                            {% endif %}
+                            {% if day.is_absence %}
+                                <div class="absence-note">결근</div>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div class="summary">
+    <p>총 근무 시간: {{ total_hours }}</p>
+    <p>총 급여: {{ total_salary }}</p>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base_ko.html' %}
+{% load static %}
+
+{% block title %}사용자 관리{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/manage_users.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>사용자 관리</h2>
+<h3>신규 직원 등록</h3>
+<a href="{% url 'register_employee' %}" class="button-primary">신규 직원 등록</a>
+<h3>최저 임금 설정</h3>
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="minimum_wage">최저 임금</label>
+        <input type="number" step="0.01" name="minimum_wage" id="minimum_wage" value="{{ minimum_wage }}" class="input-field">
+    </div>
+    <button type="submit" name="set_minimum_wage" class="button-primary">최저 임금 저장</button>
+</form>
+<h3>기존 사용자</h3>
+<table class="table-custom">
+    <thead>
+        <tr>
+            <th>이메일</th>
+            <th>직원</th>
+            <th>관리자</th>
+            <th>슈퍼유저</th>
+            <th>시간당 임금</th>
+            <th>작업</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.email }}</td>
+                <td>{{ user.is_employee|yesno:"예,아니오" }}</td>
+                <td>{{ user.is_admin|yesno:"예,아니오" }}</td>
+                <td>{{ user.is_superuser|yesno:"예,아니오" }}</td>
+                <td>{{ user.hourly_wage }}</td>
+                <td>
+                    <form method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="delete_user" value="{{ user.id }}">
+                        <button type="submit" class="button-danger">삭제</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

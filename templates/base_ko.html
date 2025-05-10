@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="{% static 'images/icon-192x192.jpeg' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}직원 근무 시간 추적{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Nanum+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="icon" href="{% static 'images/favicon.png' %}">
+    <link rel="manifest" href="{% static 'manifest/site.webmanifest' %}">
+    <meta name="theme-color" content="#007bff">
+    {% block css %}
+    {% endblock %}
+</head>
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/js/sw.js')
+            .then(reg => console.log('Service Worker registered', reg))
+            .catch(err => console.error('Service Worker registration failed', err));
+    }
+</script>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">근무 시간 추적기</a>
+            <button class="navbar-toggle" aria-expanded="false" aria-label="메뉴 토글">
+                <span class="navbar-toggle-icon">☰</span>
+            </button>
+            <ul class="nav-list">
+                {% if user.is_authenticated %}
+                    {% if user.is_superuser %}
+                        {# 슈퍼유저는 네비게이션 메뉴에서 이 링크만 봅니다 #}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'superuser_dashboard' %}">슈퍼유저 대시보드</a>
+                        </li>
+                    {% elif user.is_admin %}
+                        {# 관리자 (슈퍼유저가 아닌)는 다음 링크들을 봅니다 #}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'calendar' %}">내 캘린더</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_panel' %}">관리자 대시보드</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'manage_users' %}">사용자 관리</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'manage_holidays' %}">공휴일 관리</a>
+                        </li>
+                    {% else %}
+                        {# 일반 인증된 사용자 (관리자도, 슈퍼유저도 아님) #}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'calendar' %}">내 캘린더</a>
+                        </li>
+                    {% endif %}
+
+                    {# 모든 인증된 사용자를 위한 로그아웃 버튼 #}
+                    <li class="nav-item">
+                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-link btn btn-link">로그아웃</button>
+                        </form>
+                    </li>
+                {% else %}
+                    {# 인증되지 않은 사용자 #}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">로그인</a>
+                    </li>
+                {% endif %}
+
+                {# 언어 변경기 - 모든 사용자에게 보임 #}
+                <li class="nav-item language-switcher">
+                    <form action="{% url 'set_language' %}" method="post" id="language-form">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                        <label for="language-select" class="sr-only">언어 선택</label>
+                        <select name="language" id="language-select" onchange="this.form.submit()">
+                            <option value="en" {% if request.session.language == 'en' or not request.session.language and LANGUAGE_CODE == 'en' %}selected{% endif %}>English</option>
+                            <option value="ko" {% if request.session.language == 'ko' or not request.session.language and LANGUAGE_CODE == 'ko' %}selected{% endif %}>Korean</option>
+                        </select>
+                        <button type="submit" style="margin-left: 10px;">언어 변경</button> {# onchange가 잘 작동한다면 이 버튼은 제거해도 됩니다 #}
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+    <script src="{% static 'js/base.js' %}"></script>
+</body>
+</html>

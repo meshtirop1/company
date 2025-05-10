@@ -1,0 +1,26 @@
+{% extends 'base_en.html' %}
+{% load static %}
+
+{% block title %}Server Error{% endblock %}
+
+{% block css %}
+    {{ block.super }} {# Includes CSS from base_en.html #}
+    <link rel="stylesheet" href="{% static 'css/error_page.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="error-page-main-content">
+    <div class="error-page-container">
+        <img src="{% static 'images/500_icon.jpeg' %}" alt="Server Error Icon" class="error-icon">
+        <h1 class="error-code-500">Oops! Something Went Wrong (500)</h1>
+        <p class="lead">We're currently experiencing some technical difficulties on our end.</p>
+        <p>Our team has been notified and is working hard to resolve the issue. Please try again in a little while.</p>
+        <hr>
+        <p>You can also:</p>
+        <ul>
+            <li>Return to the <a href="{% url 'home' %}" class="home-button">Homepage</a>.</li>
+            <li>If the problem persists, please <a href="mailto:mailto:mtirop345@gmail.com">contact support</a>.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

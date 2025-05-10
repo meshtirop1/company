@@ -1,0 +1,26 @@
+{% extends 'base_ko.html' %} {# Or your equivalent Korean base template #}
+{% load static %}
+
+{% block title %}서버 오류{% endblock %}
+
+{% block css %}
+    {{ block.super }} {# Includes CSS from base_ko.html #}
+    <link rel="stylesheet" href="{% static 'css/error_page.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="error-page-main-content">
+    <div class="error-page-container">
+        <img src="{% static 'images/500_icon.jpeg' %}" alt="서버 오류 아이콘" class="error-icon">
+        <h1 class="error-code-500">이런! 서버에 문제가 발생했습니다 (500)</h1>
+        <p class="lead">현재 저희 시스템에 기술적인 문제가 발생했습니다.</p>
+        <p>저희 팀에게 알림이 전달되었으며, 문제를 해결하기 위해 노력하고 있습니다. 잠시 후 다시 시도해 주십시오.</p>
+        <hr>
+        <p>다음과 같은 작업을 수행할 수도 있습니다:</p>
+        <ul>
+            <li><a href="{% url 'home' %}" class="home-button">홈페이지</a>로 돌아가기.</li>
+            <li>문제가 지속되면 <a href="mailto:mtirop345@gmail.com">지원팀에 문의</a>해 주세요.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

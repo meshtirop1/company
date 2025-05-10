@@ -1,0 +1,62 @@
+{% extends 'base_en.html' %}
+{% load static %}
+
+{% block title %}Calendar{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/calender.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>
+    {% if employee_email %}
+        Calendar for {{ employee_email }}
+    {% else %}
+        Your Calendar
+    {% endif %}
+</h2>
+<div class="calendar-nav">
+    <a href="{% url 'calendar' %}?year={{ prev_year }}&month={{ prev_month }}" class="nav-link">Previous</a>
+    <span class="month-year">{{ month_name }} {{ year }}</span>
+    <a href="{% url 'calendar' %}?year={{ next_year }}&month={{ next_month }}" class="nav-link">Next</a>
+</div>
+<table class="calendar-table">
+    <thead>
+        <tr>
+            <th>Mon</th>
+            <th>Tue</th>
+            <th>Wed</th>
+            <th>Thu</th>
+            <th>Fri</th>
+            <th>Sat</th>
+            <th>Sun</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for week in weeks %}
+            <tr>
+                {% for day in week %}
+                    <td {% if day.holiday %}class="holiday"{% elif day.is_absence %}class="absence"{% endif %}>
+                        {% if day.day %}
+                            <div class="day-number">{{ day.day }}</div>
+                            {% if day.hours is not None %}
+                                <div class="hours">{{ day.hours }} hrs</div>
+                            {% endif %}
+                            {% if day.holiday %}
+                                <div class="holiday-name">{{ day.holiday }}</div>
+                            {% endif %}
+                            {% if day.is_absence %}
+                                <div class="absence-note">Absent</div>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div class="summary">
+    <p>Total Hours: {{ total_hours }}</p>
+    <p>Total Salary: {{ total_salary }}</p>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base_ko.html' %}
+{% load static %}
+
+{% block title %}슈퍼유저 대시보드{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/superuser_dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>슈퍼유저 대시보드</h2>
+<h3>직원 개요</h3>
+<table class="table-custom">
+    <thead>
+        <tr>
+            <th>이름</th>
+            <th>성</th>
+            <th>이메일</th>
+            <th>계좌 번호</th>
+            <th>계약 여부</th>
+            <th>비자 유형</th>
+            <th>은행 이름</th>
+            <th>총 근무 시간</th>
+            <th>결근 횟수</th>
+            <th>급여</th>
+            <th>캘린더 보기</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in user_data %}
+            <tr class="{% if user.is_contracted %}contracted{% else %}not-contracted{% endif %}">
+                <td data-label="이름">{{ user.first_name }}</td>
+                <td data-label="성">{{ user.last_name }}</td>
+                <td data-label="이메일"><a href="mailto:{{ user.email }}" class="email-link">{{ user.email }}</a></td>
+                <td data-label="계좌 번호">{{ user.account_number|default:"-" }}</td>
+                <td data-label="계약 여부">{{ user.is_contracted|yesno:"예,아니오" }}</td>
+                <td data-label="비자 유형">{{ user.visa_type|default:"-" }}</td>
+                <td data-label="은행 이름">{{ user.bank_name|default:"-" }}</td>
+                <td data-label="총 근무 시간">{{ user.total_hours }}</td>
+                <td data-label="결근 횟수">{{ user.absences }}</td>
+                <td data-label="급여">{{ user.salary }}</td>
+                <td data-label="캘린더 보기"><a href="{% url 'employee_calendar' user.user_id %}" class="button-primary">보기</a></td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="11">직원이 없습니다.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<h3>총 급여: {{ total_salary }}</h3>
+{% endblock %}

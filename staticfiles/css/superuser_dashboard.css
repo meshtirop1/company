@@ -1,0 +1,354 @@
+/*!* Superuser Dashboard Styles *!*/
+/*body {*/
+/*    font-family: Arial, sans-serif;*/
+/*    background-color: #f0f0f0;*/
+/*    margin: 0;*/
+/*    padding: 20px;*/
+/*}*/
+
+/*.container {*/
+/*    max-width: 1200px;*/
+/*    margin: 0 auto;*/
+/*}*/
+
+/*!* Headings *!*/
+/*h2 {*/
+/*    font-size: 28px;*/
+/*    color: #333;*/
+/*    margin-bottom: 20px;*/
+/*    text-align: center;*/
+/*}*/
+
+/*h3 {*/
+/*    font-size: 20px;*/
+/*    color: #333;*/
+/*    margin: 20px 0 10px;*/
+/*    text-align: center;*/
+/*}*/
+
+/*!* Email Link *!*/
+/*.email-link {*/
+/*    color: #007bff;*/
+/*    text-decoration: none;*/
+/*}*/
+
+/*.email-link:hover {*/
+/*    text-decoration: underline;*/
+/*    color: #0056b3;*/
+/*}*/
+
+/*!* Table *!*/
+/*.table-custom {*/
+/*    width: 100%;*/
+/*    background-color: white;*/
+/*    border-collapse: collapse;*/
+/*    border-radius: 5px;*/
+/*    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);*/
+/*    margin-bottom: 20px;*/
+/*}*/
+
+/*.table-custom th,*/
+/*.table-custom td {*/
+/*    padding: 12px;*/
+/*    text-align: left;*/
+/*    border-bottom: 1px solid #ddd;*/
+/*}*/
+
+/*.table-custom th {*/
+/*    background-color: #e0e0e0;*/
+/*    font-weight: bold;*/
+/*    color: #333;*/
+/*}*/
+
+/*.table-custom td {*/
+/*    vertical-align: middle;*/
+/*}*/
+
+/*!* Contract Status Background *!*/
+/*.contracted {*/
+/*    background-color: #d4edda; !* Light green for contracted *!*/
+/*}*/
+
+/*.not-contracted {*/
+/*    background-color: #f8d7da; !* Light red for not contracted *!*/
+/*}*/
+
+/*!* Responsive Adjustments *!*/
+/*@media (max-width: 768px) {*/
+/*    .container {*/
+/*        padding: 10px;*/
+/*    }*/
+
+/*    h2 {*/
+/*        font-size: 24px;*/
+/*    }*/
+
+/*    h3 {*/
+/*        font-size: 18px;*/
+/*    }*/
+
+/*    .table-custom th,*/
+/*    .table-custom td {*/
+/*        padding: 8px;*/
+/*        font-size: 12px;*/
+/*    }*/
+
+/*    .email-link {*/
+/*        font-size: 12px;*/
+/*    }*/
+/*}*/
+/* General Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f7fa;
+}
+
+/* Container for content */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+/* Heading Styles */
+h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a202c;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    position: relative;
+}
+
+h2::after {
+    content: '';
+    width: 50px;
+    height: 3px;
+    background: #3b82f6;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 1.5rem 0 0.75rem;
+    text-align: center;
+}
+
+/* Table Styles */
+.table-custom {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.table-custom thead {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+.table-custom th,
+.table-custom td {
+    padding: 0.75rem;
+    text-align: left;
+    font-size: 0.95rem;
+}
+
+.table-custom th {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.table-custom tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table-custom tbody tr:last-child {
+    border-bottom: none;
+}
+
+.table-custom tbody tr.contracted {
+    background: #f0fdf4;
+}
+
+.table-custom tbody tr.not-contracted {
+    background: #fef2f2;
+}
+
+.table-custom tbody tr:hover {
+    background: #f3f4f6;
+}
+
+/* Email Link Styles */
+.email-link {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.email-link:hover {
+    text-decoration: underline;
+    color: #2563eb;
+}
+
+/* Responsive Table for Small Screens */
+@media (max-width: 768px) {
+    .container {
+        padding: 12px;
+    }
+
+    h2 {
+        font-size: 1.75rem;
+    }
+
+    h3 {
+        font-size: 1.1rem;
+    }
+
+    .table-custom {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .table-custom thead,
+    .table-custom tbody,
+    .table-custom tr,
+    .table-custom th,
+    .table-custom td {
+        display: block;
+    }
+
+    .table-custom thead {
+        display: none; /* Hide headers on small screens */
+    }
+
+    .table-custom tbody tr {
+        margin-bottom: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 0.5rem;
+    }
+
+    .table-custom tbody td {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: right;
+        font-size: 0.9rem;
+    }
+
+    .table-custom tbody td:last-child {
+        border-bottom: none;
+    }
+
+    /* Add pseudo-elements for labels */
+    .table-custom tbody td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #2d3748;
+        text-transform: uppercase;
+        flex: 1;
+        text-align: left;
+    }
+
+    /* Assign data-labels to table cells */
+    .table-custom tbody td:nth-child(1)::before { content: "Full Name"; }
+    .table-custom tbody td:nth-child(2)::before { content: "Email"; }
+    .table-custom tbody td:nth-child(3)::before { content: "Bank Name"; }
+    .table-custom tbody td:nth-child(4)::before { content: "Account Number"; }
+    .table-custom tbody td:nth-child(5)::before { content: "Contract"; }
+    .table-custom tbody td:nth-child(6)::before { content: "Visa Type"; }
+    .table-custom tbody td:nth-child(7)::before { content: "Total Hours"; }
+    .table-custom tbody td:nth-child(8)::before { content: "Absences"; }
+    .table-custom tbody td:nth-child(9)::before { content: "Salary"; }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 8px;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    h2::after {
+        width: 40px;
+        height: 2px;
+    }
+
+    h3 {
+        font-size: 1rem;
+    }
+
+    .table-custom tbody td {
+        font-size: 0.85rem;
+        padding: 0.4rem;
+    }
+
+    .table-custom tbody td:before {
+        font-size: 0.8rem;
+    }
+
+    .email-link {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .container {
+        padding: 6px;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+    }
+
+    h3 {
+        font-size: 0.9rem;
+    }
+
+    .table-custom tbody td {
+        font-size: 0.8rem;
+        padding: 0.3rem;
+    }
+
+    .table-custom tbody td:before {
+        font-size: 0.75rem;
+    }
+}
+
+/* Accessibility Enhancements */
+.email-link:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .table-custom tbody tr:hover,
+    .email-link {
+        transition: none;
+    }
+}

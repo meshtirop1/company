@@ -1,0 +1,530 @@
+
+/** {*/
+/*    margin: 0;*/
+/*    padding: 0;*/
+/*    box-sizing: border-box;*/
+/*}*/
+
+/*body {*/
+/*    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;*/
+/*    line-height: 1.6;*/
+/*    color: #333;*/
+/*    background-color: #f5f7fa;*/
+/*}*/
+
+/*!* Container for content *!*/
+/*.container {*/
+/*    max-width: 1200px;*/
+/*    margin: 0 auto;*/
+/*    padding: 16px;*/
+/*}*/
+
+/*!* Heading Styles *!*/
+/*h2 {*/
+/*    font-size: 2rem;*/
+/*    font-weight: 700;*/
+/*    color: #1a202c;*/
+/*    text-align: center;*/
+/*    margin-bottom: 1.5rem;*/
+/*    padding-bottom: 0.5rem;*/
+/*    position: relative;*/
+/*}*/
+
+/*h2::after {*/
+/*    content: '';*/
+/*    width: 50px;*/
+/*    height: 3px;*/
+/*    background: #3b82f6;*/
+/*    position: absolute;*/
+/*    bottom: 0;*/
+/*    left: 50%;*/
+/*    transform: translateX(-50%);*/
+/*}*/
+
+/*h3 {*/
+/*    font-size: 1.25rem;*/
+/*    font-weight: 600;*/
+/*    color: #2d3748;*/
+/*    margin: 1.5rem 0 0.75rem;*/
+/*    text-align: center;*/
+/*}*/
+
+/*!* Table Styles *!*/
+/*.table-custom {*/
+/*    width: 100%;*/
+/*    border-collapse: collapse;*/
+/*    background: #ffffff;*/
+/*    border-radius: 10px;*/
+/*    overflow: hidden;*/
+/*    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);*/
+/*    margin-bottom: 1.5rem;*/
+/*}*/
+
+/*.table-custom thead {*/
+/*    background: #3b82f6;*/
+/*    color: #ffffff;*/
+/*}*/
+
+/*.table-custom th,*/
+/*.table-custom td {*/
+/*    padding: 0.75rem;*/
+/*    text-align: left;*/
+/*    font-size: 0.95rem;*/
+/*}*/
+
+/*.table-custom th {*/
+/*    font-weight: 600;*/
+/*    text-transform: uppercase;*/
+/*    letter-spacing: 0.05em;*/
+/*}*/
+
+/*.table-custom tbody tr {*/
+/*    border-bottom: 1px solid #e5e7eb;*/
+/*}*/
+
+/*.table-custom tbody tr:last-child {*/
+/*    border-bottom: none;*/
+/*}*/
+
+/*.table-custom tbody tr.contracted {*/
+/*    background: #f0fdf4;*/
+/*}*/
+
+/*.table-custom tbody tr.not-contracted {*/
+/*    background: #fef2f2;*/
+/*}*/
+
+/*.table-custom tbody tr:hover {*/
+/*    background: #f3f4f6;*/
+/*}*/
+
+/*!* Email Link Styles *!*/
+/*.email-link {*/
+/*    color: #3b82f6;*/
+/*    text-decoration: none;*/
+/*    font-weight: 500;*/
+/*}*/
+
+/*.email-link:hover {*/
+/*    text-decoration: underline;*/
+/*    color: #2563eb;*/
+/*}*/
+
+/*!* Responsive Table for Small Screens *!*/
+/*@media (max-width: 768px) {*/
+/*    .container {*/
+/*        padding: 12px;*/
+/*    }*/
+
+/*    h2 {*/
+/*        font-size: 1.75rem;*/
+/*    }*/
+
+/*    h3 {*/
+/*        font-size: 1.1rem;*/
+/*    }*/
+
+/*    .table-custom {*/
+/*        display: block;*/
+/*        overflow-x: auto;*/
+/*        white-space: nowrap;*/
+/*    }*/
+
+/*    .table-custom thead,*/
+/*    .table-custom tbody,*/
+/*    .table-custom tr,*/
+/*    .table-custom th,*/
+/*    .table-custom td {*/
+/*        display: block;*/
+/*    }*/
+
+/*    .table-custom thead {*/
+/*        display: none; !* Hide headers on small screens *!*/
+/*    }*/
+
+/*    .table-custom tbody tr {*/
+/*        margin-bottom: 1rem;*/
+/*        border: 1px solid #e5e7eb;*/
+/*        border-radius: 8px;*/
+/*        padding: 0.5rem;*/
+/*    }*/
+
+/*    .table-custom tbody td {*/
+/*        display: flex;*/
+/*        justify-content: space-between;*/
+/*        padding: 0.5rem;*/
+/*        border-bottom: 1px solid #e5e7eb;*/
+/*        text-align: right;*/
+/*        font-size: 0.9rem;*/
+/*    }*/
+
+/*    .table-custom tbody td:last-child {*/
+/*        border-bottom: none;*/
+/*    }*/
+
+/*    !* Add pseudo-elements for labels *!*/
+/*    .table-custom tbody td:before {*/
+/*        content: attr(data-label);*/
+/*        font-weight: 600;*/
+/*        color: #2d3748;*/
+/*        text-transform: uppercase;*/
+/*        flex: 1;*/
+/*        text-align: left;*/
+/*    }*/
+
+/*    !* Assign data-labels to table cells *!*/
+/*    .table-custom tbody td:nth-child(1)::before { content: "Full Name"; }*/
+/*    .table-custom tbody td:nth-child(2)::before { content: "Email"; }*/
+/*    .table-custom tbody td:nth-child(3)::before { content: "Bank Name"; }*/
+/*    .table-custom tbody td:nth-child(4)::before { content: "Account Number"; }*/
+/*    .table-custom tbody td:nth-child(5)::before { content: "Contract"; }*/
+/*    .table-custom tbody td:nth-child(6)::before { content: "Visa Type"; }*/
+/*    .table-custom tbody td:nth-child(7)::before { content: "Total Hours"; }*/
+/*    .table-custom tbody td:nth-child(8)::before { content: "Absences"; }*/
+/*    .table-custom tbody td:nth-child(9)::before { content: "Salary"; }*/
+/*}*/
+
+/*@media (max-width: 480px) {*/
+/*    .container {*/
+/*        padding: 8px;*/
+/*    }*/
+
+/*    h2 {*/
+/*        font-size: 1.5rem;*/
+/*        margin-bottom: 1rem;*/
+/*    }*/
+
+/*    h2::after {*/
+/*        width: 40px;*/
+/*        height: 2px;*/
+/*    }*/
+
+/*    h3 {*/
+/*        font-size: 1rem;*/
+/*    }*/
+
+/*    .table-custom tbody td {*/
+/*        font-size: 0.85rem;*/
+/*        padding: 0.4rem;*/
+/*    }*/
+
+/*    .table-custom tbody td:before {*/
+/*        font-size: 0.8rem;*/
+/*    }*/
+
+/*    .email-link {*/
+/*        font-size: 0.85rem;*/
+/*    }*/
+/*}*/
+
+/*@media (max-width: 360px) {*/
+/*    .container {*/
+/*        padding: 6px;*/
+/*    }*/
+
+/*    h2 {*/
+/*        font-size: 1.25rem;*/
+/*        margin-bottom: 0.75rem;*/
+/*    }*/
+
+/*    h3 {*/
+/*        font-size: 0.9rem;*/
+/*    }*/
+
+/*    .table-custom tbody td {*/
+/*        font-size: 0.8rem;*/
+/*        padding: 0.3rem;*/
+/*    }*/
+
+/*    .table-custom tbody td:before {*/
+/*        font-size: 0.75rem;*/
+/*    }*/
+/*}*/
+
+/*!* Accessibility Enhancements *!*/
+/*.email-link:focus {*/
+/*    outline: none;*/
+/*    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);*/
+/*}*/
+
+/*@media (prefers-reduced-motion: reduce) {*/
+/*    .table-custom tbody tr:hover,*/
+/*    .email-link {*/
+/*        transition: none;*/
+/*    }*/
+/*}*/
+/* General Reset and Base Styles */
+/* General Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: #333; /* Default text color */
+    background-color: #f5f7fa; /* Light background for the page */
+}
+
+/* Container for content */
+.container {
+    max-width: 1200px; /* Max width of the content area */
+    margin: 0 auto; /* Center the container */
+    padding: 16px; /* Padding around the content */
+}
+
+/* Heading Styles */
+h2 {
+    font-size: 2rem; /* Large heading for main titles */
+    font-weight: 700; /* Bold font weight */
+    color: #1a202c; /* Darker color for headings */
+    text-align: center; /* Center-align the heading */
+    margin-bottom: 1.5rem; /* Space below the heading */
+    padding-bottom: 0.5rem; /* Space for the underline */
+    position: relative; /* For positioning the ::after pseudo-element */
+}
+
+h2::after {
+    content: '';
+    width: 50px; /* Width of the underline */
+    height: 3px; /* Thickness of the underline */
+    background: #3b82f6; /* Accent color for the underline */
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%); /* Center the underline */
+}
+
+h3 {
+    font-size: 1.25rem; /* Medium heading for sub-titles */
+    font-weight: 600;
+    color: #2d3748; /* Slightly lighter dark color */
+    margin: 1.5rem 0 0.75rem; /* Space around the sub-heading */
+    text-align: center;
+}
+
+/* Table Styles */
+.table-custom {
+    width: 100%; /* Table takes full width of its container */
+    border-collapse: collapse; /* Removes space between table cell borders */
+    background: #ffffff; /* White background for the table */
+    border-radius: 10px; /* Rounded corners for the table */
+    overflow: hidden; /* Ensures content respects the border-radius */
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    margin-bottom: 1.5rem; /* Space below the table */
+}
+
+.table-custom thead {
+    background: #3b82f6; /* Accent color for the table header */
+    color: #ffffff; /* White text for the header */
+}
+
+.table-custom th,
+.table-custom td {
+    padding: 0.75rem; /* Padding within cells */
+    text-align: left; /* Align text to the left */
+    font-size: 0.95rem; /* Base font size for table content */
+}
+
+.table-custom th {
+    font-weight: 600; /* Bolder text for table headers */
+    text-transform: uppercase; /* Uppercase text for headers */
+    letter-spacing: 0.05em; /* Slight spacing between letters */
+}
+
+.table-custom tbody tr {
+    border-bottom: 1px solid #e5e7eb; /* Separator line between rows */
+}
+
+.table-custom tbody tr:last-child {
+    border-bottom: none; /* No border for the last row */
+}
+
+/* Styling for rows based on contract status */
+.table-custom tbody tr.contracted {
+    background: #f0fdf4; /* Light green for contracted status */
+}
+
+.table-custom tbody tr.not-contracted {
+    background: #fef2f2; /* Light red for not-contracted status */
+}
+
+.table-custom tbody tr:hover {
+    background: #f3f4f6; /* Light grey background on row hover */
+}
+
+/* Email Link Styles */
+.email-link {
+    color: #3b82f6; /* Accent color for links */
+    text-decoration: none; /* No underline by default */
+    font-weight: 500; /* Medium font weight */
+}
+
+.email-link:hover {
+    text-decoration: underline; /* Underline on hover */
+    color: #2563eb; /* Darker accent color on hover */
+}
+
+/* Responsive Table for Small Screens (Tablet and below) */
+@media (max-width: 768px) {
+    .container {
+        padding: 12px; /* Reduce container padding */
+    }
+
+    h2 {
+        font-size: 1.75rem; /* Reduce heading font size */
+    }
+
+    h3 {
+        font-size: 1.1rem; /* Reduce sub-heading font size */
+    }
+
+    /* Transform table to a block element for card layout */
+    .table-custom {
+        display: block;
+        /* overflow-x: auto; */ /* Typically not needed for card layout if cells wrap. */
+    }
+
+    /* Make all table structural elements behave as blocks */
+    .table-custom thead,
+    .table-custom tbody,
+    .table-custom tr,
+    .table-custom th,
+    .table-custom td {
+        display: block;
+    }
+
+    /* Hide the original table header */
+    .table-custom thead {
+        display: none;
+    }
+
+    /* Style each table row as a "card" */
+    .table-custom tbody tr {
+        margin-bottom: 1rem; /* Space between cards */
+        border: 1px solid #e5e7eb; /* Border around each card */
+        border-radius: 8px; /* Rounded corners for cards */
+        padding: 0.5rem; /* Inner padding for the card */
+        background-color: #ffffff; /* Ensure cards have a background */
+        white-space: normal; /* Ensure text wraps within the card row */
+    }
+
+    /* Restore specific backgrounds for contracted/not-contracted on the TR card */
+    .table-custom tbody tr.contracted {
+        background: #f0fdf4;
+    }
+
+    .table-custom tbody tr.not-contracted {
+        background: #fef2f2;
+    }
+
+
+    /* Style each table cell within the card */
+    .table-custom tbody td {
+        display: flex; /* Arrange label and data side-by-side */
+        justify-content: space-between; /* Push label and data to opposite ends */
+        padding: 0.5rem; /* Padding for each "field" in the card */
+        border-bottom: 1px solid #e5e7eb; /* Separator line between fields */
+        text-align: right; /* Align the data value to the right */
+        font-size: 0.9rem; /* Font size for data in cards */
+        white-space: normal; /* Ensure text wraps within the data part of the cell */
+    }
+
+    .table-custom tbody td:last-child {
+        border-bottom: none; /* No separator for the last field in a card */
+    }
+
+    /* Generate labels for each cell using data-label attribute from HTML */
+    .table-custom tbody td:before {
+        content: attr(data-label); /* This pulls the label from <td data-label="Label Text"> */
+        font-weight: 600;
+        color: #2d3748;
+        text-transform: uppercase;
+        flex-basis: 40%; /* Give label a certain amount of space, adjust as needed */
+                         /* (e.g., use 'auto' or a fixed pixel value if preferred) */
+        margin-right: 10px; /* Space between the label and the data */
+        text-align: left; /* Align label text to the left */
+        word-wrap: break-word; /* Allow long labels to wrap */
+        white-space: normal; /* Ensure text wraps in the label */
+    }
+
+    /* NTH-CHILD LABELS ARE NOW REMOVED - Rely on HTML data-label attributes */
+
+}
+
+/* Further Responsive Adjustments for Smaller Mobile Screens */
+@media (max-width: 480px) {
+    .container {
+        padding: 8px;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    h2::after {
+        width: 40px;
+        height: 2px;
+    }
+
+    h3 {
+        font-size: 1rem;
+    }
+
+    .table-custom tbody td {
+        font-size: 0.85rem;
+        padding: 0.4rem;
+    }
+
+    .table-custom tbody td:before {
+        font-size: 0.8rem;
+        flex-basis: 45%; /* May need to adjust label width if using flex-basis */
+    }
+
+    .email-link {
+        font-size: 0.85rem;
+    }
+}
+
+/* Adjustments for Very Small Mobile Screens */
+@media (max-width: 360px) {
+    .container {
+        padding: 6px;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+    }
+
+    h3 {
+        font-size: 0.9rem;
+    }
+
+    .table-custom tbody td {
+        font-size: 0.8rem;
+        padding: 0.3rem;
+    }
+
+    .table-custom tbody td:before {
+        font-size: 0.75rem;
+        flex-basis: 50%; /* Labels might take more relative space if using flex-basis */
+    }
+}
+
+/* Accessibility Enhancements */
+.email-link:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    .table-custom tbody tr:hover,
+    .email-link {
+        transition: none;
+    }
+}

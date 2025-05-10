@@ -1,0 +1,74 @@
+{% extends 'base_en.html' %}
+{% load static %}
+
+{% block title %}Individual Hours Update{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/individual_hours.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>Individual Hours Update</h2>
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+{% endif %}
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="date">Select Date</label>
+        <input type="date" name="date" id="date" value="{{ selected_date|date:'Y-m-d' }}" class="input-field" required>
+    </div>
+    <table class="table-custom">
+        <thead>
+            <tr>
+                <th>Employee</th>
+                <th>Hours</th>
+                <th>Absent</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        <input type="number" step="0.01" name="hours_{{ user.id }}" class="input-field">
+                    </td>
+                    <td>
+                        <input type="checkbox" name="absence_{{ user.id }}" class="checkbox-input">
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button type="submit" class="button-primary">Update Individual Hours/Absences</button>
+</form>
+<h3>Current Hours for {{ selected_date|date:'Y-m-d' }}</h3>
+<table class="table-custom">
+    <thead>
+        <tr>
+            <th>Employee</th>
+            <th>Hours</th>
+            <th>Absent</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if work_hours %}
+            {% for wh in work_hours %}
+                <tr>
+                    <td>{{ wh.user.email }}</td>
+                    <td>{{ wh.hours }}</td>
+                    <td>{{ wh.is_absence|yesno:"Yes,No" }}</td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan="3">No hours recorded for this date.</td>
+            </tr>
+        {% endif %}
+    </tbody>
+</table>
+{% endblock %}

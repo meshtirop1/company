@@ -1,0 +1,60 @@
+{% extends 'base_en.html' %}
+{% load static %}
+
+{% block title %}Register New Employee{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/manage_users.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>Register New Employee</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" class="input-field" required>
+    </div>
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" class="input-field" required>
+    </div>
+    <div class="form-group">
+        <label for="first_name">First Name</label>
+        <input type="text" name="first_name" id="first_name" class="input-field">
+    </div>
+    <div class="form-group">
+        <label for="last_name">Last Name</label>
+        <input type="text" name="last_name" id="last_name" class="input-field">
+    </div>
+    <div class="form-group">
+        <label for="account_number">Account Number</label>
+        <input type="text" name="account_number" id="account_number" class="input-field">
+    </div>
+    <div class="form-check">
+        <input type="checkbox" name="is_contracted" id="is_contracted" class="checkbox-input">
+        <label for="is_contracted" class="form-check-label">Contracted</label>
+    </div>
+    <div class="form-group">
+        <label for="visa_type">Visa Type</label>
+        <input type="text" name="visa_type" id="visa_type" class="input-field">
+    </div>
+    <div class="form-group">
+        <label for="bank_name">Bank Name</label>
+        <input type="text" name="bank_name" id="bank_name" class="input-field">
+    </div>
+    <div class="form-group">
+        <label for="hourly_wage">Hourly Wage</label>
+        <input type="number" step="0.01" name="hourly_wage" id="hourly_wage" class="input-field">
+    </div>
+    <div class="form-check">
+        <input type="checkbox" name="is_employee" id="is_employee" class="checkbox-input" checked>
+        <label for="is_employee" class="form-check-label">Employee</label>
+    </div>
+    <div class="form-check">
+        <input type="checkbox" name="is_admin" id="is_admin" class="checkbox-input">
+        <label for="is_admin" class="form-check-label">Admin</label>
+    </div>
+    <button type="submit" name="add_user" class="button-primary">Register Employee</button>
+</form>
+{% endblock %}
