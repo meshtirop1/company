@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Django check
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Django system check
+        env:
+          DJANGO_SECRET: ci-only-secret
+          DJANGO_DEBUG: "False"
+          DJANGO_ALLOWED_HOSTS: "*"
+        run: |
+          python manage.py check
+          python manage.py check --deploy || echo "deploy-check warnings (expected without prod env)"
+
+      - name: Detect missing migrations
+        env:
+          DJANGO_SECRET: ci-only-secret
+          DJANGO_DEBUG: "False"
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Run tests
+        env:
+          DJANGO_SECRET: ci-only-secret
+          DJANGO_DEBUG: "False"
+        run: python manage.py test --noinput

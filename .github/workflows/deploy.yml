@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Deploy to Hetzner
+    needs: ci
+    runs-on: ubuntu-22.04
+    environment:
+      name: production
+      url: https://shinhe.mtirop.com
+
+    steps:
+      - name: Sanity check secrets
+        run: |
+          if [ -z "${{ secrets.SSH_HOST }}" ]; then echo "Missing SSH_HOST"; exit 1; fi
+          if [ -z "${{ secrets.SSH_USER }}" ]; then echo "Missing SSH_USER"; exit 1; fi
+          if [ -z "${{ secrets.SSH_KEY }}" ]; then echo "Missing SSH_KEY"; exit 1; fi
+
+      - name: Run deploy.sh on the server
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          command_timeout: 5m
+          script: |
+            set -euo pipefail
+            /home/deploy/shinhe_backend/deploy/deploy.sh
+
+      - name: Smoke test public URL
+        run: |
+          for i in 1 2 3 4 5; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" https://shinhe.mtirop.com/login/)
+            echo "Attempt $i -> $code"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 5
+          done
+          echo "Site did not return 200 after deploy"; exit 1
