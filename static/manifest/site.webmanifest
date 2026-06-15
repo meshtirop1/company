@@ -3,6 +3,7 @@
     "short_name": "Hours Tracker",
     "description": "Track employee work hours and manage schedules",
     "start_url": "/calendar/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#007bff",
@@ -10,12 +11,14 @@
         {
             "src": "/static/images/icon-192x192.jpeg",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/jpeg",
+            "purpose": "any"
         },
         {
             "src": "/static/images/icon-512x512.jpeg",
             "sizes": "512x512",
-            "type": "image/jpeg"
+            "type": "image/jpeg",
+            "purpose": "maskable"
         }
     ],
     "lang": "en-US",

@@ -8,25 +8,25 @@
     font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
     font-size: 1rem;
     font-weight: 500;
-    color: #2d3748;
+    color: var(--color-text);
     margin-bottom: 0.5rem;
 }
 
 .input-field {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--color-border);
     border-radius: 5px;
     font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
     font-size: 0.95rem;
-    color: #333;
-    background: #ffffff;
+    color: var(--color-text);
+    background: var(--color-surface);
     transition: border-color 0.2s ease;
 }
 
 .input-field:focus {
     outline: none;
-    border-color: #005bac;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(0, 91, 172, 0.1);
 }
 
@@ -40,7 +40,7 @@ form p label {
     font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
     font-size: 1rem;
     font-weight: 500;
-    color: #2d3748;
+    color: var(--color-text);
     margin-bottom: 0.5rem;
 }
 
@@ -49,25 +49,25 @@ form p input[type="password"],
 form p input[type="email"] {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--color-border);
     border-radius: 5px;
     font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
     font-size: 0.95rem;
-    color: #333;
-    background: #ffffff;
+    color: var(--color-text);
+    background: var(--color-surface);
     transition: border-color 0.2s ease;
 }
 
 form p input:focus {
     outline: none;
-    border-color: #005bac;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(0, 91, 172, 0.1);
 }
 
 /* Button Styles */
 .button-primary {
-    background: #005bac;
-    color: #ffffff;
+    background: var(--color-primary);
+    color: var(--color-surface);
     border: none;
     padding: 0.75rem 1.5rem;
     border-radius: 5px;
@@ -79,7 +79,7 @@ form p input:focus {
 }
 
 .button-primary:hover {
-    background: #004a8c;
+    background: var(--color-primary-hover);
 }
 
 .button-primary:focus {
@@ -88,8 +88,8 @@ form p input:focus {
 }
 
 .button-danger {
-    background: #dc3545;
-    color: #ffffff;
+    background: var(--color-danger);
+    color: var(--color-surface);
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 5px;
@@ -101,7 +101,7 @@ form p input:focus {
 }
 
 .button-danger:hover {
-    background: #c82333;
+    background: var(--color-danger-hover);
 }
 
 .button-danger:focus {
@@ -114,7 +114,7 @@ form p input:focus {
     width: 100%;
     border-collapse: collapse;
     font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
-    background: #ffffff;
+    background: var(--color-surface);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin-bottom: 1.5rem;
 }
@@ -123,23 +123,23 @@ form p input:focus {
 .table-custom td {
     padding: 0.75rem;
     text-align: left;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .table-custom th {
-    background: #f3f4f6;
+    background: var(--color-bg);
     font-weight: 600;
-    color: #2d3748;
+    color: var(--color-text);
     font-size: 0.95rem;
 }
 
 .table-custom td {
     font-size: 0.9rem;
-    color: #333;
+    color: var(--color-text);
 }
 
 .table-custom tr:hover {
-    background: #f9fafb;
+    background: var(--color-bg);
 }
 
 /* Responsive Design */

@@ -6,9 +6,15 @@
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/manage_holidays.css' %}">
 {% endblock %}
-
 {% block content %}
 <h2>휴일 관리</h2>
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
 <form method="post">
     {% csrf_token %}
     <div class="form-group">
@@ -19,6 +25,7 @@
         <label for="name">휴일 이름</label>
         <input type="text" name="name" id="name" class="input-field" required>
     </div>
+    <input type="hidden" name="add_holiday" value="true">
     <button type="submit" class="button-primary">휴일 추가</button>
 </form>
 <h3>기존 휴일</h3>

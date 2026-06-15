@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timesheet - {{ month_name }} {{ year }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+
+        .paper-container {
+            background: white;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 20px;
+        }
+
+        .company-name {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+
+        .timesheet-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .period-info {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .generated-date {
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        .timesheet-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 12px;
+        }
+
+        .timesheet-table th,
+        .timesheet-table td {
+            border: 1px solid #ddd;
+            padding: 8px 4px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .timesheet-table th {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .employee-name {
+            background: #f8f9fa;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 12px;
+            min-width: 150px;
+            max-width: 150px;
+            word-wrap: break-word;
+        }
+
+        .day-header {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            min-width: 25px;
+            font-size: 11px;
+            padding: 4px 2px;
+        }
+
+        .weekend {
+            background: #ffe6e6;
+        }
+
+        .holiday {
+            background: #fff0e6;
+            color: #d63384;
+        }
+
+        .absent {
+            background: #ffebee;
+            color: #d32f2f;
+            font-weight: bold;
+        }
+
+        .present {
+            background: #e8f5e8;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .hours-cell {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .total-column {
+            background: #e7f3ff;
+            font-weight: bold;
+            min-width: 60px;
+        }
+
+        .summary-section {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .summary-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .summary-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #007bff;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #007bff;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 2px solid #007bff;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .download-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(40, 167, 69, 0.3);
+        }
+
+        .download-btn:hover {
+            background: linear-gradient(135deg, #218838, #1ea87a);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .paper-container {
+                box-shadow: none;
+                padding: 20px;
+                max-width: none;
+            }
+
+            .download-section {
+                display: none;
+            }
+
+            .timesheet-table {
+                font-size: 10px;
+            }
+
+            .timesheet-table th,
+            .timesheet-table td {
+                padding: 4px 2px;
+            }
+
+            .day-header {
+                font-size: 9px;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .timesheet-table {
+                font-size: 10px;
+            }
+
+            .day-header {
+                font-size: 9px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .paper-container {
+                padding: 15px;
+            }
+
+            .timesheet-table {
+                font-size: 9px;
+            }
+
+            .summary-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="paper-container">
+        <!-- Download Buttons -->
+        <div class="download-section">
+            <button onclick="window.print()" class="download-btn">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <button onclick="downloadPDF()" class="download-btn">
+                <i class="fas fa-file-pdf"></i> Download PDF
+            </button>
+            <button onclick="downloadExcel()" class="download-btn">
+                <i class="fas fa-file-excel"></i> Download Excel
+            </button>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="company-name">Company Timesheet</div>
+            <div class="timesheet-title">Monthly Attendance Report</div>
+            <div class="period-info">{{ month_name }} {{ year }}</div>
+            <div class="generated-date">Generated on: {{ current_date }}</div>
+        </div>
+
+        <!-- Timesheet Table -->
+        <table class="timesheet-table" id="timesheetTable">
+            <thead>
+                <tr>
+                    <th class="employee-name">Employee</th>
+                    {% for day in days_in_month %}
+                        <th class="day-header {% if day.is_weekend %}weekend{% endif %} {% if day.is_holiday %}holiday{% endif %}">
+                            {{ day.day }}<br>{{ day.weekday_short }}
+                        </th>
+                    {% endfor %}
+                    <th class="total-column">Total<br>Hours</th>
+                    <th class="total-column">Total<br>Salary</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in employees_data %}
+                    <tr>
+                        <td class="employee-name">
+                            {{ employee.first_name }} {{ employee.last_name }}
+                            <br><small style="font-weight: normal; color: #666;">{{ employee.email }}</small>
+                        </td>
+                        {% for day in employee.daily_data %}
+                            <td class="hours-cell {% if day.is_absence %}absent{% elif day.hours %}present{% endif %}">
+                                {% if day.is_absence %}
+                                    X
+                                {% elif day.hours %}
+                                    {{ day.hours }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                        <td class="total-column">{{ employee.total_hours }}</td>
+                        <td class="total-column">₩{{ employee.total_salary|floatformat:0 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Summary Section -->
+        <div class="summary-section">
+            <div class="summary-box">
+                <div class="summary-title">
+                    <i class="fas fa-chart-bar"></i> Monthly Statistics
+                </div>
+                <div class="summary-item">
+                    <span>Total Employees:</span>
+                    <span>{{ total_employees }}</span>
+                </div>
+                <div class="summary-item">
+                    <span>Total Working Hours:</span>
+                    <span>{{ total_hours }}</span>
+                </div>
+                <div class="summary-item">
+                    <span>Total Absences:</span>
+                    <span>{{ total_absences }}</span>
+                </div>
+                <div class="summary-item">
+                    <span>Average Hours per Employee:</span>
+                    <span>{{ average_hours|floatformat:1 }}</span>
+                </div>
+                <div class="summary-item">
+                    <span>Total Payroll:</span>
+                    <span>₩{{ total_salary|floatformat:0 }}</span>
+                </div>
+            </div>
+
+            <div class="summary-box">
+                <div class="summary-title">
+                    <i class="fas fa-info-circle"></i> Legend
+                </div>
+                <div class="summary-item">
+                    <span>Number (e.g., 8):</span>
+                    <span>Hours worked</span>
+                </div>
+                <div class="summary-item">
+                    <span>X:</span>
+                    <span>Absent</span>
+                </div>
+                <div class="summary-item">
+                    <span>-:</span>
+                    <span>No record</span>
+                </div>
+                <div class="summary-item">
+                    <span style="color: #ffe6e6; background: #ffe6e6; padding: 2px 8px; border-radius: 3px;">Pink:</span>
+                    <span>Weekend</span>
+                </div>
+                <div class="summary-item">
+                    <span style="color: #fff0e6; background: #fff0e6; padding: 2px 8px; border-radius: 3px;">Orange:</span>
+                    <span>Holiday</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>This report was generated automatically by the HR Management System</p>
+            <p>For any questions or corrections, please contact the HR department</p>
+        </div>
+    </div>
+
+    <script>
+        function downloadPDF() {
+            window.print(); // For now, use browser print to PDF
+            // You can integrate with jsPDF library for more advanced PDF generation
+        }
+
+        function downloadExcel() {
+            // Simple CSV export that Excel can open
+            let csv = 'Employee,';
+
+            // Add headers (days)
+            {% for day in days_in_month %}
+                csv += '{{ day.day }},';
+            {% endfor %}
+            csv += 'Total Hours,Total Absences,Total Salary\n';
+
+            // Add employee data
+            {% for employee in employees_data %}
+                csv += '"{{ employee.first_name }} {{ employee.last_name }}",';
+                {% for day in employee.daily_data %}
+                    csv += '{% if day.is_absence %}X{% elif day.hours %}{{ day.hours }}{% else %}-{% endif %},';
+                {% endfor %}
+                csv += '{{ employee.total_hours }},{{ employee.total_absences }},{{ employee.total_salary|floatformat:0 }}\n';
+            {% endfor %}
+
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'timesheet_{{ month_name }}_{{ year }}.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>

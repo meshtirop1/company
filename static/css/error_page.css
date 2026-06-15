@@ -4,7 +4,7 @@
 body.error-page-body { /* You might need to add this class to <body> in base_{lang}.html if needed, or style body directly */
     font-family: 'Noto Sans KR', 'Nanum Gothic', Arial, sans-serif; /* Match your site's font */
     line-height: 1.6;
-    color: #333;
+    color: var(--color-text);
     background-color: #f4f4f4; /* Light gray background for the whole page */
     margin: 0;
     padding: 0;
@@ -27,7 +27,7 @@ body.error-page-body { /* You might need to add this class to <body> in base_{la
     margin: 20px; /* Margin for smaller screens */
     padding: 30px 40px;
     text-align: center;
-    background-color: #ffffff; /* White background for the content box */
+    background-color: var(--color-surface); /* White background for the content box */
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -50,7 +50,7 @@ body.error-page-body { /* You might need to add this class to <body> in base_{la
 }
 
 .error-page-container h1.error-code-500 {
-    color: #dc3545; /* A danger red for 500 */
+    color: var(--color-danger); /* A danger red for 500 */
 }
 
 .error-page-container p {
@@ -61,7 +61,7 @@ body.error-page-body { /* You might need to add this class to <body> in base_{la
 
 .error-page-container p.lead {
     font-size: 1.3em;
-    color: #333;
+    color: var(--color-text);
     font-weight: 500;
     margin-bottom: 1.5em;
 }
@@ -84,7 +84,7 @@ body.error-page-body { /* You might need to add this class to <body> in base_{la
 }
 
 .error-page-container a {
-    color: #007bff; /* Your site's primary link color */
+    color: var(--color-primary); /* Your site's primary link color */
     text-decoration: none;
     font-weight: 500;
 }
@@ -92,7 +92,7 @@ body.error-page-body { /* You might need to add this class to <body> in base_{la
 .error-page-container a:hover,
 .error-page-container a:focus {
     text-decoration: underline;
-    color: #0056b3; /* Darker shade on hover */
+    color: var(--color-primary-hover); /* Darker shade on hover */
 }
 
 .error-page-container .home-button {
@@ -101,8 +101,8 @@ body.error-page-body { /* You might need to add this class to <body> in base_{la
     margin-top: 20px;
     font-size: 1.1em;
     font-weight: 500;
-    color: #fff;
-    background-color: #007bff;
+    color: var(--color-surface);
+    background-color: var(--color-primary);
     border: none;
     border-radius: 5px;
     text-decoration: none;
@@ -111,7 +111,7 @@ body.error-page-body { /* You might need to add this class to <body> in base_{la
 
 .error-page-container .home-button:hover,
 .error-page-container .home-button:focus {
-    background-color: #0056b3;
+    background-color: var(--color-primary-hover);
     text-decoration: none;
     transform: translateY(-1px); /* Slight lift effect */
 }

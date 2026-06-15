@@ -8,7 +8,7 @@
 }
 
 .nav-link {
-    color: #005bac;
+    color: var(--color-primary-light);
     font-size: 1rem;
     font-weight: 500;
     text-decoration: none;
@@ -18,7 +18,7 @@
 }
 
 .nav-link:hover {
-    background: #e6f0fa;
+    background: var(--color-primary-light);
 }
 
 .nav-link:focus {
@@ -29,7 +29,7 @@
 .month-year {
     font-size: 1.2rem;
     font-weight: 600;
-    color: #2d3748;
+    color: var(--color-text);
 }
 
 /* Calendar Table */
@@ -37,7 +37,7 @@
     width: 100%;
     border-collapse: collapse;
     font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
-    background: #ffffff;
+    background: var(--color-surface);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin-bottom: 1.5rem;
 }
@@ -46,19 +46,19 @@
 .calendar-table td {
     padding: 0.5rem;
     text-align: center;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--color-border);
 }
 
 .calendar-table th {
-    background: #f3f4f6;
+    background: var(--color-bg);
     font-weight: 600;
-    color: #2d3748;
+    color: var(--color-text);
     font-size: 0.95rem;
 }
 
 .calendar-table td {
     font-size: 0.9rem;
-    color: #333;
+    color: var(--color-text);
     vertical-align: top;
     height: 100px;
 }
@@ -70,7 +70,7 @@
 
 .calendar-table .hours {
     font-size: 0.85rem;
-    color: #2d3748;
+    color: var(--color-text);
 }
 
 .calendar-table .holiday-name {
@@ -103,7 +103,7 @@
 .summary {
     font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
     font-size: 1rem;
-    color: #2d3748;
+    color: var(--color-text);
 }
 
 .summary p {

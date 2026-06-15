@@ -5,9 +5,398 @@
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/calender.css' %}">
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* User Info Panel Styles */
+        .user-info-panel {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c4a6e 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .user-info-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+            transform: rotate(45deg);
+        }
+        
+        .user-info-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .user-avatar i {
+            font-size: 20px;
+            color: white;
+        }
+        
+        .user-name {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .user-email {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .user-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .detail-item {
+            background: rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 12px 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+        
+        .detail-item:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .detail-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 35px;
+            height: 35px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            margin-right: 12px;
+            float: left;
+        }
+        
+        .detail-icon i {
+            font-size: 16px;
+            color: white;
+        }
+        
+        .detail-content {
+            overflow: hidden;
+        }
+        
+        .detail-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 4px 0;
+        }
+        
+        .detail-value {
+            font-size: 1em;
+            font-weight: 500;
+            margin: 0;
+            word-break: break-word;
+        }
+        
+        /* Month selector styles for employee view */
+        .month-selector {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .month-selector h3 {
+            margin: 0;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .month-selector select {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            min-width: 120px;
+        }
+        
+        .month-selector select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        .month-selector button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .month-selector button:hover {
+            background: #0056b3;
+        }
+        
+        .employee-info {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .employee-info p {
+            margin: 5px 0;
+            color: #333;
+        }
+        
+        .back-button {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .back-button:hover {
+            background: #545b62;
+            color: white;
+            text-decoration: none;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .user-info-panel {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .user-details {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .user-info-header {
+                flex-direction: column;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            
+            .user-avatar {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .detail-item {
+                padding: 10px 12px;
+            }
+            
+            .detail-icon {
+                width: 30px;
+                height: 30px;
+                margin-right: 10px;
+            }
+            
+            .detail-icon i {
+                font-size: 14px;
+            }
+            
+            .month-selector {
+                padding: 15px;
+                gap: 10px;
+            }
+            
+            .month-selector h3 {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .user-info-panel {
+                padding: 12px;
+                border-radius: 8px;
+            }
+            
+            .user-name {
+                font-size: 1.2em;
+            }
+            
+            .detail-item {
+                padding: 8px 10px;
+            }
+            
+            .detail-label {
+                font-size: 0.75em;
+            }
+            
+            .detail-value {
+                font-size: 0.9em;
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
+{% if is_employee_view %}
+    <a href="{% url 'superuser_dashboard' %}" class="back-button">← Back to Dashboard</a>
+    
+    <div class="employee-info">
+        <p><strong>Viewing calendar for:</strong> {{ employee.first_name }} {{ employee.last_name }} ({{ employee.email }})</p>
+        <p><strong>Hourly Wage:</strong> ₩{{ employee.hourly_wage|floatformat:0 }}</p>
+    </div>
+
+    <!-- Month Selection Form -->
+    <div class="month-selector">
+        <h3>Select Month & Year:</h3>
+        <form method="post" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;" action="{% url 'employee_calendar' user_id %}">
+            {% csrf_token %}
+            <select name="month" id="month">
+                {% for month_num, month_name in month_options %}
+                    <option value="{{ month_num }}" {% if month_num == selected_month %}selected{% endif %}>
+                        {{ month_name }}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            <select name="year" id="year">
+                {% for year_option in year_range %}
+                    <option value="{{ year_option }}" {% if year_option == selected_year %}selected{% endif %}>
+                        {{ year_option }}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            <button type="submit">View Calendar</button>
+        </form>
+    </div>
+{% else %}
+    <!-- User Info Panel (only for regular users, not employee view) -->
+    <div class="user-info-panel">
+        <div class="user-info-header">
+            <div class="user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div>
+                <h3 class="user-name">{{ request.user.first_name }} {{ request.user.last_name }}</h3>
+                <p class="user-email">{{ request.user.email }}</p>
+            </div>
+        </div>
+        
+        <div class="user-details">
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <div class="detail-content">
+                    <p class="detail-label">Full Name</p>
+                    <p class="detail-value">{{ request.user.first_name }} {{ request.user.last_name }}</p>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="fas fa-university"></i>
+                </div>
+                <div class="detail-content">
+                    <p class="detail-label">Bank Name</p>
+                    <p class="detail-value">{{ request.user.bank_name|default:"Not specified" }}</p>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div class="detail-content">
+                    <p class="detail-label">Account Number</p>
+                    <p class="detail-value">
+                        {% if request.user.account_number %}
+                            ***{{ request.user.account_number|slice:"-3:" }}
+                        {% else %}
+                            Not specified
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="detail-content">
+                    <p class="detail-label">Hourly Wage</p>
+                    <p class="detail-value">₩{{ request.user.hourly_wage|floatformat:0 }}</p>
+                </div>
+            </div>
+            
+            {% if request.user.visa_type %}
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="fas fa-passport"></i>
+                </div>
+                <div class="detail-content">
+                    <p class="detail-label">Visa Type</p>
+                    <p class="detail-value">{{ request.user.visa_type }}</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="detail-item">
+                <div class="detail-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="detail-content">
+                    <p class="detail-label">Contract Status</p>
+                    <p class="detail-value">{{ request.user.is_contracted|yesno:"Contracted,Non-Contracted" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<h2>Welcome, {{ request.user.first_name }}</h2>
 <h2>
     {% if employee_email %}
         Calendar for {{ employee_email }}
@@ -15,11 +404,23 @@
         Your Calendar
     {% endif %}
 </h2>
+
 <div class="calendar-nav">
-    <a href="{% url 'calendar' %}?year={{ prev_year }}&month={{ prev_month }}" class="nav-link">Previous</a>
+    {% if is_employee_view %}
+        <a href="{% url 'employee_calendar' user_id %}?year={{ prev_year }}&month={{ prev_month }}" class="nav-link">Previous</a>
+    {% else %}
+        <a href="{% url 'calendar' %}?year={{ prev_year }}&month={{ prev_month }}" class="nav-link">Previous</a>
+    {% endif %}
+    
     <span class="month-year">{{ month_name }} {{ year }}</span>
-    <a href="{% url 'calendar' %}?year={{ next_year }}&month={{ next_month }}" class="nav-link">Next</a>
+    
+    {% if is_employee_view %}
+        <a href="{% url 'employee_calendar' user_id %}?year={{ next_year }}&month={{ next_month }}" class="nav-link">Next</a>
+    {% else %}
+        <a href="{% url 'calendar' %}?year={{ next_year }}&month={{ next_month }}" class="nav-link">Next</a>
+    {% endif %}
 </div>
+
 <table class="calendar-table">
     <thead>
         <tr>
@@ -55,8 +456,22 @@
         {% endfor %}
     </tbody>
 </table>
+
 <div class="summary">
     <p>Total Hours: {{ total_hours }}</p>
-    <p>Total Salary: {{ total_salary }}</p>
+    <p>Total Salary: ₩{{ total_salary|floatformat:0 }}</p>
 </div>
+
+{% if is_employee_view %}
+<script>
+// Auto-submit form when month or year changes
+document.getElementById('month').addEventListener('change', function() {
+    this.form.submit();
+});
+
+document.getElementById('year').addEventListener('change', function() {
+    this.form.submit();
+});
+</script>
+{% endif %}
 {% endblock %}
