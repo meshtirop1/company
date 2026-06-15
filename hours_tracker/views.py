@@ -21,7 +21,7 @@ def service_worker(request):
     """Serve the service worker JavaScript directly from Django"""
     sw_content = """
 // sw.js - Hours Tracker PWA Service Worker
-const CACHE_NAME = 'hours-tracker-v7';
+const CACHE_NAME = 'hours-tracker-v8';
 const ASSETS_TO_CACHE = [
     '/static/css/admin_panel.css',
     '/static/css/base.css',
@@ -35,8 +35,8 @@ const ASSETS_TO_CACHE = [
     '/static/css/styles.css',
     '/static/css/superuser_dashboard.css',
     '/static/js/base.js',
-    '/static/images/icon-192x192.jpeg',
-    '/static/images/icon-512x512.jpeg',
+    '/static/images/icon-192x192.png',
+    '/static/images/icon-512x512.png',
     'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Nanum+Gothic:wght@400;700&display=swap'
 ];
 

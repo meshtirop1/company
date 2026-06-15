@@ -323,15 +323,16 @@ h3 {
 
 .table-custom th,
 .table-custom td {
-    padding: 0.75rem; /* Padding within cells */
+    padding: 0.6rem 0.75rem; /* Padding within cells */
     text-align: left; /* Align text to the left */
-    font-size: 0.95rem; /* Base font size for table content */
+    font-size: 0.85rem; /* Base font size for table content */
 }
 
 .table-custom th {
+    font-size: 0.75rem; /* Smaller header text */
     font-weight: 600; /* Bolder text for table headers */
     text-transform: uppercase; /* Uppercase text for headers */
-    letter-spacing: 0.05em; /* Slight spacing between letters */
+    letter-spacing: 0.03em; /* Slight spacing between letters */
 }
 
 .table-custom tbody tr {
