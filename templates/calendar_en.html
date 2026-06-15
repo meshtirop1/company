@@ -407,17 +407,17 @@
 
 <div class="calendar-nav">
     {% if is_employee_view %}
-        <a href="{% url 'employee_calendar' user_id %}?year={{ prev_year }}&month={{ prev_month }}" class="nav-link">Previous</a>
+        <a href="{% url 'employee_calendar' user_id %}?year={{ prev_year }}&month={{ prev_month }}" class="calendar-nav-link">Previous</a>
     {% else %}
-        <a href="{% url 'calendar' %}?year={{ prev_year }}&month={{ prev_month }}" class="nav-link">Previous</a>
+        <a href="{% url 'calendar' %}?year={{ prev_year }}&month={{ prev_month }}" class="calendar-nav-link">Previous</a>
     {% endif %}
     
     <span class="month-year">{{ month_name }} {{ year }}</span>
     
     {% if is_employee_view %}
-        <a href="{% url 'employee_calendar' user_id %}?year={{ next_year }}&month={{ next_month }}" class="nav-link">Next</a>
+        <a href="{% url 'employee_calendar' user_id %}?year={{ next_year }}&month={{ next_month }}" class="calendar-nav-link">Next</a>
     {% else %}
-        <a href="{% url 'calendar' %}?year={{ next_year }}&month={{ next_month }}" class="nav-link">Next</a>
+        <a href="{% url 'calendar' %}?year={{ next_year }}&month={{ next_month }}" class="calendar-nav-link">Next</a>
     {% endif %}
 </div>
 

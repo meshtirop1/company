@@ -407,17 +407,17 @@
 
 <div class="calendar-nav">
     {% if is_employee_view %}
-        <a href="{% url 'employee_calendar' user_id %}?year={{ prev_year }}&month={{ prev_month }}" class="nav-link">이전</a>
+        <a href="{% url 'employee_calendar' user_id %}?year={{ prev_year }}&month={{ prev_month }}" class="calendar-nav-link">이전</a>
     {% else %}
-        <a href="{% url 'calendar' %}?year={{ prev_year }}&month={{ prev_month }}" class="nav-link">이전</a>
+        <a href="{% url 'calendar' %}?year={{ prev_year }}&month={{ prev_month }}" class="calendar-nav-link">이전</a>
     {% endif %}
     
     <span class="month-year">{{ month_name }} {{ year }}</span>
     
     {% if is_employee_view %}
-        <a href="{% url 'employee_calendar' user_id %}?year={{ next_year }}&month={{ next_month }}" class="nav-link">다음</a>
+        <a href="{% url 'employee_calendar' user_id %}?year={{ next_year }}&month={{ next_month }}" class="calendar-nav-link">다음</a>
     {% else %}
-        <a href="{% url 'calendar' %}?year={{ next_year }}&month={{ next_month }}" class="nav-link">다음</a>
+        <a href="{% url 'calendar' %}?year={{ next_year }}&month={{ next_month }}" class="calendar-nav-link">다음</a>
     {% endif %}
 </div>
 
