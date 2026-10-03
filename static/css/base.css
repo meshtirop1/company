@@ -290,3 +290,137 @@ body {
         transition: none;
     }
 }
+
+/* ============================================================
+   App UI layer — content, components, forms, tables, alerts.
+   Loaded as part of base.css (before any per-page css), so a
+   page's own stylesheet still wins where it sets something.
+   ============================================================ */
+
+/* ---- Navbar polish ---- */
+.navbar .container { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.navbar-brand { display: inline-flex; align-items: center; gap: 10px; letter-spacing: -0.01em; }
+.navbar-brand::before {
+    content: ""; width: 8px; height: 22px; border-radius: 3px; display: inline-block;
+    background: linear-gradient(var(--color-accent), #b8924a);
+}
+.nav-link { border-radius: 6px; padding: 0.5rem 0.75rem; }
+.nav-link:hover { background: var(--color-primary-light); color: var(--color-primary); }
+
+/* ---- Content area ---- */
+main.container { padding-top: 28px; padding-bottom: 56px; }
+
+/* ---- Headings in content ---- */
+main.container > h1, main.container > h2, .page-title {
+    font-size: 1.6rem; font-weight: 700; color: var(--color-primary);
+    padding-bottom: 0.65rem; margin-bottom: 1.5rem; position: relative; line-height: 1.25;
+}
+main.container > h1::after, main.container > h2::after, .page-title::after {
+    content: ""; position: absolute; left: 0; bottom: 0;
+    width: 52px; height: 3px; border-radius: 3px; background: var(--color-accent);
+}
+main.container > h3, .section-title {
+    font-size: 1.15rem; font-weight: 600; color: var(--color-text); margin: 1.75rem 0 0.9rem;
+}
+
+/* ---- Page header (title + actions on one row) ---- */
+.page-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.page-header > h1, .page-header > h2 { margin-bottom: 0; }
+
+/* ---- Panels / cards ---- */
+.panel, .card-surface {
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    padding: 1.5rem; margin-bottom: 1.5rem;
+}
+.panel-title {
+    font-size: 1.05rem; font-weight: 600; color: var(--color-text);
+    margin-bottom: 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+}
+
+/* ---- Forms (global fallback; per-page css still overrides) ---- */
+.form-group { margin-bottom: 1.1rem; }
+.form-group > label, .form-label { display: block; font-weight: 500; color: var(--color-text); margin-bottom: 0.4rem; font-size: 0.95rem; }
+.input-field,
+main.container input[type="text"], main.container input[type="password"],
+main.container input[type="email"], main.container input[type="number"],
+main.container input[type="date"], main.container input[type="time"],
+main.container input[type="tel"], main.container input[type="search"],
+main.container select, main.container textarea {
+    width: 100%; max-width: 460px; padding: 0.7rem 0.8rem;
+    border: 1px solid var(--color-border); border-radius: 6px;
+    font-family: inherit; font-size: 0.95rem; color: var(--color-text);
+    background: var(--color-surface); transition: border-color .15s ease, box-shadow .15s ease;
+}
+.input-field:focus,
+main.container input:focus, main.container select:focus, main.container textarea:focus {
+    outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+}
+.panel .input-field, .cardexp-grid .input-field,
+.panel input, .panel select, .panel textarea { max-width: none; }
+
+/* ---- Buttons (global) ---- */
+.button-primary, .btn-primary {
+    display: inline-block; background: var(--color-primary); color: #fff; border: none;
+    padding: 0.7rem 1.4rem; border-radius: 6px; font-family: inherit; font-size: 0.95rem;
+    font-weight: 600; cursor: pointer; text-decoration: none; transition: background .15s ease, transform .05s ease;
+}
+.button-primary:hover, .btn-primary:hover { background: var(--color-primary-hover); color: #fff; }
+.button-primary:active { transform: translateY(1px); }
+.button-primary.block, .btn-block { width: 100%; }
+.button-secondary, .btn-secondary {
+    display: inline-block; background: var(--color-surface); color: var(--color-primary);
+    border: 1px solid var(--color-primary); padding: 0.65rem 1.3rem; border-radius: 6px;
+    font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .15s ease;
+}
+.button-secondary:hover, .btn-secondary:hover { background: var(--color-primary-light); }
+.button-danger, .btn-danger {
+    display: inline-block; background: var(--color-danger); color: #fff; border: none;
+    padding: 0.5rem 0.9rem; border-radius: 6px; font: inherit; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; text-decoration: none; transition: background .15s ease;
+}
+.button-danger:hover, .btn-danger:hover { background: var(--color-danger-hover); color: #fff; }
+.btn-gold {
+    display: inline-block; background: var(--color-accent); color: #1f2937; border: none;
+    padding: 0.55rem 1.1rem; border-radius: 6px; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none;
+}
+.btn-gold:hover { filter: brightness(0.96); }
+
+/* ---- Tables (global) ---- */
+.table-wrap { overflow-x: auto; }
+.table-custom {
+    width: 100%; border-collapse: collapse; background: var(--color-surface);
+    border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden;
+}
+.table-custom th, .table-custom td { padding: 0.75rem 0.9rem; text-align: left; border-bottom: 1px solid var(--color-border); font-size: 0.9rem; color: var(--color-text); }
+.table-custom thead th { background: var(--color-bg); font-weight: 600; }
+.table-custom tbody tr:hover td { background: var(--color-primary-light); }
+.table-custom tbody tr:last-child td { border-bottom: none; }
+
+/* ---- Alerts / messages ---- */
+.messages { list-style: none; margin: 0 0 1.25rem; padding: 0; }
+.messages li, .alert {
+    padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.6rem; font-size: 0.92rem;
+    border-left: 4px solid var(--color-primary); background: var(--color-primary-light); color: var(--color-text);
+}
+.messages li.success, .alert-success { border-left-color: var(--color-success); background: #eaf6ee; }
+.messages li.error, .messages li.danger, .alert-error { border-left-color: var(--color-danger); background: #fbeaea; }
+.messages li.warning { border-left-color: var(--color-accent); background: #fdf6e8; }
+
+/* ---- Stat cards ---- */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.stat-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.1rem 1.25rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); }
+.stat-card .label { font-size: 0.78rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-card .value { font-size: 1.6rem; font-weight: 700; color: var(--color-primary); margin-top: 0.25rem; }
+
+/* ---- Utilities ---- */
+.muted { color: var(--color-text-muted); }
+.empty-state { text-align: center; color: var(--color-text-muted); padding: 2.5rem 1rem; }
+.text-danger { color: var(--color-danger); font-weight: 700; }
+
+@media (max-width: 768px) {
+    main.container > h1, main.container > h2, .page-title { font-size: 1.35rem; }
+    .panel { padding: 1.1rem; }
+    .input-field, main.container input, main.container select, main.container textarea { max-width: none; }
+}
