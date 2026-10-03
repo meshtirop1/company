@@ -122,3 +122,16 @@ class Settings(models.Model):
 
     def __str__(self):
         return f"Minimum Wage: ₩{self.minimum_wage}"
+
+class CardExpense(models.Model):
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='card_expenses')
+    amount = models.DecimalField(max_digits=12, decimal_places=0)
+    date = models.DateField()
+    description = models.CharField(max_length=300)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+
+    def __str__(self):
+        return f"{self.user} - {self.date} - ₩{self.amount}"

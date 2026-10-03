@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Sum
 from django.contrib import messages
-from .models import CustomUser, WorkHours, Holiday, Settings
+from .models import CustomUser, WorkHours, Holiday, Settings, CardExpense
 import calendar
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -898,3 +898,94 @@ def paper_view(request):
     }
 
     return render(request, 'paper_view.html', context)
+
+
+@login_required
+def card_expenses_view(request):
+    lang = request.session.get('language', 'en')
+    is_manager = bool(request.user.is_admin or request.user.is_superuser)
+    employees = CustomUser.objects.filter(is_employee=True).order_by('first_name')
+    selected_user_id = request.GET.get('user_id', '')
+    if selected_user_id:
+        try:
+            selected_user_id = int(selected_user_id)
+        except ValueError:
+            selected_user_id = ''
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add':
+            target_id = request.POST.get('user_id') if is_manager else request.user.id
+            amount = request.POST.get('amount', '').strip()
+            date_val = request.POST.get('date', '').strip()
+            description = request.POST.get('description', '').strip()
+            if target_id and amount and date_val and description:
+                try:
+                    emp = CustomUser.objects.get(id=int(target_id))
+                    CardExpense.objects.create(
+                        user=emp, amount=int(amount), date=date_val, description=description)
+                except Exception:
+                    pass
+        elif action == 'delete':
+            exp_id = request.POST.get('expense_id')
+            if exp_id:
+                q = CardExpense.objects.filter(id=int(exp_id))
+                if not is_manager:
+                    q = q.filter(user=request.user)
+                q.delete()
+        return redirect(request.get_full_path())
+
+    qs = CardExpense.objects.select_related('user')
+    if is_manager:
+        if selected_user_id:
+            qs = qs.filter(user_id=selected_user_id)
+    else:
+        qs = qs.filter(user=request.user)
+    expenses = qs.order_by('-date', '-created_at')
+    total = sum(e.amount for e in expenses)
+
+    template = 'card_expenses_ko.html' if lang == 'ko' else 'card_expenses_en.html'
+    return render(request, template, {
+        'expenses': expenses,
+        'employees': employees,
+        'selected_user_id': selected_user_id,
+        'total': total,
+        'is_manager': is_manager,
+    })
+
+
+@login_required
+def card_expenses_pdf(request):
+    if not (request.user.is_admin or request.user.is_superuser):
+        return redirect('calendar')
+    lang = request.session.get('language', 'en')
+    year = int(request.GET.get('year', timezone.now().year))
+    try:
+        month = int(request.GET.get('month', timezone.now().month))
+    except (TypeError, ValueError):
+        month = timezone.now().month
+    if month < 1 or month > 12:
+        month = timezone.now().month
+
+    month_name = calendar.month_name[month] if lang == 'en' else f'{month}월'
+    employees = CustomUser.objects.filter(is_employee=True).order_by('first_name')
+    emp_data = []
+    grand_total = 0
+    for emp in employees:
+        exps = CardExpense.objects.filter(
+            user=emp, date__year=year, date__month=month).order_by('date')
+        emp_total = sum(e.amount for e in exps)
+        if exps.exists():
+            emp_data.append({
+                'name': emp.get_full_name() or emp.username,
+                'email': emp.email,
+                'expenses': exps,
+                'total': emp_total,
+            })
+            grand_total += emp_total
+    current_date = timezone.now().strftime(
+        '%B %d, %Y' if lang == 'en' else '%Y년 %m월 %d일')
+    return render(request, 'card_expenses_pdf.html', {
+        'year': year, 'month': month, 'month_name': month_name,
+        'emp_data': emp_data, 'grand_total': grand_total, 'current_date': current_date,
+    })

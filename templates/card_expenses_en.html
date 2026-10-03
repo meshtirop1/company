@@ -1,0 +1,105 @@
+{% extends "base_en.html" %}
+{% block title %}Card Expenses &mdash; Shinhe{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+  <h1 style="margin:0;font-size:1.5rem;">Card Expenses</h1>
+  {% if is_manager %}<a href="{% url 'card_expenses_pdf' %}" class="btn btn-primary btn-sm">&#128438; PDF / Print</a>{% endif %}
+</div>
+
+<div class="card-expenses-grid" style="display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start;">
+
+  <!-- Add form -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Record Expense</span></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add">
+        {% if is_manager %}
+        <div class="form-group">
+          <label class="form-label">Employee</label>
+          <select class="form-control" name="user_id" required>
+            <option value="">Select employee&hellip;</option>
+            {% for emp in employees %}
+            <option value="{{ emp.id }}">{{ emp.get_full_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% else %}
+        <div class="form-group">
+          <label class="form-label">Recorded by</label>
+          <div class="form-control" style="background:#f0f4ff;color:#4338ca;font-weight:600;">{{ request.user.get_full_name }}</div>
+        </div>
+        {% endif %}
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input class="form-control" type="date" name="date" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount (&#8361;)</label>
+          <input class="form-control" type="number" name="amount" min="0" step="100" placeholder="e.g. 80000" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description / Where</label>
+          <input class="form-control" type="text" name="description" placeholder="e.g. Fuel station, Grocery, Hardware" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;">+ Add Expense</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- List -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">{% if is_manager %}Expense Records{% else %}My Expenses{% endif %}</span>
+      {% if is_manager %}
+      <form method="get" style="display:flex;gap:8px;align-items:center;">
+        <select class="form-control" name="user_id" style="width:180px;height:34px;font-size:0.8rem;" onchange="this.form.submit()">
+          <option value="">All employees</option>
+          {% for emp in employees %}
+          <option value="{{ emp.id }}" {% if emp.id == selected_user_id %}selected{% endif %}>{{ emp.get_full_name }}</option>
+          {% endfor %}
+        </select>
+      </form>
+      {% endif %}
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Employee</th><th>Amount</th><th>Description</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for exp in expenses %}
+          <tr>
+            <td style="white-space:nowrap;">{{ exp.date }}</td>
+            <td>{{ exp.user.get_full_name }}</td>
+            <td style="font-weight:700;color:var(--danger,#be123c);">&#8361;{{ exp.amount|floatformat:0 }}</td>
+            <td>{{ exp.description }}</td>
+            <td>
+              <form method="post" onsubmit="return confirm('Delete this expense?');" style="margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="expense_id" value="{{ exp.id }}">
+                <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger,#be123c);">&#10005;</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted,#888);">No expenses recorded yet.</td></tr>
+          {% endfor %}
+        </tbody>
+        {% if expenses %}
+        <tfoot>
+          <tr style="background:var(--bg-2,#f8f9fa);">
+            <td colspan="2" style="font-weight:700;padding:8px 12px;">TOTAL</td>
+            <td style="font-weight:900;color:var(--danger,#be123c);padding:8px 4px;">&#8361;{{ total|floatformat:0 }}</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Card Expenses &mdash; {{ month_name }} {{ year }}</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Malgun Gothic',Arial,sans-serif; font-size:11px; background:#fff; color:#000; }
+
+.toolbar { padding:10px 20px; background:#1e1b4b; color:#fff; display:flex; align-items:center; gap:16px; }
+.toolbar span { font-weight:700; font-size:13px; }
+.toolbar button { background:#6366f1; color:#fff; border:none; padding:6px 18px; border-radius:4px; cursor:pointer; font-weight:700; }
+.toolbar a { color:#a5b4fc; font-size:11px; text-decoration:none; }
+
+.report { padding:22px 28px; }
+
+.report-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; padding-bottom:12px; border-bottom:3px solid #1e1b4b; }
+.report-title { font-size:20px; font-weight:900; color:#1e1b4b; }
+.report-sub { font-size:10px; color:#888; margin-top:3px; }
+.report-meta { font-size:10px; color:#555; text-align:right; }
+
+.emp-block { margin-bottom:24px; page-break-inside:avoid; }
+.emp-name-bar { background:#1e1b4b; color:#fff; padding:7px 12px; font-weight:800; font-size:12px; display:flex; justify-content:space-between; }
+.emp-email-bar { font-weight:400; font-size:9px; opacity:.75; }
+
+table { width:100%; border-collapse:collapse; }
+th { background:#312e81; color:#fff; font-size:9px; font-weight:700; text-align:left; padding:6px 10px; border:1px solid #4338ca; }
+th.amt { text-align:right; min-width:90px; }
+td { padding:6px 10px; border:1px solid #c7d2fe; font-size:10px; vertical-align:middle; }
+td.amt { text-align:right; font-weight:700; color:#be123c; }
+td.date { white-space:nowrap; color:#555; font-size:9px; min-width:80px; }
+td.desc { color:#1e1b4b; }
+tr:nth-child(even) td { background:#f8f9ff; }
+
+.subtotal-row td { background:#e0e7ff !important; font-weight:800; border-top:2px solid #4338ca; }
+.subtotal-row td.amt { color:#1e1b4b; font-size:11px; }
+
+.grand-total { margin-top:28px; padding:14px 16px; background:#1e1b4b; color:#fff; display:flex; justify-content:space-between; align-items:center; border-radius:4px; }
+.grand-total-label { font-size:13px; font-weight:900; letter-spacing:1px; }
+.grand-total-amt { font-size:20px; font-weight:900; color:#fca5a5; }
+
+.note { margin-top:18px; font-size:9px; color:#888; font-style:italic; }
+.empty-msg { padding:40px; text-align:center; color:#aaa; font-size:13px; border:1px dashed #c7d2fe; border-radius:4px; margin-top:16px; }
+
+.footer { margin-top:30px; padding-top:10px; border-top:1px solid #e0e7ff; display:flex; justify-content:space-between; font-size:8px; color:#bbb; }
+
+@page { size:A4 portrait; margin:12mm; }
+@media print {
+  .toolbar { display:none; }
+  body { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .report { padding:0; }
+  .emp-block { page-break-inside:avoid; }
+}
+</style>
+</head>
+<body onload="window.print()">
+
+<div class="toolbar">
+  <span>&#49888;&#54644;&#44305; Card Expenses &mdash; {{ month_name }} {{ year }}</span>
+  <button onclick="window.print()">&#128438; Print / Save PDF</button>
+  <a href="/card-expenses/pdf/?year={{ year }}&month={{ month|add:'-1' }}">&#8592; Prev</a>
+  <a href="/card-expenses/pdf/?year={{ year }}&month={{ month|add:'1' }}">Next &#8594;</a>
+  <a href="/card-expenses/">&#8592; Back</a>
+</div>
+
+<div class="report">
+  <div class="report-header">
+    <div>
+      <div class="report-title">&#49888;&#54644;&#44305; &mdash; Card Expenses</div>
+      <div class="report-sub">{{ month_name }} {{ year }} &mdash; Company Card Usage Report</div>
+    </div>
+    <div class="report-meta">
+      Generated: {{ current_date }}<br>
+      Total spent: &#8361;{{ grand_total|floatformat:0 }}
+    </div>
+  </div>
+
+  {% if emp_data %}
+    {% for emp in emp_data %}
+    <div class="emp-block">
+      <div class="emp-name-bar">
+        <span>{{ emp.name }}</span>
+        <span class="emp-email-bar">{{ emp.email }}</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:90px;">Date</th>
+            <th>Description / Where</th>
+            <th class="amt">Amount (&#8361;)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for exp in emp.expenses %}
+          <tr>
+            <td class="date">{{ exp.date }}</td>
+            <td class="desc">{{ exp.description }}</td>
+            <td class="amt">&#8361;{{ exp.amount|floatformat:0 }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="subtotal-row">
+            <td colspan="2" style="font-size:10px;">Subtotal &mdash; {{ emp.name }}</td>
+            <td class="amt">&#8361;{{ emp.total|floatformat:0 }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+
+    <div class="grand-total">
+      <span class="grand-total-label">GRAND TOTAL &mdash; {{ month_name }} {{ year }}</span>
+      <span class="grand-total-amt">&#8361;{{ grand_total|floatformat:0 }}</span>
+    </div>
+
+    <div class="note">* These amounts will be deducted from the employee salary for {{ month_name }} {{ year }}.</div>
+  {% else %}
+    <div class="empty-msg">No card expenses recorded for {{ month_name }} {{ year }}.</div>
+  {% endif %}
+
+  <div class="footer">
+    <span>&#49888;&#54644;&#44305; Hours Tracker &mdash; Card Expenses</span>
+    <span>{{ current_date }}</span>
+  </div>
+</div>
+
+</body>
+</html>
