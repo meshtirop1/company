@@ -6,51 +6,51 @@
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/manage_holidays.css' %}">
 {% endblock %}
+
 {% block content %}
 <h2>휴일 관리</h2>
-{% if messages %}
-    <ul class="messages">
-        {% for message in messages %}
-            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
-    </ul>
-{% endif %}
-<form method="post">
+{% if messages %}<ul class="messages">{% for m in messages %}<li{% if m.tags %} class="{{ m.tags }}"{% endif %}>{{ m }}</li>{% endfor %}</ul>{% endif %}
+
+<div class="panel">
+  <div class="panel-title">휴일 추가</div>
+  <form method="post">
     {% csrf_token %}
     <div class="form-group">
-        <label for="date">날짜</label>
-        <input type="date" name="date" id="date" class="input-field" required>
+      <label for="date">날짜</label>
+      <input type="date" name="date" id="date" class="input-field" required>
     </div>
     <div class="form-group">
-        <label for="name">휴일 이름</label>
-        <input type="text" name="name" id="name" class="input-field" required>
+      <label for="name">휴일 이름</label>
+      <input type="text" name="name" id="name" class="input-field" required>
     </div>
     <input type="hidden" name="add_holiday" value="true">
     <button type="submit" class="button-primary">휴일 추가</button>
-</form>
-<h3>기존 휴일</h3>
-<table class="table-custom">
-    <thead>
-        <tr>
-            <th>날짜</th>
-            <th>이름</th>
-            <th>작업</th>
-        </tr>
-    </thead>
-    <tbody>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="panel-title">기존 휴일</div>
+  <div class="table-wrap">
+    <table class="table-custom">
+      <thead><tr><th>날짜</th><th>이름</th><th>작업</th></tr></thead>
+      <tbody>
         {% for holiday in holidays %}
-            <tr>
-                <td>{{ holiday.date }}</td>
-                <td>{{ holiday.name }}</td>
-                <td>
-                    <form method="post" style="display:inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="delete_holiday" value="{{ holiday.id }}">
-                        <button type="submit" class="button-danger">삭제</button>
-                    </form>
-                </td>
-            </tr>
+        <tr>
+          <td>{{ holiday.date }}</td>
+          <td>{{ holiday.name }}</td>
+          <td>
+            <form method="post" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="delete_holiday" value="{{ holiday.id }}">
+              <button type="submit" class="button-danger">삭제</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="empty-state">추가된 휴일이 없습니다.</td></tr>
         {% endfor %}
-    </tbody>
-</table>
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}
