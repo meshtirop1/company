@@ -459,3 +459,11 @@ main.container input:focus, main.container select:focus, main.container textarea
 .panel input[type="email"], .panel input[type="password"], .panel select, .panel textarea { max-width: 460px; }
 .panel table .input-field { max-width: none; }
 .panel form > .button-primary, .panel form > .button-danger { margin-top: 0.5rem; }
+
+/* ---- Mobile navbar: full-width container so brand & toggle don't overlap ---- */
+@media (max-width: 1024px) {
+    .navbar { display: block; }
+    .navbar .container { width: 100%; justify-content: space-between; align-items: center; }
+    .navbar-brand { margin-left: 0; }
+    .navbar-toggle { top: 50%; transform: translateY(-50%); }
+}
