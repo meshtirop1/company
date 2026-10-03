@@ -1,98 +1,96 @@
 {% extends "base_ko.html" %}
+{% load static %}
 {% block title %}카드 지출 &mdash; 신해광{% endblock %}
+{% block css %}<link rel="stylesheet" href="{% static 'css/card_expenses.css' %}">{% endblock %}
 {% block content %}
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
-  <h1 style="margin:0;font-size:1.5rem;">카드 지출</h1>
-  {% if is_manager %}<a href="{% url 'card_expenses_pdf' %}" class="btn btn-primary btn-sm">&#128438; PDF / 인쇄</a>{% endif %}
+<div class="cardexp-head">
+  <h2>카드 지출</h2>
+  {% if is_manager %}<a href="{% url 'card_expenses_pdf' %}" class="btn-pdf">&#128438; PDF / 인쇄</a>{% endif %}
 </div>
 
-<div class="card-expenses-grid" style="display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start;">
+{% if messages %}
+<ul class="messages">
+  {% for m in messages %}<li{% if m.tags %} class="{{ m.tags }}"{% endif %}>{{ m }}</li>{% endfor %}
+</ul>
+{% endif %}
 
-  <div class="card">
-    <div class="card-header"><span class="card-title">지출 입력</span></div>
-    <div class="card-body">
-      <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="add">
-        {% if is_manager %}
-        <div class="form-group">
-          <label class="form-label">직원 선택</label>
-          <select class="form-control" name="user_id" required>
-            <option value="">직원 선택&hellip;</option>
-            {% for emp in employees %}
-            <option value="{{ emp.id }}">{{ emp.get_full_name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        {% else %}
-        <div class="form-group">
-          <label class="form-label">입력자</label>
-          <div class="form-control" style="background:#f0f4ff;color:#4338ca;font-weight:600;">{{ request.user.get_full_name }}</div>
-        </div>
-        {% endif %}
-        <div class="form-group">
-          <label class="form-label">날짜</label>
-          <input class="form-control" type="date" name="date" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">금액 (&#8361;)</label>
-          <input class="form-control" type="number" name="amount" min="0" step="100" placeholder="예: 80000" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">내역 / 장소</label>
-          <input class="form-control" type="text" name="description" placeholder="예: 주유소, 마트, 철물점" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-lg" style="width:100%;">+ 지출 추가</button>
-      </form>
-    </div>
+<div class="cardexp-grid">
+
+  <div class="panel">
+    <div class="panel-title">지출 입력</div>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add">
+      {% if is_manager %}
+      <div class="form-group">
+        <label for="user_id">직원 선택</label>
+        <select class="input-field" name="user_id" id="user_id" required>
+          <option value="">직원 선택&hellip;</option>
+          {% for emp in employees %}<option value="{{ emp.id }}">{{ emp.get_full_name }}</option>{% endfor %}
+        </select>
+      </div>
+      {% else %}
+      <div class="form-group">
+        <label>입력자</label>
+        <div class="readonly-field">{{ request.user.get_full_name }}</div>
+      </div>
+      {% endif %}
+      <div class="form-group">
+        <label for="date">날짜</label>
+        <input class="input-field" type="date" name="date" id="date" required>
+      </div>
+      <div class="form-group">
+        <label for="amount">금액 (&#8361;)</label>
+        <input class="input-field" type="number" name="amount" id="amount" min="0" step="100" placeholder="예: 80000" required>
+      </div>
+      <div class="form-group">
+        <label for="description">내역 / 장소</label>
+        <input class="input-field" type="text" name="description" id="description" placeholder="예: 주유소, 마트" required>
+      </div>
+      <button type="submit" class="button-primary block">+ 지출 추가</button>
+    </form>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <span class="card-title">{% if is_manager %}지출 내역{% else %}내 지출 내역{% endif %}</span>
+  <div class="panel">
+    <div class="panel-title">
+      <span>{% if is_manager %}지출 내역{% else %}내 지출 내역{% endif %}</span>
       {% if is_manager %}
-      <form method="get" style="display:flex;gap:8px;align-items:center;">
-        <select class="form-control" name="user_id" style="width:180px;height:34px;font-size:0.8rem;" onchange="this.form.submit()">
+      <form method="get">
+        <select class="filter-select" name="user_id" onchange="this.form.submit()">
           <option value="">전체 직원</option>
-          {% for emp in employees %}
-          <option value="{{ emp.id }}" {% if emp.id == selected_user_id %}selected{% endif %}>{{ emp.get_full_name }}</option>
-          {% endfor %}
+          {% for emp in employees %}<option value="{{ emp.id }}" {% if emp.id == selected_user_id %}selected{% endif %}>{{ emp.get_full_name }}</option>{% endfor %}
         </select>
       </form>
       {% endif %}
     </div>
     <div class="table-wrap">
-      <table>
+      <table class="table-custom">
         <thead>
           <tr><th>날짜</th><th>직원</th><th>금액</th><th>내역 / 장소</th><th></th></tr>
         </thead>
         <tbody>
           {% for exp in expenses %}
           <tr>
-            <td style="white-space:nowrap;">{{ exp.date }}</td>
+            <td>{{ exp.date }}</td>
             <td>{{ exp.user.get_full_name }}</td>
-            <td style="font-weight:700;color:var(--danger,#be123c);">&#8361;{{ exp.amount|floatformat:0 }}</td>
+            <td class="amount">&#8361;{{ exp.amount|floatformat:0 }}</td>
             <td>{{ exp.description }}</td>
             <td>
               <form method="post" onsubmit="return confirm('이 지출을 삭제할까요?');" style="margin:0;">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="delete">
                 <input type="hidden" name="expense_id" value="{{ exp.id }}">
-                <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger,#be123c);">&#10005;</button>
+                <button type="submit" class="button-danger">삭제</button>
               </form>
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted,#888);">지출 내역이 없습니다.</td></tr>
+          <tr><td colspan="5" class="muted">지출 내역이 없습니다.</td></tr>
           {% endfor %}
         </tbody>
         {% if expenses %}
         <tfoot>
-          <tr style="background:var(--bg-2,#f8f9fa);">
-            <td colspan="2" style="font-weight:700;padding:8px 12px;">합계</td>
-            <td style="font-weight:900;color:var(--danger,#be123c);padding:8px 4px;">&#8361;{{ total|floatformat:0 }}</td>
-            <td colspan="2"></td>
-          </tr>
+          <tr><td colspan="2">합계</td><td class="amount">&#8361;{{ total|floatformat:0 }}</td><td colspan="2"></td></tr>
         </tfoot>
         {% endif %}
       </table>
