@@ -38,7 +38,7 @@ jobs:
           command_timeout: 5m
           script: |
             set -euo pipefail
-            /home/deploy/shinhe_backend/deploy/deploy.sh
+            /home/deploy/sites/shinhe/deploy/deploy.sh
 
       - name: Smoke test public URL
         run: |
