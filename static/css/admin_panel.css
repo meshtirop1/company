@@ -1,151 +1,49 @@
-/* Dashboard Styles */
-h2 {
-    font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: var(--color-text);
-    margin-bottom: 1.5rem;
+/* Admin dashboard — action card grid */
+
+.dash-sub { color: var(--color-text-muted); margin: -0.75rem 0 1.75rem; font-size: 0.98rem; }
+
+.action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 1.1rem;
 }
 
-.dashboard-links {
-    font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
-    margin-bottom: 1.5rem;
-}
-
-.dashboard-links h3 {
-    font-size: 1.3rem;
-    font-weight: 500;
-    color: var(--color-text);
-    margin-bottom: 1rem;
-}
-
-.dashboard-links ul {
-    list-style: none;
-    padding: 0;
-}
-
-.dashboard-links li {
-    margin-bottom: 0.75rem;
-}
-
-/* Button/Link Styles */
-.button-primary {
-    display: inline-block;
-    background: var(--color-primary);
-    color: var(--color-surface);
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 5px;
-    font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
-    font-size: 1rem;
-    font-weight: 500;
+.action-card {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
     text-decoration: none;
-    cursor: pointer;
-    transition: background 0.2s ease;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 1.3rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: box-shadow .15s ease, transform .1s ease, border-color .15s ease;
+}
+.action-card:hover {
+    box-shadow: 0 10px 26px rgba(30, 58, 95, 0.12);
+    transform: translateY(-2px);
+    border-color: var(--color-primary);
 }
 
-.button-primary:hover {
-    background: var(--color-primary-hover);
+.action-icon {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
 }
+.action-card.danger .action-icon { background: #fbeaea; color: var(--color-danger); }
 
-.button-primary:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(0, 91, 172, 0.3);
-}
-
-.button-danger {
-    display: inline-block;
-    background: var(--color-danger);
-    color: var(--color-surface);
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 5px;
-    font-family: 'Noto Sans KR', 'Nanum Gothic', sans-serif;
-    font-size: 1rem;
-    font-weight: 500;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.button-danger:hover {
-    background: var(--color-danger-hover);
-}
-
-.button-danger:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.3);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    h2 {
-        font-size: 1.6rem;
-    }
-
-    .dashboard-links h3 {
-        font-size: 1.2rem;
-    }
-
-    .button-primary,
-    .button-danger {
-        padding: 0.65rem 1.25rem;
-        font-size: 0.95rem;
-    }
-}
+.action-body h3 { margin: 0 0 0.3rem; font-size: 1.05rem; color: var(--color-text); font-weight: 600; }
+.action-body p { margin: 0; font-size: 0.88rem; color: var(--color-text-muted); line-height: 1.5; }
 
 @media (max-width: 480px) {
-    h2 {
-        font-size: 1.4rem;
-    }
-
-    .dashboard-links h3 {
-        font-size: 1.1rem;
-    }
-
-    .button-primary,
-    .button-danger {
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
-        width: 100%;
-        text-align: center;
-    }
-
-    .dashboard-links li {
-        margin-bottom: 0.5rem;
-    }
-}
-
-@media (max-width: 360px) {
-    h2 {
-        font-size: 1.2rem;
-    }
-
-    .dashboard-links h3 {
-        font-size: 1rem;
-    }
-
-    .button-primary,
-    .button-danger {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.85rem;
-    }
-}
-
-/* Accessibility */
-.button-primary:focus,
-.button-danger:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(0, 91, 172, 0.3);
-}
-
-.button-danger:focus {
-    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.3);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .button-primary,
-    .button-danger {
-        transition: none;
-    }
+    .action-grid { grid-template-columns: 1fr; }
+    .action-card { padding: 1.1rem; }
 }

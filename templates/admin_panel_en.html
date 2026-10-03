@@ -9,13 +9,50 @@
 
 {% block content %}
 <h2>Admin Dashboard</h2>
-<div class="dashboard-links">
-    <h3>Manage Hours and Absences</h3>
-    <ul>
-        <li><a href="{% url 'bulk_hours' %}" class="button-primary">Bulk Hours Update</a></li>
-        <li><a href="{% url 'individual_hours' %}" class="button-primary">Individual Hours Update</a></li>
-        <li><a  href="{% url 'manage_holidays' %}" class="button-primary">Manage Holidays</a></li>
-        <li><a href="{% url 'bulk_absence' %}" class="button-danger">Bulk Absence Update</a></li>
-    </ul>
+<p class="dash-sub">Quick access to the tools for managing hours, absences, holidays and staff.</p>
+
+<div class="action-grid">
+  <a class="action-card" href="{% url 'bulk_hours' %}">
+    <div class="action-icon">&#128339;</div>
+    <div class="action-body">
+      <h3>Bulk Hours Update</h3>
+      <p>Enter or adjust worked hours for several employees at once.</p>
+    </div>
+  </a>
+  <a class="action-card" href="{% url 'individual_hours' %}">
+    <div class="action-icon">&#128100;</div>
+    <div class="action-body">
+      <h3>Individual Hours Update</h3>
+      <p>Record or correct hours for a single employee.</p>
+    </div>
+  </a>
+  <a class="action-card" href="{% url 'manage_holidays' %}">
+    <div class="action-icon">&#128197;</div>
+    <div class="action-body">
+      <h3>Manage Holidays</h3>
+      <p>Add or remove the public holidays used in calculations.</p>
+    </div>
+  </a>
+  <a class="action-card" href="{% url 'manage_users' %}">
+    <div class="action-icon">&#128101;</div>
+    <div class="action-body">
+      <h3>Manage Users</h3>
+      <p>Add employees, set hourly wages and roles.</p>
+    </div>
+  </a>
+  <a class="action-card" href="{% url 'calendar' %}">
+    <div class="action-icon">&#128198;</div>
+    <div class="action-body">
+      <h3>My Calendar</h3>
+      <p>View and edit your own hours calendar.</p>
+    </div>
+  </a>
+  <a class="action-card danger" href="{% url 'bulk_absence' %}">
+    <div class="action-icon">&#128683;</div>
+    <div class="action-body">
+      <h3>Bulk Absence Update</h3>
+      <p>Mark absences for multiple employees in one go.</p>
+    </div>
+  </a>
 </div>
 {% endblock %}

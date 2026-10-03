@@ -424,3 +424,26 @@ main.container input:focus, main.container select:focus, main.container textarea
     .panel { padding: 1.1rem; }
     .input-field, main.container input, main.container select, main.container textarea { max-width: none; }
 }
+
+
+/* ---- Navbar fit: keep items on one line; collapse to menu earlier ---- */
+.navbar-brand { white-space: nowrap; }
+.nav-list { gap: 0.9rem; flex-wrap: nowrap; }
+.nav-item { flex: 0 0 auto; }
+.nav-link { white-space: nowrap; font-size: 0.95rem; }
+
+@media (max-width: 1024px) {
+    .navbar .container { position: relative; }
+    .navbar-toggle { display: block; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }
+    .nav-list {
+        display: none; flex-direction: column; align-items: flex-start; flex-wrap: wrap;
+        gap: 0.4rem; padding: 0.75rem; width: 100%;
+        background: var(--color-surface); border-top: 1px solid var(--color-border);
+        position: absolute; top: 100%; left: 0; z-index: 999; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+    .nav-list--open { display: flex; }
+    .nav-item { width: 100%; }
+    .nav-item .btn-link, .nav-link { display: block; width: 100%; text-align: left; border-radius: 6px; }
+    .language-switcher { padding: 0.25rem 0; }
+    .language-switcher select { width: auto; min-width: 140px; margin: 0; }
+}

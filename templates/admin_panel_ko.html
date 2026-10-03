@@ -9,12 +9,50 @@
 
 {% block content %}
 <h2>관리자 대시보드</h2>
-<div class="dashboard-links">
-    <h3>근무 시간 및 결근 관리</h3>
-    <ul>
-        <li><a href="{% url 'bulk_hours' %}" class="button-primary">일괄 근무 시간 업데이트</a></li>
-        <li><a href="{% url 'individual_hours' %}" class="button-primary">개인 근무 시간 업데이트</a></li>
-        <li><a href="{% url 'bulk_absence' %}" class="button-danger">일괄 결근 업데이트</a></li>
-    </ul>
+<p class="dash-sub">근무 시간, 결근, 공휴일 및 직원 관리 도구에 빠르게 접근하세요.</p>
+
+<div class="action-grid">
+  <a class="action-card" href="{% url 'bulk_hours' %}">
+    <div class="action-icon">&#128339;</div>
+    <div class="action-body">
+      <h3>일괄 근무 시간 입력</h3>
+      <p>여러 직원의 근무 시간을 한 번에 입력하거나 수정합니다.</p>
+    </div>
+  </a>
+  <a class="action-card" href="{% url 'individual_hours' %}">
+    <div class="action-icon">&#128100;</div>
+    <div class="action-body">
+      <h3>개별 근무 시간 입력</h3>
+      <p>특정 직원의 근무 시간을 기록하거나 수정합니다.</p>
+    </div>
+  </a>
+  <a class="action-card" href="{% url 'manage_holidays' %}">
+    <div class="action-icon">&#128197;</div>
+    <div class="action-body">
+      <h3>공휴일 관리</h3>
+      <p>계산에 사용되는 공휴일을 추가하거나 삭제합니다.</p>
+    </div>
+  </a>
+  <a class="action-card" href="{% url 'manage_users' %}">
+    <div class="action-icon">&#128101;</div>
+    <div class="action-body">
+      <h3>사용자 관리</h3>
+      <p>직원을 추가하고 시급과 역할을 설정합니다.</p>
+    </div>
+  </a>
+  <a class="action-card" href="{% url 'calendar' %}">
+    <div class="action-icon">&#128198;</div>
+    <div class="action-body">
+      <h3>내 캘린더</h3>
+      <p>내 근무 시간 캘린더를 확인하고 편집합니다.</p>
+    </div>
+  </a>
+  <a class="action-card danger" href="{% url 'bulk_absence' %}">
+    <div class="action-icon">&#128683;</div>
+    <div class="action-body">
+      <h3>일괄 결근 입력</h3>
+      <p>여러 직원의 결근을 한 번에 표시합니다.</p>
+    </div>
+  </a>
 </div>
 {% endblock %}
