@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
@@ -679,6 +679,88 @@ def register_employee(request):
         except Exception as e:
             messages.error(request, f'Failed to register employee: {str(e)}.' if lang == 'en' else f'직원 등록 실패: {str(e)}.')
     return render(request, template)
+
+def _send_payslip_email(request, employee, context):
+    """Email a rendered payslip to the employee. Returns True if sent."""
+    from django.core.mail import EmailMultiAlternatives
+    from django.template.loader import render_to_string
+    from django.conf import settings
+    try:
+        lang = context.get('lang', 'en')
+        if lang == 'en':
+            subject = f"Payslip — {context['month_name']} {context['year']} — Shinhe Hours Tracker"
+            text_body = (f"Hello {employee.first_name or employee.email},\n\n"
+                         f"Your payslip for {context['month_name']} {context['year']} is below.\n"
+                         f"Net pay: ₩{context['net']:.0f}\n\n-- Shinhe Hours Tracker")
+        else:
+            subject = f"급여 명세서 — {context['year']} {context['month_name']} — 신해경 근무 시간 추적기"
+            text_body = (f"안녕하세요 {employee.first_name or employee.email}님,\n\n"
+                         f"{context['year']} {context['month_name']} 급여 명세서입니다.\n"
+                         f"실수령액: ₩{context['net']:.0f}\n\n-- 신해경 근무 시간 추적기")
+        html_body = render_to_string('payslip_email.html', context)
+        msg = EmailMultiAlternatives(subject, text_body, settings.DEFAULT_FROM_EMAIL, [employee.email])
+        msg.attach_alternative(html_body, 'text/html')
+        msg.send()
+        return True
+    except Exception as e:
+        logger.error(f"payslip: could not email payslip to {employee.email}: {e}")
+        return False
+
+
+@login_required
+def payslip(request, user_id):
+    lang = request.session.get('language', 'en')
+    employee = get_object_or_404(CustomUser, id=user_id)
+    is_manager = bool(request.user.is_admin or request.user.is_superuser)
+    if not (is_manager or request.user.id == employee.id):
+        return redirect('calendar')
+
+    now = timezone.now()
+    try:
+        year = int(request.GET.get('year', now.year))
+    except (TypeError, ValueError):
+        year = now.year
+    try:
+        month = int(request.GET.get('month', now.month))
+    except (TypeError, ValueError):
+        month = now.month
+    if month < 1 or month > 12:
+        month = now.month
+
+    total_hours = WorkHours.objects.filter(
+        user=employee, is_absence=False, date__year=year, date__month=month
+    ).aggregate(s=Sum('hours'))['s'] or 0
+    absences = WorkHours.objects.filter(
+        user=employee, is_absence=True, date__year=year, date__month=month
+    ).count()
+    wage = employee.hourly_wage or 0
+    gross = total_hours * wage
+    expenses = list(CardExpense.objects.filter(
+        user=employee, date__year=year, date__month=month).order_by('date'))
+    exp_total = sum((e.amount for e in expenses), 0)
+    net = gross - exp_total
+
+    month_names_en = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December']
+    month_name = month_names_en[month] if lang == 'en' else f'{month}월'
+
+    context = {
+        'employee': employee, 'year': year, 'month': month, 'month_name': month_name,
+        'total_hours': total_hours, 'absences': absences, 'wage': wage,
+        'gross': gross, 'expenses': expenses, 'exp_total': exp_total, 'net': net,
+        'is_manager': is_manager, 'lang': lang, 'generated': now,
+    }
+
+    if request.method == 'POST' and request.POST.get('action') == 'email' and is_manager:
+        sent = _send_payslip_email(request, employee, context)
+        if sent:
+            messages.success(request, f'Payslip emailed to {employee.email}.' if lang == 'en' else f'급여 명세서를 {employee.email} (으)로 보냈습니다.')
+        else:
+            messages.error(request, 'Could not send the payslip email.' if lang == 'en' else '급여 명세서 이메일을 보내지 못했습니다.')
+        return redirect(f"{reverse('payslip', args=[employee.id])}?year={year}&month={month}")
+
+    return render(request, 'payslip.html', context)
+
 
 @login_required
 def manage_holidays(request):

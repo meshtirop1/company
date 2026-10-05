@@ -16,6 +16,7 @@ urlpatterns = [
     path('register-employee/', views.register_employee, name='register_employee'),
     path('manage-holidays/', views.manage_holidays, name='manage_holidays'),
     path('paper-view/', views.paper_view, name='paper_view'),
+    path('payslip/<int:user_id>/', views.payslip, name='payslip'),
     path('sw.js', views.service_worker, name='service_worker'),
     path('card-expenses/', views.card_expenses_view, name='card_expenses'),
     path('card-expenses/pdf/', views.card_expenses_pdf, name='card_expenses_pdf'),

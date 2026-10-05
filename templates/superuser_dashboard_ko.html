@@ -53,7 +53,7 @@
       <thead>
         <tr>
           <th>이름</th><th>성</th><th>이메일</th><th>계좌 번호</th><th>계약 여부</th>
-          <th>비자 유형</th><th>은행 이름</th><th>총 근무 시간</th><th>결근 횟수</th><th>급여</th><th>캘린더</th>
+          <th>비자 유형</th><th>은행 이름</th><th>총 근무 시간</th><th>결근 횟수</th><th>급여</th><th>작업</th>
         </tr>
       </thead>
       <tbody>
@@ -69,11 +69,12 @@
           <td data-label="총 근무 시간">{{ user.total_hours }}</td>
           <td data-label="결근 횟수">{{ user.absences }}</td>
           <td data-label="급여">&#8361;{{ user.salary|floatformat:0 }}</td>
-          <td data-label="캘린더">
+          <td data-label="작업">
             {% if view_type == 'monthly' %}
-              <a href="{% url 'employee_calendar' user.user_id %}?year={{ selected_year }}&month={{ selected_month }}" class="button-primary">보기</a>
+              <a href="{% url 'employee_calendar' user.user_id %}?year={{ selected_year }}&month={{ selected_month }}" class="button-primary">캘린더</a>
+              <a href="{% url 'payslip' user.user_id %}?year={{ selected_year }}&month={{ selected_month }}" class="button-secondary" target="_blank">급여 명세서</a>
             {% else %}
-              <a href="{% url 'employee_calendar' user.user_id %}" class="button-primary">보기</a>
+              <a href="{% url 'employee_calendar' user.user_id %}" class="button-primary">캘린더</a>
             {% endif %}
           </td>
         </tr>

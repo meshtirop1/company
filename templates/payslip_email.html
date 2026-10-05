@@ -1,0 +1,41 @@
+{% autoescape off %}<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{% if lang == 'ko' %}급여 명세서{% else %}Payslip{% endif %}</title></head>
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1f2937;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:28px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.06);">
+        <tr>
+          <td style="background:#1e3a5f;padding:22px 28px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr>
+              <td style="color:#ffffff;font-size:17px;font-weight:700;"><span style="display:inline-block;width:7px;height:22px;background:#c8a45c;border-radius:2px;vertical-align:-4px;margin-right:8px;"></span>{% if lang == 'ko' %}급여 명세서{% else %}Payslip{% endif %}</td>
+              <td align="right" style="color:#a9c0dd;font-size:13px;">{{ month_name }} {{ year }}</td>
+            </tr></table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:26px 28px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;">{% if lang == 'ko' %}안녕하세요{% if employee.first_name %} {{ employee.first_name }}{% endif %}님, {{ month_name }} {{ year }} 급여 명세서입니다.{% else %}Hello{% if employee.first_name %} {{ employee.first_name }}{% endif %}, here is your payslip for {{ month_name }} {{ year }}.{% endif %}</p>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:8px;">
+              <tr><td style="padding:9px 0;border-bottom:1px solid #eef1f5;font-size:14px;color:#374151;">{% if lang == 'ko' %}기본급{% else %}Basic pay{% endif %} ({{ total_hours|floatformat:"-2" }} {% if lang == 'ko' %}시간{% else %}hrs{% endif %} &times; &#8361;{{ wage|floatformat:0 }})</td><td align="right" style="padding:9px 0;border-bottom:1px solid #eef1f5;font-size:14px;font-weight:600;">&#8361;{{ gross|floatformat:0 }}</td></tr>
+              <tr><td style="padding:9px 0;border-bottom:1px solid #eef1f5;font-size:14px;color:#374151;">{% if lang == 'ko' %}총 지급액{% else %}Gross pay{% endif %}</td><td align="right" style="padding:9px 0;border-bottom:1px solid #eef1f5;font-size:14px;font-weight:700;">&#8361;{{ gross|floatformat:0 }}</td></tr>
+              <tr><td style="padding:9px 0;border-bottom:1px solid #eef1f5;font-size:14px;color:#374151;">{% if lang == 'ko' %}공제 (카드 지출){% else %}Deductions (card expenses){% endif %}</td><td align="right" style="padding:9px 0;border-bottom:1px solid #eef1f5;font-size:14px;font-weight:600;color:#be123c;">&minus; &#8361;{{ exp_total|floatformat:0 }}</td></tr>
+            </table>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0 6px;background:#1e3a5f;border-radius:8px;">
+              <tr>
+                <td style="padding:14px 18px;color:#ffffff;font-size:14px;font-weight:800;letter-spacing:1px;">{% if lang == 'ko' %}실수령액{% else %}NET PAY{% endif %}</td>
+                <td align="right" style="padding:14px 18px;color:#ffffff;font-size:20px;font-weight:800;">&#8361;{{ net|floatformat:0 }}</td>
+              </tr>
+            </table>
+
+            <p style="margin:12px 0 0;font-size:12px;color:#6b7280;">{% if lang == 'ko' %}결근: {{ absences }}회 · 은행: {{ employee.bank_name|default:"—" }} · 계좌: {{ employee.account_number|default:"—" }}{% else %}Absences: {{ absences }} · Bank: {{ employee.bank_name|default:"—" }} · Account: {{ employee.account_number|default:"—" }}{% endif %}</p>
+          </td>
+        </tr>
+        <tr><td style="padding:16px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;"><p style="margin:0;font-size:12px;color:#9ca3af;">Shinhe Hours Tracker &middot; {% if lang == 'ko' %}자동 발송 메일입니다.{% else %}Automated message.{% endif %}</p></td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>{% endautoescape %}

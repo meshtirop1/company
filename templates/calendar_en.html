@@ -460,6 +460,13 @@
 <div class="summary">
     <p>Total Hours: {{ total_hours }}</p>
     <p>Total Salary: ₩{{ total_salary|floatformat:0 }}</p>
+    <p style="margin-top:10px;">
+    {% if is_employee_view %}
+        <a href="{% url 'payslip' user_id %}?year={{ year }}&month={{ month }}" class="button-primary" target="_blank">&#128438; View Payslip</a>
+    {% else %}
+        <a href="{% url 'payslip' request.user.id %}?year={{ year }}&month={{ month }}" class="button-primary" target="_blank">&#128438; My Payslip</a>
+    {% endif %}
+    </p>
 </div>
 
 {% if is_employee_view %}
