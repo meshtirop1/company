@@ -13,16 +13,13 @@
 
 <div class="panel">
   <div class="panel-title">New employee details</div>
+  <p class="muted" style="margin:-0.5rem 0 1.1rem;">The employee will receive an email with a link to set their own password &mdash; you don&rsquo;t set one here.</p>
   <form method="post">
     {% csrf_token %}
     <div class="form-grid">
       <div class="form-group">
         <label for="email">Email</label>
         <input type="email" name="email" id="email" class="input-field" required>
-      </div>
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" name="password" id="password" class="input-field" required>
       </div>
       <div class="form-group">
         <label for="first_name">First Name</label>

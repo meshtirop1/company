@@ -159,7 +159,7 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", default=True)
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@shinhe.mtirop.com")
-PASSWORD_RESET_TIMEOUT = 60 * 60 * 2  # 2 hours
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24 * 3  # 3 days (covers reset links and new-employee set-password invites)
 
 if not DEBUG and not _running_tests:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

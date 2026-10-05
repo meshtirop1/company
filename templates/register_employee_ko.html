@@ -13,16 +13,13 @@
 
 <div class="panel">
   <div class="panel-title">신규 직원 정보</div>
+  <p class="muted" style="margin:-0.5rem 0 1.1rem;">직원에게 비밀번호 설정 링크가 이메일로 발송됩니다. 여기서 비밀번호를 설정하지 않습니다.</p>
   <form method="post">
     {% csrf_token %}
     <div class="form-grid">
       <div class="form-group">
         <label for="email">이메일</label>
         <input type="email" name="email" id="email" class="input-field" required>
-      </div>
-      <div class="form-group">
-        <label for="password">비밀번호</label>
-        <input type="password" name="password" id="password" class="input-field" required>
       </div>
       <div class="form-group">
         <label for="first_name">이름</label>

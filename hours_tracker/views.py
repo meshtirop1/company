@@ -595,38 +595,89 @@ def manage_users(request):
     }
     return render(request, template, context)
 
+def _send_set_password_email(request, user, lang):
+    """Email a newly registered employee a one-time link to set their own
+    password. Returns True if it was sent. Reuses Django's password-reset token
+    so the link is single-use and time-limited."""
+    from django.contrib.auth.tokens import default_token_generator
+    from django.utils.http import urlsafe_base64_encode
+    from django.utils.encoding import force_bytes
+    from django.core.mail import EmailMultiAlternatives
+    from django.template.loader import render_to_string
+    from django.conf import settings
+    try:
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        link = request.build_absolute_uri(
+            reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token}))
+        ctx = {
+            'user': user,
+            'link': link,
+            'login_url': request.build_absolute_uri(reverse('login')),
+            'lang': lang,
+        }
+        subject = ('Set your password — Shinhe Hours Tracker' if lang == 'en'
+                   else '비밀번호 설정 — 신해경 근무 시간 추적기')
+        text_body = render_to_string('set_password_email.txt', ctx)
+        html_body = render_to_string('set_password_email.html', ctx)
+        msg = EmailMultiAlternatives(subject, text_body, settings.DEFAULT_FROM_EMAIL, [user.email])
+        msg.attach_alternative(html_body, 'text/html')
+        msg.send()
+        return True
+    except Exception as e:
+        logger.error(f"register_employee: could not send set-password email to {user.email}: {e}")
+        return False
+
+
 @login_required
 def register_employee(request):
     lang = request.session.get('language', 'en')
-    logger.debug(f"register_employee - Session language: {lang}, Session key: {request.session.session_key}")
     template = f'register_employee_{lang}.html'
-    logger.debug(f"register_employee - Rendering template: {template}")
     if not (request.user.is_admin or request.user.is_superuser):
         return redirect('calendar')
     if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+        email = (request.POST.get('email') or '').strip()
         first_name = request.POST.get('first_name', '')
         last_name = request.POST.get('last_name', '')
         account_number = request.POST.get('account_number', '')
         is_contracted = 'is_contracted' in request.POST
         visa_type = request.POST.get('visa_type', '')
         bank_name = request.POST.get('bank_name', '')
-        hourly_wage = request.POST.get('hourly_wage', 0.00)
+        hourly_wage = request.POST.get('hourly_wage') or 0.00
         is_employee = 'is_employee' in request.POST
         is_admin = 'is_admin' in request.POST
-        if email and password:
-            try:
-                CustomUser.objects.create_user(
-                    email=email, username=email, password=password,
-                    first_name=first_name, last_name=last_name, account_number=account_number,
-                    is_contracted=is_contracted, visa_type=visa_type, bank_name=bank_name,
-                    hourly_wage=hourly_wage, is_employee=is_employee, is_admin=is_admin
-                )
-                messages.success(request, 'Employee registered successfully.' if lang == 'en' else '직원이 성공적으로 등록되었습니다.')
-                return redirect('manage_users')
-            except Exception as e:
-                messages.error(request, f'Failed to register employee: {str(e)}.' if lang == 'en' else f'직원 등록 실패: {str(e)}.')
+        if not email:
+            messages.error(request, 'Email is required.' if lang == 'en' else '이메일은 필수입니다.')
+            return render(request, template)
+        try:
+            import secrets
+            # The employee sets their own password via the emailed link; the admin
+            # never sets or knows it. A random password is stored so the account is
+            # valid and the normal "forgot password" flow works as a fallback.
+            user = CustomUser(
+                email=email, username=email,
+                first_name=first_name, last_name=last_name, account_number=account_number,
+                is_contracted=is_contracted, visa_type=visa_type, bank_name=bank_name,
+                hourly_wage=hourly_wage, is_employee=is_employee, is_admin=is_admin,
+            )
+            user.set_password(secrets.token_urlsafe(36))
+            user.save()
+            sent = _send_set_password_email(request, user, lang)
+            if sent:
+                messages.success(request,
+                    f'Employee registered. A link to set their password was emailed to {email}.'
+                    if lang == 'en' else
+                    f'직원이 등록되었습니다. 비밀번호 설정 링크를 {email} (으)로 보냈습니다.')
+            else:
+                messages.warning(request,
+                    'Employee registered, but the set-password email could not be sent. '
+                    'They can use "Forgot your password?" on the sign-in page.'
+                    if lang == 'en' else
+                    '직원이 등록되었지만 비밀번호 설정 이메일을 보내지 못했습니다. '
+                    '로그인 페이지의 "비밀번호를 잊으셨나요?"를 사용할 수 있습니다.')
+            return redirect('manage_users')
+        except Exception as e:
+            messages.error(request, f'Failed to register employee: {str(e)}.' if lang == 'en' else f'직원 등록 실패: {str(e)}.')
     return render(request, template)
 
 @login_required
