@@ -45,7 +45,7 @@
           <td>{{ user.is_superuser|yesno:"Yes,No" }}</td>
           <td>{{ user.hourly_wage }}</td>
           <td>
-            <form method="post" style="display:inline;">
+            <form method="post" style="display:inline;" onsubmit="return confirm('Delete {{ user.email|escapejs }}? This permanently removes the account and cannot be undone.');">
               {% csrf_token %}
               <input type="hidden" name="delete_user" value="{{ user.id }}">
               <button type="submit" class="button-danger">Delete</button>
