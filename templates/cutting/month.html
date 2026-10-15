@@ -12,6 +12,7 @@
 <h2>{{ heading }}</h2>
 <p class="cut-lead">{{ T.month_intro }}</p>
 {% include 'cutting/_messages.html' %}
+{% if provisional %}<div class="cut-provisional" role="note">{{ provisional }}</div>{% endif %}
 
 <nav class="cut-daynav" aria-label="{{ T.go_to_month }}">
   <a class="button-secondary btn-sm" href="{% url 'cutting:month' previous_month %}">{{ T.previous_month }}</a>

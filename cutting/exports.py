@@ -5,17 +5,26 @@ Cells hold numbers and dates (not text), so the sheet can be sorted, filtered an
 from io import BytesIO
 
 from openpyxl import Workbook
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from .models import CutRecord
-from .reports import month_summary
+from .reports import month_summary, provisional_note
 
 NUMBER = '#,##0'
 DATE = 'yyyy-mm-dd'
 HEADER_FONT = Font(bold=True, color='FFFFFF')
 HEADER_FILL = PatternFill('solid', fgColor='1E3A5F')
 TOTAL_FILL = PatternFill('solid', fgColor='EAEEF2')
+
+
+def text_cell(sheet, row, column, value):
+    """Typed-in text (names, sizes) stays plain text: control characters, which openpyxl
+    refuses, are dropped, and a leading '=' is never turned into a live formula."""
+    cell = sheet.cell(row=row, column=column, value=ILLEGAL_CHARACTERS_RE.sub('', value))
+    cell.data_type = 's'
+    return cell
 
 
 def header_row(sheet, row, labels):
@@ -31,11 +40,14 @@ def set_widths(sheet, widths):
         sheet.column_dimensions[get_column_letter(column)].width = width
 
 
-def summary_sheet(sheet, summary, T, month_label):
+def summary_sheet(sheet, summary, T, month_label, provisional):
     sheet.title = T['xl_summary_sheet']
     sheet['A1'] = T['xl_title'].format(month=month_label)
     sheet['A1'].font = Font(bold=True, size=14, color='1E3A5F')
     sheet['A2'] = T['xl_period'].format(first=summary['first'].isoformat(), last=summary['last'].isoformat())
+    if provisional:
+        sheet['A3'] = provisional
+        sheet['A3'].font = Font(bold=True, color='9A5B00')
 
     labels = [T['cutter']]
     for cell in summary['style_cells']:
@@ -44,14 +56,13 @@ def summary_sheet(sheet, summary, T, month_label):
     header_row(sheet, 4, labels)
 
     def write(row, name, cells, boxes, total):
-        values = [name]
+        text_cell(sheet, row, 1, name)
+        values = []
         for cell in cells:
             values += [cell['boxes'], int(cell['amount'])]
         values += [boxes, int(total)]
-        for column, value in enumerate(values, start=1):
-            target = sheet.cell(row=row, column=column, value=value)
-            if column > 1:
-                target.number_format = NUMBER
+        for column, value in enumerate(values, start=2):
+            sheet.cell(row=row, column=column, value=value).number_format = NUMBER
 
     row = 5
     for entry in summary['rows']:
@@ -74,14 +85,12 @@ def detail_sheet(sheet, summary, T):
         .select_related('cutter').order_by('work_date', 'cutter__name', 'batch_id', 'pk')
     )
     for row, record in enumerate(records, start=2):
-        values = [record.work_date, record.cutter.name, record.get_style_display(), record.size,
-                  record.boxes, int(record.unit_price), int(record.total)]
-        for column, value in enumerate(values, start=1):
-            cell = sheet.cell(row=row, column=column, value=value)
-            if column == 1:
-                cell.number_format = DATE
-            elif column >= 5:
-                cell.number_format = NUMBER
+        sheet.cell(row=row, column=1, value=record.work_date).number_format = DATE
+        text_cell(sheet, row, 2, record.cutter.name)
+        text_cell(sheet, row, 3, record.get_style_display())
+        text_cell(sheet, row, 4, record.size)
+        for column, value in enumerate((record.boxes, int(record.unit_price), int(record.total)), start=5):
+            sheet.cell(row=row, column=column, value=value).number_format = NUMBER
     sheet.freeze_panes = 'A2'
     sheet.auto_filter.ref = f'A1:{get_column_letter(len(labels))}{max(sheet.max_row, 1)}'
     set_widths(sheet, [12, 20, 10, 10, 9, 12, 14])
@@ -92,7 +101,7 @@ def month_workbook_bytes(first_day, T):
     summary = month_summary(first_day)
     month_label = first_day.strftime('%Y-%m')
     workbook = Workbook()
-    summary_sheet(workbook.active, summary, T, month_label)
+    summary_sheet(workbook.active, summary, T, month_label, provisional_note(T, first_day))
     detail_sheet(workbook.create_sheet(T['xl_detail_sheet']), summary, T)
     buffer = BytesIO()
     workbook.save(buffer)

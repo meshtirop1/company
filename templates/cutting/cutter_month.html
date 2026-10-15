@@ -12,6 +12,7 @@
 <h2>{{ heading }}</h2>
 {% if data.cutter.note %}<p class="cut-lead">{{ data.cutter.note }}</p>{% endif %}
 {% include 'cutting/_messages.html' %}
+{% if provisional %}<div class="cut-provisional" role="note">{{ provisional }}</div>{% endif %}
 
 <div class="stat-grid">
   <div class="stat-card"><div class="label">{{ T.month_total }}</div><div class="value">₩{{ data.total|won }}</div></div>

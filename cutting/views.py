@@ -532,6 +532,7 @@ def month_report(request, month=None):
         request, 'month.html',
         month=month,
         heading=T['month_title'].format(month=month_label(month)),
+        provisional=reports.provisional_note(T, month),
         summary=reports.month_summary(month),
         previous_month=(month - timedelta(days=1)).replace(day=1),
         next_month=next_month(month) if month < this_month() else None,
@@ -547,6 +548,7 @@ def cutter_report(request, month, cutter_pk):
         request, 'cutter_month.html',
         month=month,
         heading=T['cutter_month_title'].format(name=cutter.name, month=month_label(month)),
+        provisional=reports.provisional_note(T, month),
         data=reports.cutter_month(cutter, month),
     )
 
@@ -564,13 +566,20 @@ def month_export(request, month):
 def render_payslips(request, month, slips):
     """The printable payslip sheet (a standalone page, like the employees' payslip)."""
     lang = get_lang(request)
+    T = STRINGS[lang]
     for slip in slips:
         for group in slip['style_groups']:
-            group['subtotal_label'] = STRINGS[lang]['subtotal'].format(style=group['label'])
+            group['subtotal_label'] = T['subtotal'].format(style=group['label'])
+    # One cutter's slip is titled with their name, so each saved PDF gets its own file name.
+    title = T['payslip_title'] + ' — ' + month_label(month)
+    if len(slips) == 1:
+        title = f"{slips[0]['cutter'].name} — {title}"
     return render(request, 'cutting/payslip.html', {
-        'T': STRINGS[lang],
+        'T': T,
         'lang': lang,
         'slips': slips,
+        'title': title,
+        'provisional': reports.provisional_note(T, month),
         'month_label': month_label(month),
         'back_url': reverse('cutting:month', args=[month]),
         'generated': timezone.localtime(),

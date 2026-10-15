@@ -64,6 +64,15 @@ class ReportMathTests(ReportData, TestCase):
         self.assertEqual(reports.month_bounds(date(2026, 12, 1))[1], date(2026, 12, 31))
         self.assertEqual(reports.month_bounds(date(2028, 2, 1))[1], date(2028, 2, 29))  # leap year
 
+    def test_a_month_is_provisional_until_its_last_day_has_passed(self):
+        status = reports.month_status
+        self.assertEqual(status(SEPT, today=date(2026, 9, 10)), {'provisional': True, 'through': date(2026, 9, 10)})
+        self.assertEqual(status(SEPT, today=date(2026, 9, 30)), {'provisional': True, 'through': date(2026, 9, 30)})
+        self.assertEqual(status(SEPT, today=date(2026, 10, 1)), {'provisional': False, 'through': date(2026, 9, 30)})
+        self.assertEqual(reports.provisional_note(EN, SEPT, today=date(2026, 9, 10)),
+                         EN['provisional_note'].format(date='2026-09-10'))
+        self.assertEqual(reports.provisional_note(EN, SEPT, today=date(2026, 10, 1)), '')
+
     def test_month_summary_per_cutter_split_by_style(self):
         summary = reports.month_summary(SEPT)
         rows = {row['cutter'].name: row for row in summary['rows']}
@@ -161,6 +170,35 @@ class ReportPageTests(ReportData, ManagerTestCase):
         self.assertContains(response, '₩79,000')
         self.assertContains(response, EN['received_by'])
 
+    def test_payslip_is_a_receipt_for_one_person(self):
+        Cutter.objects.filter(pk=self.kim.pk).update(note='Late twice this month')
+        response = self.client.get(self.month_url('cutting:payslip', self.kim.pk))
+        self.assertNotContains(response, 'Late twice')  # the roster note is for managers, not the slip
+        self.assertContains(response, '<title>Kim — Cutting pay slip — 2026-09</title>', html=False)
+        self.assertContains(response, f"{escape(EN['daily_detail'])} · <span class=\"as-typed\">Kim</span> · 2026-09", html=False)
+        # The day-by-day tally: 9/15, 5 boxes, ₩20,000.
+        self.assertContains(response, '<span class="d">09-15</span><span class="b">5</span><span class="a">₩20,000</span>', html=False)
+        all_slips = self.client.get(self.month_url('cutting:payslips'))
+        self.assertEqual(all_slips.context['title'], f"{EN['payslip_title']} — 2026-09")
+
+    def test_a_running_month_is_marked_provisional(self):
+        today = timezone.localdate()
+        note = escape(EN['provisional_note'].format(date=today.isoformat()))
+        this_month = today.replace(day=1)
+        for url in (reverse('cutting:month_current'),
+                    reverse('cutting:cutter_month', args=[this_month, self.kim.pk]),
+                    reverse('cutting:payslip', args=[this_month, self.kim.pk])):
+            self.assertContains(self.client.get(url), note, msg_prefix=url)
+        sheet = load_workbook(BytesIO(self.client.get(reverse('cutting:month_export', args=[this_month])).content)).active
+        self.assertEqual(sheet['A3'].value, EN['provisional_note'].format(date=today.isoformat()))
+
+    def test_a_finished_month_is_not_provisional(self):
+        stem = EN['provisional_note'].split('—')[0]
+        for url in (self.month_url(), self.month_url('cutting:cutter_month', self.kim.pk),
+                    self.month_url('cutting:payslip', self.kim.pk)):
+            self.assertNotContains(self.client.get(url), stem, msg_prefix=url)
+        self.assertIsNone(load_workbook(BytesIO(self.client.get(self.month_url('cutting:month_export')).content)).active['A3'].value)
+
     def test_payslip_in_korean(self):
         self.use_korean()
         response = self.client.get(self.month_url('cutting:payslip', self.kim.pk))
@@ -195,6 +233,19 @@ class ReportPageTests(ReportData, ManagerTestCase):
         first = [cell.value for cell in detail[2]]
         self.assertEqual(first[0].date(), date(2026, 9, 1))  # a real date, not text
         self.assertEqual(first[1:], ['Kim', '통포', '7', 10, 4000, 40000])
+
+    def test_excel_keeps_typed_names_as_plain_text(self):
+        formula = Cutter.objects.create(name='=1+1')
+        control = Cutter.objects.create(name='Oh\x01Min')
+        services.save_batch(work_date=date(2026, 9, 2), rows=[(formula, self.tongpo7, 1), (control, self.tongpo7, 1)],
+                            entered_by=None, token=uuid.uuid4())
+        response = self.client.get(self.month_url('cutting:month_export'))
+        self.assertEqual(response.status_code, 200)  # openpyxl refuses control characters outright
+        workbook = load_workbook(BytesIO(response.content))
+        for sheet, column in ((workbook[EN['xl_summary_sheet']], 1), (workbook[EN['xl_detail_sheet']], 2)):
+            names = {row[column - 1].value: row[column - 1] for row in sheet.iter_rows(min_row=2)}
+            self.assertEqual(names['=1+1'].data_type, 's', sheet.title)  # text, never a live formula
+            self.assertIn('OhMin', names, sheet.title)
 
     def test_excel_export_in_korean(self):
         self.use_korean()

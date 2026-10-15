@@ -6,6 +6,7 @@ from today's price list, so a report always shows exactly what was recorded.
 import calendar
 
 from django.db.models import Sum
+from django.utils import timezone
 
 from .models import CutRecord, Cutter, CuttingStyle
 
@@ -17,6 +18,20 @@ LINE_FIELDS = ('style', 'size', 'unit_price', 'item__sort_order')
 def month_bounds(first_day):
     """The first and last day of the calendar month that starts on `first_day`."""
     return first_day, first_day.replace(day=calendar.monthrange(first_day.year, first_day.month)[1])
+
+
+def month_status(first_day, today=None):
+    """Whether a month's figures can still grow: until its last day has passed they are
+    provisional, covering only the work recorded through `through`."""
+    today = today or timezone.localdate()
+    last = month_bounds(first_day)[1]
+    return {'provisional': today <= last, 'through': min(today, last)}
+
+
+def provisional_note(T, first_day, today=None):
+    """'Provisional — up to <date>' while the month isn't over, so no one takes it as final pay."""
+    status = month_status(first_day, today)
+    return T['provisional_note'].format(date=status['through'].isoformat()) if status['provisional'] else ''
 
 
 def by_name(cutter):
