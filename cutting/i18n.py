@@ -235,6 +235,14 @@ STRINGS = {
         'generated': 'Generated',
         'no_work_slip': 'No work recorded in this period.',
         'payslip_note': 'Amounts use the price saved with each entry.',
+        'payslip_note_deductions': 'Tax and insurance are taken from gross pay and rounded down to 10 won.',
+        'deductions_heading': 'Deductions',
+        'gross_pay': 'Gross pay',
+        'deductions_total': 'Total deductions',
+        'net_pay': 'NET PAY',
+        'net_col': 'Net pay',
+        'deductions_col': 'Tax & insurance',
+        'month_net': 'Net pay',
         'no_payslips': 'Nobody has work recorded for this month, so there are no payslips.',
 
         'xl_summary_sheet': 'Summary',
@@ -248,6 +256,9 @@ STRINGS = {
         'xl_rate': 'Rate (₩)',
         'xl_amount_col': 'Amount (₩)',
         'xl_total_row': 'Total',
+        'xl_tax': 'Income tax (₩)',
+        'xl_insurance': 'Health insurance (₩)',
+        'xl_net': 'Net pay (₩)',
         'xl_filename': 'fish-cutting-{month}.xlsx',
         'err_form_expired': 'This form had expired, so nothing was saved. Check the rows below and tap Save again.',
 
@@ -325,6 +336,8 @@ STRINGS = {
         'action_rate_add': 'New rate',
         'action_rate_edit': 'Rate changed',
         'action_rate_delete': 'Rate deleted',
+        'action_deduction_set': 'Tax/insurance set',
+        'action_deduction_delete': 'Tax/insurance deleted',
 
         # Singular forms, picked by counted() when the count is 1.
         'stat_today_value_one': '{rows} row · ₩{total}',
@@ -386,6 +399,15 @@ STRINGS = {
         'help_prices_2': (
             'If a price was wrong and should also apply to work already saved, '
             'use "Review and re-price" on that month\'s pay page.'
+        ),
+        'help_deductions_title': 'Tax and health insurance',
+        'help_deductions_1': (
+            "Set each cutter's income tax (%) and health insurance (a % of gross pay or a fixed amount) "
+            'under Cutters → Edit. A rate starts from a month and applies until the next one.'
+        ),
+        'help_deductions_2': (
+            'Payslips, the monthly pay page and the Excel file then show the deductions and the net pay. '
+            "A change that would alter a locked month is refused, so paid payslips keep their rate."
         ),
     },
     'ko': {
@@ -602,6 +624,14 @@ STRINGS = {
         'generated': '발행일',
         'no_work_slip': '이 기간에 기록된 작업이 없습니다.',
         'payslip_note': '금액은 각 입력에 저장된 단가로 계산했습니다.',
+        'payslip_note_deductions': '세금과 보험료는 총 지급액 기준이며 10원 미만은 버립니다.',
+        'deductions_heading': '공제',
+        'gross_pay': '총 지급액',
+        'deductions_total': '공제 합계',
+        'net_pay': '실수령액',
+        'net_col': '실수령액',
+        'deductions_col': '세금·보험',
+        'month_net': '실수령액',
         'no_payslips': '해당 월에 작업이 기록된 사람이 없어 명세서가 없습니다.',
 
         'xl_summary_sheet': '요약',
@@ -615,6 +645,9 @@ STRINGS = {
         'xl_rate': '단가 (₩)',
         'xl_amount_col': '금액 (₩)',
         'xl_total_row': '합계',
+        'xl_tax': '소득세 (₩)',
+        'xl_insurance': '건강보험 (₩)',
+        'xl_net': '실수령액 (₩)',
         'xl_filename': '생선손질수당-{month}.xlsx',
         'err_form_expired': '입력 화면이 만료되어 저장하지 않았습니다. 아래 행을 확인한 뒤 다시 저장을 누르세요.',
 
@@ -690,6 +723,8 @@ STRINGS = {
         'action_rate_add': '새 단가',
         'action_rate_edit': '단가 수정',
         'action_rate_delete': '단가 삭제',
+        'action_deduction_set': '세금·보험 설정',
+        'action_deduction_delete': '세금·보험 삭제',
 
         'payslip_language': '명세서 언어',
         'payslip_language_help': '이 작업자의 명세서는 이 언어로 인쇄됩니다. 작업자가 가장 잘 읽을 수 있는 언어를 고르세요.',
@@ -723,6 +758,15 @@ STRINGS = {
             '이미 기록된 작업은 저장 당시의 단가를 유지합니다.'
         ),
         'help_prices_2': '단가가 잘못되어 이미 저장된 작업에도 적용해야 한다면 해당 월 정산 화면의 "확인하고 단가 재적용"을 사용하세요.',
+        'help_deductions_title': '세금 및 건강보험',
+        'help_deductions_1': (
+            '작업자별 소득세(%)와 건강보험(총 지급액의 % 또는 고정 금액)은 작업자 → 수정 화면에서 설정합니다. '
+            '설정은 시작 월부터 다음 설정 전까지 적용됩니다.'
+        ),
+        'help_deductions_2': (
+            '그러면 명세서, 월별 정산 화면, 엑셀에 공제액과 실수령액이 표시됩니다. '
+            '잠긴 월을 바꾸게 되는 변경은 거부되므로, 지급한 명세서는 당시의 공제율을 유지합니다.'
+        ),
     },
 }
 

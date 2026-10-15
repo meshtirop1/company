@@ -1,12 +1,15 @@
 """Pay figures built from work records: what each cutter did and earned, by day and by month.
 
 Everything is summed from the prices and totals saved on the records, never recalculated
-from today's price list, so a report always shows exactly what was recorded.
+from today's price list, so a report always shows exactly what was recorded. A month's tax
+and health insurance come from the cutter's rate for that month (hours_tracker.deductions).
 """
 import calendar
 
 from django.db.models import Sum
 from django.utils import timezone
+
+from hours_tracker import deductions
 
 from .models import CutRecord, Cutter, CuttingStyle, MonthLock
 
@@ -102,16 +105,19 @@ def month_summary(first_day):
         month_totals[row['style']]['boxes'] += row['boxes']
         month_totals[row['style']]['amount'] += row['amount']
 
-    cutters = Cutter.objects.in_bulk(totals_by_cutter)
-    cutter_rows = sorted((
-        {
-            'cutter': cutters[cutter_id],
+    cutters = Cutter.objects.prefetch_related('deductions').in_bulk(totals_by_cutter)
+    cutter_rows = []
+    for cutter_id, totals in totals_by_cutter.items():
+        cutter = cutters[cutter_id]
+        total = sum(cell['amount'] for cell in totals.values())
+        cutter_rows.append({
+            'cutter': cutter,
             'style_cells': style_cells(totals),
             'boxes': sum(cell['boxes'] for cell in totals.values()),
-            'total': sum(cell['amount'] for cell in totals.values()),
-        }
-        for cutter_id, totals in totals_by_cutter.items()
-    ), key=lambda row: by_name(row['cutter']))
+            'total': total,
+            'deductions': month_deductions(cutter, first, total),
+        })
+    cutter_rows.sort(key=lambda row: by_name(row['cutter']))
 
     return {
         'first': first,
@@ -120,7 +126,17 @@ def month_summary(first_day):
         'style_cells': style_cells(month_totals),
         'boxes': sum(cell['boxes'] for cell in month_totals.values()),
         'total': sum(cell['amount'] for cell in month_totals.values()),
+        'has_deductions': any(row['deductions']['shown'] for row in cutter_rows),
+        'tax': sum(row['deductions']['tax'] for row in cutter_rows),
+        'insurance': sum(row['deductions']['insurance'] for row in cutter_rows),
+        'deductions_total': sum(row['deductions']['total'] for row in cutter_rows),
+        'net': sum(row['deductions']['net'] for row in cutter_rows),
     }
+
+
+def month_deductions(cutter, first_day, gross):
+    """Tax and insurance on the cutter's gross pay for the month, under that month's rate."""
+    return deductions.compute(gross, deductions.rate_for(cutter.deductions.all(), first_day))
 
 
 def cutter_month(cutter, first_day):
@@ -146,9 +162,11 @@ def cutter_month(cutter, first_day):
                 'boxes': sum(line['boxes'] for line in members),
                 'amount': sum(line['amount'] for line in members),
             })
+    totals = summarise(lines)
     return {
         'cutter': cutter, 'first': first, 'last': last,
-        'days': days, 'lines': lines, 'style_groups': style_groups, **summarise(lines),
+        'days': days, 'lines': lines, 'style_groups': style_groups, **totals,
+        'deductions': month_deductions(cutter, first, totals['total']),
     }
 
 

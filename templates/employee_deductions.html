@@ -1,0 +1,16 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/deductions.css' %}">
+{% endblock %}
+
+{% block content %}
+<p><a href="{% url 'manage_users' %}">{{ D.back_to_users }}</a></p>
+<h2>{{ heading }}</h2>
+{% if messages %}<ul class="messages">{% for m in messages %}<li{% if m.tags %} class="{{ m.tags }}"{% endif %}>{{ m }}</li>{% endfor %}</ul>{% endif %}
+
+{% include 'deductions/_panel.html' %}
+{% endblock %}

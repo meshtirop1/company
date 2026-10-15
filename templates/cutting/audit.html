@@ -32,7 +32,9 @@
       <span class="cut-log-action action-{{ row.entry.action }}">{{ row.action }}</span>
       <span class="muted">{{ row.when }} · {{ row.entry.user_name|default:"—" }}</span>
     </div>
-    {% if row.entry.work_date and not row.is_rate %}
+    {% if row.is_deduction %}
+    <div class="cut-log-what"><span class="cut-name">{{ row.entry.cutter_name }}</span></div>
+    {% elif row.entry.work_date and not row.is_rate %}
     <div class="cut-log-what">
       <a href="{% url 'cutting:day' row.entry.work_date %}">{{ row.entry.work_date|date:'Y-m-d' }}</a>{% if row.entry.cutter_name %} · <span class="cut-name">{{ row.entry.cutter_name }}</span>{% endif %}
     </div>

@@ -1,0 +1,43 @@
+{% comment %}
+  A person's tax and health-insurance rates, with the form to add one.
+  Context: D (hours_tracker.deductions strings), ded_rows (rate_rows() plus each row's delete_url),
+  ded_form (DeductionRateForm), ded_action (where the form posts). Needs css/deductions.css.
+{% endcomment %}
+<section class="panel ded-panel" id="deductions">
+  <div class="panel-title">{{ D.deductions }}</div>
+  <p class="muted ded-intro">{{ D.deductions_intro }}</p>
+
+  {% if ded_rows %}
+  <ul class="ded-list">
+    {% for row in ded_rows %}
+    <li class="ded-row">
+      <div>
+        <div class="ded-month"><span class="muted">{{ D.col_from }}</span> <strong>{{ row.month }}</strong>{% if row.status %}<span class="ded-status">{{ row.status }}</span>{% endif %}</div>
+        <div class="ded-values">{{ D.col_tax }} <strong>{{ row.tax }}</strong> · {{ D.col_insurance }} <strong>{{ row.insurance }}</strong></div>
+      </div>
+      <form method="post" action="{{ row.delete_url }}" class="ded-delete" onsubmit="return confirm('{{ row.confirm_delete|escapejs }}');">
+        {% csrf_token %}
+        <button type="submit" class="button-danger">{{ D.delete }}</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty-state ded-empty">{{ D.no_rates }}</p>
+  {% endif %}
+
+  <form method="post" action="{{ ded_action }}" novalidate>
+    {% csrf_token %}
+    <div class="ded-form-row">
+      {% for field in ded_form %}
+      <div class="form-group{% if field.errors %} has-error{% endif %}">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<small class="field-help">{{ field.help_text }}</small>{% endif %}
+        {% for error in field.errors %}<div class="field-error" role="alert">{{ error }}</div>{% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <button type="submit" class="button-primary">{{ D.save_rate }}</button>
+  </form>
+</section>

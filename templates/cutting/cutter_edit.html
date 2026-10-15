@@ -5,6 +5,7 @@
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+    <link rel="stylesheet" href="{% static 'css/deductions.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -13,7 +14,8 @@
 {% include 'cutting/_messages.html' %}
 
 <div class="panel">
-  <form method="post" novalidate>
+  {# An explicit action: this page is also shown by the tax/insurance form's own URL. #}
+  <form method="post" action="{% url 'cutting:cutter_edit' cutter.pk %}" novalidate>
     {% csrf_token %}
     <div class="cut-form-row">
       {% include 'cutting/_field.html' with field=form.name %}
@@ -26,4 +28,6 @@
     </div>
   </form>
 </div>
+
+{% include 'deductions/_panel.html' %}
 {% endblock %}

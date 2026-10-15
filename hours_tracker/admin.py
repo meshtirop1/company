@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CustomUser, WorkHours, Holiday, Settings
+from .models import CustomUser, WorkHours, Holiday, Settings, EmployeeDeduction
 
 
 @admin.register(CustomUser)
@@ -39,4 +39,12 @@ class HolidayAdmin(admin.ModelAdmin):
 @admin.register(Settings)
 class SettingsAdmin(admin.ModelAdmin):
     list_display = ['minimum_wage', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(EmployeeDeduction)
+class EmployeeDeductionAdmin(admin.ModelAdmin):
+    list_display = ['user', 'effective_from', 'tax_percent', 'insurance_mode', 'insurance_value', 'updated_at']
+    list_filter = ['insurance_mode']
+    search_fields = ['user__username', 'user__email', 'user__first_name', 'user__last_name']
     readonly_fields = ['created_at', 'updated_at']

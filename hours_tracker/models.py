@@ -135,3 +135,45 @@ class CardExpense(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.date} - ₩{self.amount}"
+
+
+class InsuranceMode(models.TextChoices):
+    NONE = '', 'None'
+    PERCENT = 'percent', '% of gross pay'
+    AMOUNT = 'amount', 'Fixed amount (₩)'
+
+
+class DeductionRate(models.Model):
+    """Tax and health insurance taken off one person's pay, from `effective_from` (always the
+    first day of a month) until their next rate starts.
+
+    Payslips look up the rate for their own month, so adding a rate for a later month never
+    changes an earlier payslip. hours_tracker.deductions does the arithmetic; employees and
+    fish cutters each have a concrete subclass.
+    """
+    effective_from = models.DateField()
+    tax_percent = models.DecimalField(
+        max_digits=6, decimal_places=3, default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    insurance_mode = models.CharField(max_length=10, choices=InsuranceMode.choices, blank=True, default='')
+    # A percentage (e.g. 3.545) or whole won (e.g. 150000), depending on insurance_mode.
+    insurance_value = models.DecimalField(max_digits=12, decimal_places=3, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+        ordering = ['-effective_from']
+
+
+class EmployeeDeduction(DeductionRate):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='deductions')
+
+    class Meta(DeductionRate.Meta):
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'effective_from'], name='hours_employeededuction_user_month_unique'),
+        ]
+
+    def __str__(self):
+        return f'{self.user} from {self.effective_from:%Y-%m}'

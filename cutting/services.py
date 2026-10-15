@@ -1,8 +1,9 @@
-"""Every write to work records goes through these functions.
+"""Every write to work records and to cutters' tax and insurance goes through these functions.
 
 That makes this the one place the month lock and the change log apply: a locked month
-refuses every change, and every correction, deletion, re-price, rate change and lock is
-written to the change log (AuditEntry) in the same transaction as the change itself.
+refuses every change, and every correction, deletion, re-price, rate change, tax/insurance
+change and lock is written to the change log (AuditEntry) in the same transaction as the
+change itself.
 
 Each write checks the lock inside its transaction. On SQLite (production) only one
 transaction can write at a time, so a lock can't slip in between the check and the write.
@@ -13,7 +14,9 @@ from datetime import date
 from django.db import transaction
 from django.utils import timezone
 
-from .models import AuditAction, AuditEntry, CutBatch, CutRecord, MonthLock
+from hours_tracker import deductions
+
+from .models import AuditAction, AuditEntry, CutBatch, CutRecord, CutterDeduction, MonthLock
 from .reports import month_bounds
 
 
@@ -151,6 +154,57 @@ def log_rate(action, *, user, before=None, after=None):
     """A rate was added, changed or deleted — filed under the month it (now) starts in."""
     day = date.fromisoformat((after or before)['effective_from'])
     log(action, user=user, month=month_of(day), work_date=day, before=before, after=after)
+
+
+# ─── Tax and health insurance ─────────────────────────────────
+
+def deduction_span_lock(cutter, first_day):
+    """The first locked month whose payslip uses the cutter's rate starting `first_day`, or None.
+
+    That rate covers its month and every month until the cutter's next rate starts, so
+    adding, changing or deleting it alters all of those payslips.
+    """
+    later = cutter.deductions.filter(effective_from__gt=first_day).order_by('effective_from').first()
+    locks = MonthLock.objects.filter(month__gte=first_day)
+    if later is not None:
+        locks = locks.filter(month__lt=later.effective_from)
+    return locks.order_by('month').first()
+
+
+@transaction.atomic
+def set_deduction(cutter, first_day, values, *, user):
+    """Save the cutter's rate from `first_day` (replacing one already starting then).
+
+    `values` holds tax_percent, insurance_mode and insurance_value. Refused with MonthLocked
+    if it would alter a locked month's payslip. Saving it unchanged writes nothing.
+    """
+    lock = deduction_span_lock(cutter, first_day)
+    if lock is not None:
+        raise MonthLocked(lock.month)
+    rate = cutter.deductions.filter(effective_from=first_day).first()
+    before = deductions.snapshot(rate) if rate else None
+    if rate is None:
+        rate = CutterDeduction(cutter=cutter, effective_from=first_day)
+    for field, value in values.items():
+        setattr(rate, field, value)
+    rate.save()
+    rate.refresh_from_db()  # the decimals as stored, so an unchanged save compares equal
+    after = deductions.snapshot(rate)
+    if after != before:
+        log(AuditAction.DEDUCTION_SET, user=user, month=first_day, work_date=first_day,
+            cutter_name=cutter.name, before=before, after=after)
+    return rate
+
+
+@transaction.atomic
+def delete_deduction(rate, *, user):
+    """Delete a rate; the months it covered fall back to the cutter's previous rate (or none)."""
+    lock = deduction_span_lock(rate.cutter, rate.effective_from)
+    if lock is not None:
+        raise MonthLocked(lock.month)
+    log(AuditAction.DEDUCTION_DELETE, user=user, month=rate.effective_from, work_date=rate.effective_from,
+        cutter_name=rate.cutter.name, before=deductions.snapshot(rate))
+    rate.delete()
 
 
 # ─── Work records ─────────────────────────────────────────────

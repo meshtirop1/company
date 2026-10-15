@@ -1,0 +1,28 @@
+/* The "Tax and health insurance" panel (templates/deductions/_panel.html), shared by the
+   employee page and the fish-cutting cutter page — so it styles itself rather than relying on
+   cutting.css. */
+.ded-panel .ded-intro { margin: 0 0 1rem; font-size: 0.92rem; }
+.ded-panel .ded-list { list-style: none; margin: 0 0 1.25rem; padding: 0; border-top: 1px solid var(--color-border); }
+.ded-panel .ded-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding: 0.7rem 0.25rem; border-bottom: 1px solid var(--color-border);
+}
+.ded-panel .ded-values { margin-top: 0.15rem; font-size: 0.92rem; overflow-wrap: anywhere; }
+.ded-panel .ded-empty { margin: 0 0 1.25rem; }
+.ded-panel .ded-status {
+    display: inline-block; margin-left: 0.4rem; padding: 0.05rem 0.5rem; border-radius: 999px;
+    background: var(--color-primary-light); color: var(--color-primary); font-size: 0.75rem; font-weight: 600;
+}
+.ded-panel .ded-delete { display: inline-flex; margin: 0; }
+.ded-panel .ded-delete .button-danger { margin: 0; padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+.ded-panel .ded-form-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0 1rem; align-items: start;
+}
+.ded-panel .ded-form-row .input-field { max-width: none; width: 100%; }
+.ded-panel .field-help { display: block; margin-top: 0.3rem; font-size: 0.8rem; color: var(--color-text-muted); }
+.ded-panel .field-error { margin-top: 0.3rem; font-size: 0.85rem; font-weight: 600; color: var(--color-danger); }
+.ded-panel .form-group.has-error .input-field { border-color: var(--color-danger); }
+
+@media (max-width: 640px) {
+    .ded-panel .ded-delete .button-danger { padding: 0.6rem 0.95rem; }
+}
