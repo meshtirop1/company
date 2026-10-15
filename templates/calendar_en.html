@@ -284,7 +284,7 @@
     
     <div class="employee-info">
         <p><strong>Viewing calendar for:</strong> {{ employee.first_name }} {{ employee.last_name }} ({{ employee.email }})</p>
-        <p><strong>Hourly Wage:</strong> ₩{{ employee.hourly_wage|floatformat:0 }}</p>
+        <p><strong>Hourly Wage:</strong> ₩{{ hourly_wage|floatformat:0 }}</p>
     </div>
 
     <!-- Month Selection Form -->
@@ -367,7 +367,7 @@
                 </div>
                 <div class="detail-content">
                     <p class="detail-label">Hourly Wage</p>
-                    <p class="detail-value">₩{{ request.user.hourly_wage|floatformat:0 }}</p>
+                    <p class="detail-value">₩{{ hourly_wage|floatformat:0 }}</p>
                 </div>
             </div>
             

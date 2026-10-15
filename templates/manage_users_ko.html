@@ -43,8 +43,9 @@
           <td>{{ user.is_employee|yesno:"예,아니오" }}</td>
           <td>{{ user.is_admin|yesno:"예,아니오" }}</td>
           <td>{{ user.is_superuser|yesno:"예,아니오" }}</td>
-          <td>{{ user.hourly_wage }}</td>
+          <td>{{ user.current_wage|floatformat:"-2" }}</td>
           <td>
+            <a href="{% url 'employee_edit' user.id %}" class="button-secondary">수정</a>
             <a href="{% url 'employee_deductions' user.id %}" class="button-secondary">세금·보험</a>
             <form method="post" style="display:inline;" onsubmit="return confirm('{{ user.email|escapejs }} 사용자를 삭제할까요? 계정이 영구적으로 삭제되며 되돌릴 수 없습니다.');">
               {% csrf_token %}

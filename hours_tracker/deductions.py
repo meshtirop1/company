@@ -146,6 +146,16 @@ def plain_number(value):
     return number if number.is_finite() else None
 
 
+def parse_month(value):
+    """'2026-10' (as a month picker sends it) → date(2026, 10, 1), or None."""
+    match = re.fullmatch(r'(\d{4})-(\d{1,2})', unicodedata.normalize('NFKC', str(value or '')).strip())
+    try:
+        first_day = date(int(match[1]), int(match[2]), 1)
+    except (TypeError, ValueError):
+        return None
+    return first_day if 2000 <= first_day.year <= 2100 else None
+
+
 def valid_percent(number, *, allow_zero):
     return (number is not None and (number >= 0 if allow_zero else number > 0) and number <= 100
             and -number.as_tuple().exponent <= PERCENT_PLACES)
@@ -183,12 +193,8 @@ class DeductionRateForm(forms.Form):
             field.widget.attrs['class'] = 'input-field'
 
     def clean_month(self):
-        match = re.fullmatch(r'(\d{4})-(\d{1,2})', unicodedata.normalize('NFKC', self.cleaned_data['month']).strip())
-        try:
-            first_day = date(int(match[1]), int(match[2]), 1)
-        except (TypeError, ValueError):
-            raise ValidationError(self.D['err_month'])
-        if not 2000 <= first_day.year <= 2100:
+        first_day = parse_month(self.cleaned_data['month'])
+        if first_day is None:
             raise ValidationError(self.D['err_month'])
         return first_day
 
