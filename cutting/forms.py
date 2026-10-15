@@ -15,7 +15,11 @@ BOXES_MAX = 9999
 
 
 class WonField(forms.DecimalField):
-    """A whole-won amount. Also accepts '4,500' or '₩4500' as typed on a desktop keyboard."""
+    """A whole-won amount. Also accepts '4,500', '₩4500', '4500원' and full-width digits.
+
+    On a Korean PC keyboard the ₩ key types a backslash (U+005C, drawn as ₩ in Korean
+    fonts), so that is stripped too.
+    """
 
     def __init__(self, **kwargs):
         kwargs.setdefault('max_digits', 10)
@@ -26,7 +30,10 @@ class WonField(forms.DecimalField):
 
     def to_python(self, value):
         if isinstance(value, str):
-            value = value.replace(',', '').replace('₩', '').strip()
+            value = unicodedata.normalize('NFKC', value)  # full-width ￦, digits and commas → plain
+            for mark in (',', '₩', '\\', '원'):
+                value = value.replace(mark, '')
+            value = value.strip()
         return super().to_python(value)
 
 
@@ -66,9 +73,9 @@ def localize_price(field, T):
     field.error_messages['min_value'] = T['err_price_min']
 
 
-def localize_sort_order(field, T):
+def localize_sort_order(field, T, help_key='sort_order_help'):
     field.label = T['sort_order']
-    field.help_text = T['sort_order_help']
+    field.help_text = T[help_key]
     field.error_messages.update(min_value=T['err_order_range'], max_value=T['err_order_range'])
 
 
@@ -144,6 +151,7 @@ class PriceItemCreateForm(forms.Form):
 
 class PriceItemEditForm(forms.ModelForm):
     """Rename a size or move it in the list. The style is fixed once the line exists."""
+    sort_order = forms.IntegerField(min_value=0, max_value=SORT_ORDER_MAX)  # same range as when adding
 
     class Meta:
         model = PriceItem
@@ -155,7 +163,7 @@ class PriceItemEditForm(forms.ModelForm):
         self.fields['size'].label = T['size']
         self.fields['size'].help_text = T['size_help']
         localize(self, T)
-        localize_sort_order(self.fields['sort_order'], T)
+        localize_sort_order(self.fields['sort_order'], T, help_key='sort_order_help_edit')  # blank isn't allowed here
 
     def clean_size(self):
         size = normalize_size(self.cleaned_data['size'])

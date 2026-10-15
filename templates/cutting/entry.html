@@ -38,7 +38,7 @@
           <label class="cut-segment-option">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>
           {% endfor %}
         </div>
-        {% for error in form.style.errors %}<div class="field-error" role="alert">{{ error }}</div>{% endfor %}
+        {% include 'cutting/_errors.html' with field=form.style %}
       </div>
       {% include 'cutting/_field.html' with field=form.item %}
     </div>
@@ -61,8 +61,8 @@
           <summary>{{ T.change_row }}</summary>
           {{ row.item }}
         </details>
-        {% for error in row.boxes.errors %}<div class="field-error" role="alert">{{ error }}</div>{% endfor %}
-        {% for error in row.item.errors %}<div class="field-error" role="alert">{{ error }}</div>{% endfor %}
+        {% include 'cutting/_errors.html' with field=row.boxes %}
+        {% include 'cutting/_errors.html' with field=row.item %}
       </li>
       {% endfor %}
     </ul>

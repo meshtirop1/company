@@ -47,7 +47,7 @@
     {% endfor %}
   </ul>
   {% else %}
-  <p class="empty-state">{{ T.no_cutters }}</p>
+  <p class="empty-state">{% if inactive_rows %}{{ T.roster_no_active }}{% else %}{{ T.no_cutters }}{% endif %}</p>
   {% endif %}
 </div>
 

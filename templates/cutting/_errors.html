@@ -1,0 +1,2 @@
+{% comment %}A field's errors, under the id that Django's aria-describedby on the input points to.{% endcomment %}
+{% if field.errors %}<div id="{{ field.auto_id }}_error">{% for error in field.errors %}<div class="field-error" role="alert">{{ error }}</div>{% endfor %}</div>{% endif %}

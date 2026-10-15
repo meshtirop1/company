@@ -249,6 +249,12 @@ class CutterTests(ManagerTestCase):
         self.assertEqual([row['cutter'].name for row in response.context['inactive_rows']], ['Kim'])
         self.assertContains(response, EN['inactive_cutters'])
 
+    def test_with_only_inactive_cutters_the_roster_points_to_reactivating(self):
+        Cutter.objects.create(name='Kim', is_active=False)
+        response = self.client.get(reverse('cutting:cutters'))
+        self.assertContains(response, EN['roster_no_active'])
+        self.assertNotContains(response, EN['no_cutters'])
+
     def test_delete_a_cutter(self):
         cutter = Cutter.objects.create(name='Kim', is_active=False)
         response = self.post('cutting:cutter_delete', cutter.pk)
@@ -297,6 +303,30 @@ class PriceListTests(ManagerTestCase):
     def test_price_accepts_commas_and_the_won_sign(self):
         self.add_size(unit_price='₩8,000')
         self.assertEqual(PriceItem.objects.get(style='tongpo', size='13').rates.get().unit_price, 8000)
+
+    def test_price_accepts_what_a_korean_keyboard_types(self):
+        # The ₩ key on a Korean PC keyboard types a backslash; an IME can give full-width forms.
+        for typed, size in (('\\4,500', '13'), ('￦4500', '14'), ('4500원', '15'), ('４５００', '16')):
+            with self.subTest(typed=typed):
+                self.add_size(size=size, unit_price=typed)
+                self.assertEqual(PriceItem.objects.get(style='tongpo', size=size).rates.get().unit_price, 4500)
+
+    def test_field_errors_are_linked_for_screen_readers(self):
+        response = self.add_size(unit_price='0')
+        self.assertContains(response, 'aria-describedby="id_unit_price_error"')
+        self.assertContains(response, 'id="id_unit_price_error"')
+
+    def test_editing_a_size_keeps_the_display_order_in_range(self):
+        item = PriceItem.objects.get(style='tongpo', size='12')
+        response = self.post('cutting:item_edit', item.pk, data={'size': '12', 'sort_order': '40000'})
+        self.assertContains(response, escape(EN['err_order_range']))
+        item.refresh_from_db()
+        self.assertEqual(item.sort_order, 50)
+
+    def test_the_edit_hint_does_not_offer_leaving_the_order_blank(self):
+        item = PriceItem.objects.get(style='tongpo', size='12')
+        form = self.client.get(reverse('cutting:item_edit', args=[item.pk])).context['form']
+        self.assertEqual(form.fields['sort_order'].help_text, EN['sort_order_help_edit'])
 
     def test_size_spacing_and_full_width_characters_are_normalized(self):
         response = self.add_size(size=' 10 ～ 11 ')  # 통포 10~11 is already on the sheet

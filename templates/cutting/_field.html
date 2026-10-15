@@ -2,5 +2,5 @@
   <label for="{{ field.id_for_label }}">{{ field.label }}</label>
   {{ field }}
   {% if field.help_text %}<small class="field-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</small>{% endif %}
-  {% for error in field.errors %}<div class="field-error" role="alert">{{ error }}</div>{% endfor %}
+  {% include 'cutting/_errors.html' %}
 </div>
