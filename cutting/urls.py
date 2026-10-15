@@ -35,6 +35,7 @@ app_name = 'cutting'
 
 urlpatterns = [
     path('', views.hub, name='hub'),
+    path('help/', views.help_page, name='help'),
 
     path('entry/', views.entry, name='entry'),
     path('day/', views.day, name='day_today'),

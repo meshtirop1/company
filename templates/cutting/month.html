@@ -47,7 +47,7 @@
 {% if summary.rows %}
 <div class="cut-actions cut-month-actions">
   <a class="button-primary" href="{% url 'cutting:month_export' month %}">&#11015; {{ T.export_excel }}</a>
-  <a class="button-secondary" href="{% url 'cutting:payslips' month %}" target="_blank" rel="noopener">&#128438; {{ T.print_payslips }}</a>
+  <a class="button-secondary" href="{% url 'cutting:payslips' month %}" target="_blank" rel="noopener">&#128424;&#65039; {{ T.print_payslips }}</a>
   <a class="button-secondary" href="{{ log_url }}">{{ T.view_change_log }}</a>
 </div>
 

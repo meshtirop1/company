@@ -21,6 +21,7 @@
       {% include 'cutting/_field.html' with field=form.name %}
       {% include 'cutting/_field.html' with field=form.note %}
     </div>
+    {% include 'cutting/_field.html' with field=form.payslip_language %}
     <button type="submit" class="button-primary">{{ T.add_cutter }}</button>
   </form>
 </div>
@@ -34,6 +35,7 @@
       <div class="cut-list-main">
         <span class="cut-name">{{ cutter.name }}</span>
         {% if cutter.note %}<span class="cut-note">{{ cutter.note }}</span>{% endif %}
+        {% if cutter.payslip_language %}<span class="cut-note">{{ T.payslip_language }}: {{ cutter.get_payslip_language_display }}</span>{% endif %}
       </div>
       <div class="cut-actions">
         <a class="button-secondary btn-sm" href="{% url 'cutting:cutter_edit' cutter.pk %}">{{ T.edit }}</a>

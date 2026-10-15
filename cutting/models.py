@@ -10,6 +10,12 @@ class CuttingStyle(models.TextChoices):
     TONGHALBOK = 'tonghalbok', '통할복'
 
 
+class PayslipLanguage(models.TextChoices):
+    SCREEN = '', 'Same as the screen'
+    EN = 'en', 'English'
+    KO = 'ko', '한국어'
+
+
 class Cutter(models.Model):
     """A member of the cutting crew.
 
@@ -17,6 +23,8 @@ class Cutter(models.Model):
     """
     name = models.CharField(max_length=100)
     note = models.CharField(max_length=200, blank=True)
+    # The language their payslip prints in, so a mixed crew each get one they can read.
+    payslip_language = models.CharField(max_length=2, choices=PayslipLanguage.choices, blank=True, default='')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

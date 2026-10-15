@@ -322,6 +322,50 @@ STRINGS = {
         'action_rate_add': 'New rate',
         'action_rate_edit': 'Rate changed',
         'action_rate_delete': 'Rate deleted',
+
+        'payslip_language': 'Payslip language',
+        'payslip_language_help': "Their payslip prints in this language — pick the one they read best.",
+        'same_as_screen': 'Same as the screen',
+        'print_in': 'Print in',
+        'each_cutters_language': "Each cutter's language",
+
+        'help_link': 'How it works',
+        'help_title': 'How it works',
+        'help_intro': 'A short guide for the supervisor. Everything can be done on a phone or a PC.',
+        'help_daily_title': 'Every day',
+        'help_daily_1': (
+            'Open "Enter work", check the date, pick the style and size, tap "Select all", '
+            'then untick anyone who is absent.'
+        ),
+        'help_daily_2': "Type each person's boxes. If someone cut a different size or style, change it on their row.",
+        'help_daily_3': (
+            'Tap Save once: the whole crew is saved together, or nothing is if a row needs fixing. '
+            'You can save several entries a day — for example one per style.'
+        ),
+        'help_fix_title': 'Fixing a mistake',
+        'help_fix_1': 'Open the day in "Daily view", then edit or delete the row. Changing only the boxes keeps the saved price.',
+        'help_fix_2': (
+            'Every correction and deletion is kept in the change log with who did it and when. '
+            'Add a reason when you correct something.'
+        ),
+        'help_month_title': 'End of the month',
+        'help_month_1': 'Open "Monthly pay". Until the month is over, its figures are marked provisional.',
+        'help_month_2': (
+            "Export to Excel for the office and print the payslips — each cutter's slip prints in their payslip language."
+        ),
+        'help_month_3': (
+            "Once everyone is paid, lock the month. A locked month can't be changed; "
+            'unlocking needs a reason and is logged.'
+        ),
+        'help_prices_title': 'Prices',
+        'help_prices_1': (
+            'Each rate has a start date. Add a new rate from the day it applies — '
+            'work already recorded keeps the price it was saved with.'
+        ),
+        'help_prices_2': (
+            'If a price was wrong and should also apply to work already saved, '
+            'use "Review and re-price" on that month\'s pay page.'
+        ),
     },
     'ko': {
         'nav': '손질 작업',
@@ -622,5 +666,38 @@ STRINGS = {
         'action_rate_add': '새 단가',
         'action_rate_edit': '단가 수정',
         'action_rate_delete': '단가 삭제',
+
+        'payslip_language': '명세서 언어',
+        'payslip_language_help': '이 작업자의 명세서는 이 언어로 인쇄됩니다. 가장 잘 읽는 언어를 고르세요.',
+        'same_as_screen': '화면 언어와 같게',
+        'print_in': '인쇄 언어',
+        'each_cutters_language': '작업자별 언어',
+
+        'help_link': '사용 방법',
+        'help_title': '사용 방법',
+        'help_intro': '관리자를 위한 간단한 안내입니다. 모든 작업은 휴대폰이나 PC에서 할 수 있습니다.',
+        'help_daily_title': '매일',
+        'help_daily_1': (
+            '"작업 입력"을 열어 날짜를 확인하고 손질 방식과 크기를 고른 뒤, '
+            '"전체 선택"을 누르고 결근한 사람의 체크를 해제하세요.'
+        ),
+        'help_daily_2': '각자의 박스 수를 입력하세요. 다른 크기나 방식으로 작업한 사람은 그 행에서 바꾸면 됩니다.',
+        'help_daily_3': (
+            '저장을 한 번 누르면 전원이 함께 저장되고, 고칠 행이 있으면 아무것도 저장되지 않습니다. '
+            '하루에 여러 번 입력할 수 있습니다 — 예를 들어 손질 방식별로 한 번씩.'
+        ),
+        'help_fix_title': '잘못 입력했을 때',
+        'help_fix_1': '"일일 현황"에서 해당 날짜를 열고 행을 수정하거나 삭제하세요. 박스 수만 바꾸면 저장된 단가가 유지됩니다.',
+        'help_fix_2': '모든 수정과 삭제는 누가 언제 했는지와 함께 변경 기록에 남습니다. 수정할 때는 사유를 적어 두세요.',
+        'help_month_title': '월말',
+        'help_month_1': '"월별 정산"을 여세요. 월이 끝나기 전까지는 금액이 잠정으로 표시됩니다.',
+        'help_month_2': '사무실용 엑셀을 내보내고 명세서를 인쇄하세요. 명세서는 작업자마다 지정한 언어로 인쇄됩니다.',
+        'help_month_3': '모두에게 지급한 뒤 월을 잠그세요. 잠긴 월은 바꿀 수 없으며, 잠금 해제에는 사유가 필요하고 기록에 남습니다.',
+        'help_prices_title': '단가',
+        'help_prices_1': (
+            '단가마다 적용 시작일이 있습니다. 새 단가는 적용되는 날부터 추가하세요. '
+            '이미 기록된 작업은 저장 당시의 단가를 유지합니다.'
+        ),
+        'help_prices_2': '단가가 잘못되어 이미 저장된 작업에도 적용해야 한다면 해당 월 정산 화면의 "확인하고 단가 재적용"을 사용하세요.',
     },
 }

@@ -19,6 +19,7 @@
       {% include 'cutting/_field.html' with field=form.name %}
       {% include 'cutting/_field.html' with field=form.note %}
     </div>
+    {% include 'cutting/_field.html' with field=form.payslip_language %}
     <div class="cut-actions cut-form-actions">
       <button type="submit" class="button-primary">{{ T.save }}</button>
       <a class="button-secondary" href="{% url 'cutting:cutters' %}">{{ T.cancel }}</a>

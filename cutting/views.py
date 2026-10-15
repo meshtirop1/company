@@ -78,6 +78,19 @@ def hub(request):
     )
 
 
+HELP_SECTIONS = (('daily', 3), ('fix', 2), ('month', 3), ('prices', 2))
+
+
+@manager_required
+def help_page(request):
+    T = strings(request)
+    sections = [
+        {'title': T[f'help_{key}_title'], 'steps': [T[f'help_{key}_{n}'] for n in range(1, count + 1)]}
+        for key, count in HELP_SECTIONS
+    ]
+    return render_page(request, 'help.html', sections=sections)
+
+
 # ─── Cutters ──────────────────────────────────────────────────
 
 @manager_required
@@ -784,12 +797,23 @@ def month_export(request, month):
 
 
 def render_payslips(request, month, slips):
-    """The printable payslip sheet (a standalone page, like the employees' payslip)."""
-    lang = get_lang(request)
-    T = STRINGS[lang]
+    """The printable payslip sheet (a standalone page, like the employees' payslip).
+
+    Each slip prints in its cutter's payslip language (else the screen's), so a mixed crew
+    each get one they can read. `?slip_lang=en|ko` prints every slip on the page in that
+    language instead.
+    """
+    screen_lang = get_lang(request)
+    forced = request.GET.get('slip_lang')
+    forced = forced if forced in STRINGS else None
     for slip in slips:
+        slip['lang'] = forced or slip['cutter'].payslip_language or screen_lang
+        slip['T'] = T = STRINGS[slip['lang']]
+        slip['provisional'] = reports.provisional_note(T, month)
         for group in slip['style_groups']:
             group['subtotal_label'] = T['subtotal'].format(style=group['label'])
+    lang = slips[0]['lang'] if len(slips) == 1 else (forced or screen_lang)
+    T = STRINGS[lang]
     # One cutter's slip is titled with their name, so each saved PDF gets its own file name.
     title = T['payslip_title'] + ' — ' + month_label(month)
     if len(slips) == 1:
@@ -799,7 +823,7 @@ def render_payslips(request, month, slips):
         'lang': lang,
         'slips': slips,
         'title': title,
-        'provisional': reports.provisional_note(T, month),
+        'forced': forced,
         'month_label': month_label(month),
         'back_url': reverse('cutting:month', args=[month]),
         'generated': timezone.localtime(),

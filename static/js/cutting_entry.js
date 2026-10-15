@@ -129,4 +129,9 @@
 
     showSizesForStyle();
     refresh();
+
+    // After a refused save, bring the first row to fix into view: on a phone it is usually
+    // far below the "nothing was saved" message.
+    var firstError = form.querySelector('.cut-row.has-error, .form-group.has-error');
+    if (firstError && firstError.scrollIntoView) firstError.scrollIntoView({block: 'center'});
 }());

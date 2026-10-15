@@ -193,7 +193,7 @@ a.cut-name:hover { text-decoration: underline; }
 .cut-stale { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 1rem; }
 .cut-stale span { flex: 1 1 22rem; }
 .cut-lock-panel .cut-panel-intro { margin: 0 0 0.75rem; }
-.cut-unlock summary { display: inline-flex; list-style: none; cursor: pointer; }
+.cut-unlock summary { display: inline-flex; align-items: center; min-height: 44px; list-style: none; cursor: pointer; }
 .cut-unlock summary::-webkit-details-marker { display: none; }
 .cut-unlock[open] summary { margin-bottom: 0.75rem; }
 .cut-reprice-total { margin: 0 auto 0 0; align-self: center; }
@@ -212,6 +212,11 @@ a.cut-name:hover { text-decoration: underline; }
 .cut-log-meta, .cut-log-reason { margin-top: 0.2rem; font-size: 0.85rem; }
 .cut-pager { justify-content: center; }
 
+/* ---- Help ---- */
+.cut-help ol { margin: 0; padding-left: 1.25rem; line-height: 1.6; }
+.cut-help li + li { margin-top: 0.4rem; }
+.cut-lead a { color: var(--color-primary); font-weight: 600; white-space: nowrap; }
+
 /* ---- Phones: stack rows, larger tap targets ---- */
 @media (max-width: 600px) {
     .cut-list-row { flex-direction: column; align-items: flex-start; }
@@ -221,6 +226,8 @@ a.cut-name:hover { text-decoration: underline; }
     .cut-daynav-jump { margin-left: 0; width: 100%; }
     .cut-savebar { margin-left: -0.25rem; margin-right: -0.25rem; }
     .cut-log { padding: 0.25rem 0.9rem; }
+    /* Room to scroll the last amounts clear of the site's floating "Install App" button. */
+    main.container { padding-bottom: 5.5rem; }
 
     /* Report tables → one compact card per row: name + amount on top, everything else below.
        Cells marked .phone-hide are summarised in the name cell's .cut-phone-detail instead. */

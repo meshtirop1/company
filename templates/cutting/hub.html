@@ -9,7 +9,7 @@
 
 {% block content %}
 <h2>{{ T.module }}</h2>
-<p class="cut-lead">{{ T.hub_intro }}</p>
+<p class="cut-lead">{{ T.hub_intro }} <a href="{% url 'cutting:help' %}">{{ T.help_link }} →</a></p>
 {% include 'cutting/_messages.html' %}
 
 <div class="stat-grid">

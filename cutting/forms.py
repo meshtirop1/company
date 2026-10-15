@@ -84,7 +84,7 @@ def localize_sort_order(field, T, help_key='sort_order_help'):
 class CutterForm(forms.ModelForm):
     class Meta:
         model = Cutter
-        fields = ['name', 'note']
+        fields = ['name', 'note', 'payslip_language']
 
     def __init__(self, *args, T, **kwargs):
         super().__init__(*args, **kwargs)
@@ -94,6 +94,10 @@ class CutterForm(forms.ModelForm):
         self.fields['name'].widget.attrs['autocomplete'] = 'off'
         self.fields['note'].label = T['note']
         self.fields['note'].help_text = T['note_help']
+        language = self.fields['payslip_language']
+        language.label = T['payslip_language']
+        language.help_text = T['payslip_language_help']
+        language.choices = [('', T['same_as_screen']), ('en', 'English'), ('ko', '한국어')]
 
     def clean_name(self):
         name = ' '.join(self.cleaned_data['name'].split())
