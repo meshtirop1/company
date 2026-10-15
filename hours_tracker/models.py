@@ -177,3 +177,27 @@ class EmployeeDeduction(DeductionRate):
 
     def __str__(self):
         return f'{self.user} from {self.effective_from:%Y-%m}'
+
+
+class EmployeeWage(models.Model):
+    """An employee's hourly wage from `effective_from` (always the first day of a month) until
+    their next wage starts.
+
+    Pay for a month uses that month's wage (hours_tracker.wages.wage_for), so a raise from
+    November never changes October's payslip. CustomUser.hourly_wage is only the fallback for
+    someone with no wage recorded here.
+    """
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='wages')
+    effective_from = models.DateField()
+    hourly_wage = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-effective_from']
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'effective_from'], name='hours_employeewage_user_month_unique'),
+        ]
+
+    def __str__(self):
+        return f'{self.user} ₩{self.hourly_wage}/h from {self.effective_from:%Y-%m}'

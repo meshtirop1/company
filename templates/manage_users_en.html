@@ -43,8 +43,9 @@
           <td>{{ user.is_employee|yesno:"Yes,No" }}</td>
           <td>{{ user.is_admin|yesno:"Yes,No" }}</td>
           <td>{{ user.is_superuser|yesno:"Yes,No" }}</td>
-          <td>{{ user.hourly_wage }}</td>
+          <td>{{ user.current_wage|floatformat:"-2" }}</td>
           <td>
+            <a href="{% url 'employee_edit' user.id %}" class="button-secondary">Edit</a>
             <a href="{% url 'employee_deductions' user.id %}" class="button-secondary">Tax &amp; insurance</a>
             <form method="post" style="display:inline;" onsubmit="return confirm('Delete {{ user.email|escapejs }}? This permanently removes the account and cannot be undone.');">
               {% csrf_token %}

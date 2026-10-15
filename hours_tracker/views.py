@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Sum
 from django.contrib import messages
-from .models import CustomUser, WorkHours, Holiday, Settings, CardExpense, EmployeeDeduction
-from . import deductions
+from .models import CustomUser, WorkHours, Holiday, Settings, CardExpense, EmployeeDeduction, EmployeeWage
+from . import deductions, wages
 import calendar
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -193,7 +193,8 @@ def calendar_view(request):
     work_hours = WorkHours.objects.filter(user=request.user, date__year=year, date__month=month)
     holidays = Holiday.objects.filter(date__year=year, date__month=month)
     total_hours = sum(h.hours for h in work_hours if not h.is_absence)
-    total_salary = total_hours * request.user.hourly_wage
+    hourly_wage = wages.wage_for(request.user, date(year, month, 1))
+    total_salary = total_hours * hourly_wage
     weeks = []
     for week in cal:
         week_days = []
@@ -217,6 +218,7 @@ def calendar_view(request):
         'month': month,
         'total_hours': total_hours,
         'total_salary': total_salary,
+        'hourly_wage': hourly_wage,
         'prev_year': year if month > 1 else year - 1,
         'prev_month': month - 1 if month > 1 else 12,
         'next_year': year if month < 12 else year + 1,
@@ -265,7 +267,8 @@ def employee_calendar_view(request, user_id):
 
     # Calculate totals for selected month
     total_hours = sum(h.hours for h in work_hours if not h.is_absence)
-    total_salary = total_hours * employee.hourly_wage
+    hourly_wage = wages.wage_for(employee, date(selected_year, selected_month, 1))
+    total_salary = total_hours * hourly_wage
 
     # Build weeks data
     weeks = []
@@ -309,6 +312,7 @@ def employee_calendar_view(request, user_id):
         'month': selected_month,
         'total_hours': total_hours,
         'total_salary': total_salary,
+        'hourly_wage': hourly_wage,
         'prev_year': selected_year if selected_month > 1 else selected_year - 1,
         'prev_month': selected_month - 1 if selected_month > 1 else 12,
         'next_year': selected_year if selected_month < 12 else selected_year + 1,
@@ -489,7 +493,7 @@ def superuser_dashboard(request):
     if selected_month < 1 or selected_month > 12:
         selected_month = timezone.now().month
 
-    users = CustomUser.objects.filter(is_employee=True)
+    users = CustomUser.objects.filter(is_employee=True).prefetch_related('wages')
     user_data = []
     total_salary = 0
 
@@ -538,7 +542,10 @@ def superuser_dashboard(request):
                 is_absence=True
             ).count()
 
-        user_salary = total_hours * user.hourly_wage
+        if view_type == 'monthly':
+            user_salary = total_hours * wages.wage_for(user, date(selected_year, selected_month, 1))
+        else:  # all time: each month's hours at that month's wage
+            user_salary = wages.pay_for(user, WorkHours.objects.filter(user=user, is_absence=False))
         total_salary += user_salary
 
         user_data.append({
@@ -591,7 +598,9 @@ def manage_users(request):
                     messages.error(request, 'You do not have permission to delete this user.' if lang == 'en' else '이 사용자를 삭제할 권한이 없습니다.')
             except CustomUser.DoesNotExist:
                 messages.error(request, 'User not found.' if lang == 'en' else '사용자를 찾을 수 없습니다.')
-    users = CustomUser.objects.all()
+    users = list(CustomUser.objects.prefetch_related('wages'))
+    for user in users:
+        user.current_wage = wages.wage_for(user, wages.this_month())
     settings, created = Settings.objects.get_or_create(id=1)
     context = {
         'users': users,
@@ -666,6 +675,7 @@ def register_employee(request):
             )
             user.set_password(secrets.token_urlsafe(36))
             user.save()
+            EmployeeWage.objects.create(user=user, effective_from=wages.this_month(), hourly_wage=user.hourly_wage)
             sent = _send_set_password_email(request, user, lang)
             if sent:
                 messages.success(request,
@@ -737,7 +747,7 @@ def payslip(request, user_id):
     absences = WorkHours.objects.filter(
         user=employee, is_absence=True, date__year=year, date__month=month
     ).count()
-    wage = employee.hourly_wage or 0
+    wage = wages.wage_for(employee, date(year, month, 1))
     gross = total_hours * wage
     expenses = list(CardExpense.objects.filter(
         user=employee, date__year=year, date__month=month).order_by('date'))
@@ -768,6 +778,96 @@ def payslip(request, user_id):
         return redirect(f"{reverse('payslip', args=[employee.id])}?year={year}&month={month}")
 
     return render(request, 'payslip.html', context)
+
+
+def _can_manage(actor, target):
+    """Managers can edit anyone except superusers, whom only a superuser can edit."""
+    return bool(actor.is_admin or actor.is_superuser) and (actor.is_superuser or not target.is_superuser)
+
+
+def _render_employee_edit(request, employee, *, name=None, form=None, wage_form=None):
+    lang = 'ko' if request.session.get('language') == 'ko' else 'en'
+    S = wages.strings(lang)
+    rows = wages.wage_rows(S, list(employee.wages.all()))
+    for row in rows:
+        row['delete_url'] = reverse('employee_wage_delete', args=[row['wage'].pk])
+    return render(request, 'employee_edit.html', {
+        'base_template': f'base_{lang}.html',
+        'S': S,
+        'employee': employee,
+        'heading': S['page_title'].format(name=name or employee.get_full_name() or employee.username),
+        'signs_in_as': S['signs_in_as'].format(username=employee.username),
+        'form': form or wages.EmployeeDetailsForm(instance=employee, S=S, actor=request.user),
+        'wage_rows': rows,
+        'wage_form': wage_form or wages.WageForm(S=S),
+    })
+
+
+def _editable_employee(request, user_id):
+    """The employee to edit, or a redirect when the signed-in user may not edit them."""
+    if not (request.user.is_admin or request.user.is_superuser):
+        return None, redirect('calendar')
+    employee = get_object_or_404(CustomUser, id=user_id)
+    if not _can_manage(request.user, employee):
+        messages.error(request, wages.strings(request.session.get('language', 'en'))['err_superuser'])
+        return None, redirect('manage_users')
+    return employee, None
+
+
+@login_required
+def employee_edit(request, user_id):
+    """Change an employee's details and role, and see their dated hourly wages. Managers only."""
+    employee, refused = _editable_employee(request, user_id)
+    if refused:
+        return refused
+    S = wages.strings(request.session.get('language', 'en'))
+    if request.method == 'POST':
+        saved_name = employee.get_full_name() or employee.username  # before the form touches it
+        form = wages.EmployeeDetailsForm(request.POST, instance=employee, S=S, actor=request.user)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, S['saved'].format(name=user.get_full_name() or user.username))
+            return redirect('employee_edit', user_id=user.pk)
+        messages.error(request, S['err_form'])
+        return _render_employee_edit(request, employee, name=saved_name, form=form)
+    return _render_employee_edit(request, employee)
+
+
+@login_required
+@require_POST
+def employee_wage_add(request, user_id):
+    employee, refused = _editable_employee(request, user_id)
+    if refused:
+        return refused
+    S = wages.strings(request.session.get('language', 'en'))
+    form = wages.WageForm(request.POST, S=S)
+    if not form.is_valid():
+        messages.error(request, S['err_form'])
+        return _render_employee_edit(request, employee, wage_form=form)
+    first_day, amount = form.cleaned_data['month'], form.cleaned_data['hourly_wage']
+    EmployeeWage.objects.update_or_create(user=employee, effective_from=first_day, defaults={'hourly_wage': amount})
+    messages.success(request, S['wage_saved'].format(month=first_day.strftime('%Y-%m'), wage=wages.wage_text(amount)))
+    minimum = Settings.objects.filter(id=1).values_list('minimum_wage', flat=True).first() or 0
+    if 0 < amount < minimum:
+        messages.warning(request, S['below_minimum'].format(
+            wage=wages.wage_text(amount), minimum=wages.wage_text(minimum)))
+    return redirect(f"{reverse('employee_edit', args=[employee.pk])}#wages")
+
+
+@login_required
+@require_POST
+def employee_wage_delete(request, pk):
+    wage = get_object_or_404(EmployeeWage, pk=pk)
+    employee, refused = _editable_employee(request, wage.user_id)
+    if refused:
+        return refused
+    S = wages.strings(request.session.get('language', 'en'))
+    if employee.wages.count() <= 1:
+        messages.error(request, S['wage_only_one'])
+    else:
+        wage.delete()
+        messages.success(request, S['wage_deleted'].format(month=wage.effective_from.strftime('%Y-%m')))
+    return redirect(f"{reverse('employee_edit', args=[employee.pk])}#wages")
 
 
 def _render_employee_deductions(request, employee, ded_form=None):
@@ -1076,7 +1176,7 @@ def paper_view(request):
                     'is_absence': False
                 })
 
-        employee_salary = employee_total_hours * float(employee.hourly_wage)
+        employee_salary = employee_total_hours * float(wages.wage_for(employee, date(year, month, 1)))
 
         employees_data.append({
             'first_name': employee.first_name,
