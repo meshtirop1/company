@@ -1,0 +1,24 @@
+{% extends 'base_en.html' %}
+{% load static %}
+
+{% block title %}Page expired{% endblock %}
+
+{% block css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/error_page.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+  <div class="error-card">
+    <div class="error-code error-403">&#128260;</div>
+    <h1>This page had expired</h1>
+    <p class="lead">Nothing was saved.</p>
+    <p class="muted">The page was opened before you signed in or out (for example, it came back with the Back button). Reload it and try again.</p>
+    <div class="error-actions">
+      <a href="{{ reload_url }}" class="button-primary">Reload the page</a>
+      <a href="{% url 'home' %}" class="button-secondary">Back to home</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base_ko.html' %}
+{% load static %}
+
+{% block title %}페이지 만료{% endblock %}
+
+{% block css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/error_page.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+  <div class="error-card">
+    <div class="error-code error-403">&#128260;</div>
+    <h1>페이지가 만료되었습니다</h1>
+    <p class="lead">저장된 내용은 없습니다.</p>
+    <p class="muted">로그인하거나 로그아웃하기 전에 열어 둔 페이지입니다(예: 뒤로 가기 버튼으로 돌아온 페이지). 페이지를 새로 고친 뒤 다시 시도해 주세요.</p>
+    <div class="error-actions">
+      <a href="{{ reload_url }}" class="button-primary">페이지 새로 고침</a>
+      <a href="{% url 'home' %}" class="button-secondary">홈으로</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

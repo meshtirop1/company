@@ -13,7 +13,9 @@ import logging
 from datetime import datetime,date
 logger = logging.getLogger(__name__)
 from django.http import HttpResponse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
+from urllib.parse import urlsplit
 
 
 @never_cache
@@ -903,6 +905,32 @@ def custom_permission_denied_view(request, exception=None):
         # Be very careful here not to cause another error.
         logger.error(f"Critical error rendering {template_name}: {e}. Falling back to basic 403_en.html.")
         return render(request, '403_en.html', status=403)
+
+
+def csrf_failure(request, reason=''):
+    """
+    Shown instead of Django's bare "CSRF verification failed" page (settings.CSRF_FAILURE_VIEW).
+
+    It almost always means the form came from a page opened before the user signed in or out:
+    Django gives the browser a new token at sign-in, so the old page's token no longer matches.
+    static/js/csrf_refresh.js prevents most of these; this page covers the rest. Nothing was saved.
+    """
+    logger.warning(f"CSRF failure ({reason}) for path: {request.path}")
+    # A second tap on "Sign in" after the first one already signed the user in.
+    if request.path == reverse('login') and request.user.is_authenticated:
+        return redirect('calendar')
+
+    # Offer to reload the page the form was on, but only if it is on this site.
+    referer = request.META.get('HTTP_REFERER', '')
+    if referer and url_has_allowed_host_and_scheme(
+            referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        reload_url = urlsplit(referer)._replace(scheme='', netloc='').geturl() or reverse('home')
+    else:
+        reload_url = reverse('home')
+
+    lang = request.session.get('language', 'en')
+    template_name = 'csrf_failure_ko.html' if lang == 'ko' else 'csrf_failure_en.html'
+    return render(request, template_name, {'reload_url': reload_url}, status=403)
 
 
 @login_required
