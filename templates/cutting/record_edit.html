@@ -26,6 +26,7 @@
       {% include 'cutting/_field.html' with field=form.item %}
       {% include 'cutting/_field.html' with field=form.boxes %}
     </div>
+    {% include 'cutting/_field.html' with field=form.reason %}
     <div class="cut-actions cut-form-actions">
       <button type="submit" class="button-primary">{{ T.save }}</button>
       <a class="button-secondary" href="{% url 'cutting:day' record.work_date %}">{{ T.cancel }}</a>

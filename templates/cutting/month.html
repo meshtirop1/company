@@ -12,7 +12,14 @@
 <h2>{{ heading }}</h2>
 <p class="cut-lead">{{ T.month_intro }}</p>
 {% include 'cutting/_messages.html' %}
+{% if lock_banner %}<div class="cut-locked" role="note">{{ lock_banner }}</div>{% endif %}
 {% if provisional %}<div class="cut-provisional" role="note">{{ provisional }}</div>{% endif %}
+{% if stale_notice %}
+<div class="cut-provisional cut-stale" role="note">
+  <span>{{ stale_notice }}</span>
+  <a class="button-secondary btn-sm" href="{% url 'cutting:reprice' month %}">{{ T.stale_review }}</a>
+</div>
+{% endif %}
 
 <nav class="cut-daynav" aria-label="{{ T.go_to_month }}">
   <a class="button-secondary btn-sm" href="{% url 'cutting:month' previous_month %}">{{ T.previous_month }}</a>
@@ -41,6 +48,7 @@
 <div class="cut-actions cut-month-actions">
   <a class="button-primary" href="{% url 'cutting:month_export' month %}">&#11015; {{ T.export_excel }}</a>
   <a class="button-secondary" href="{% url 'cutting:payslips' month %}" target="_blank" rel="noopener">&#128438; {{ T.print_payslips }}</a>
+  <a class="button-secondary" href="{{ log_url }}">{{ T.view_change_log }}</a>
 </div>
 
 <div class="panel">
@@ -95,4 +103,30 @@
 {% else %}
 <div class="panel"><p class="empty-state">{{ T.no_month_work }}</p></div>
 {% endif %}
+
+<section class="panel cut-lock-panel" id="lock">
+  {% if lock %}
+  <div class="panel-title"><span>&#128274; {{ T.locked_badge }}</span></div>
+  <details class="cut-unlock">
+    <summary class="button-secondary btn-sm">{{ T.unlock_month }}</summary>
+    <form method="post" action="{% url 'cutting:month_unlock' month %}" novalidate>
+      {% csrf_token %}
+      {% include 'cutting/_field.html' with field=unlock_form.reason %}
+      <div class="cut-actions cut-form-actions">
+        <button type="submit" class="button-danger">{{ T.unlock_month }}</button>
+      </div>
+    </form>
+  </details>
+  {% else %}
+  <p class="cut-panel-intro">{{ T.lock_intro }}</p>
+  {% if can_lock %}
+  <form method="post" action="{% url 'cutting:month_lock' month %}" onsubmit="return confirm('{{ confirm_lock|escapejs }}');">
+    {% csrf_token %}
+    <button type="submit" class="button-primary">{{ T.lock_month }}</button>
+  </form>
+  {% else %}
+  <p class="muted">{{ lock_not_yet }}</p>
+  {% endif %}
+  {% endif %}
+</section>
 {% endblock %}

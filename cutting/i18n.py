@@ -102,7 +102,8 @@ STRINGS = {
         'confirm_delete_rate': 'Delete this rate? Work already recorded keeps its saved price.',
         'rate_change_note': (
             'Changing a rate never changes work that is already recorded — '
-            'each record keeps the price it was saved with.'
+            'each record keeps the price it was saved with. If a correction should also apply to work '
+            'already recorded, use "Review and re-price" on that month\'s pay page.'
         ),
         'err_duplicate_item': '{item} is already on the price list.',
         'err_duplicate_rate_date': 'This size already has a rate starting on that date — edit that one instead.',
@@ -246,6 +247,81 @@ STRINGS = {
         'xl_rate': 'Rate (₩)',
         'xl_amount_col': 'Amount (₩)',
         'xl_total_row': 'Total',
+
+        'err_month_locked': (
+            '{month} is locked because it has been paid. '
+            'To change its work, unlock it on the monthly pay page first.'
+        ),
+        'locked_banner': (
+            "🔒 {month} is locked (paid) — locked by {name} on {when}. "
+            "Its work can't be entered, corrected or deleted."
+        ),
+        'locked_badge': 'Locked',
+        'lock_month': '🔒 Lock month (paid)',
+        'lock_intro': 'Lock the month once everyone has been paid, so its figures can no longer change.',
+        'confirm_lock': (
+            "Lock {month}? Its work can't be entered, corrected or deleted until someone unlocks it."
+        ),
+        'lock_not_yet': 'The month can be locked from its last day ({date}).',
+        'month_locked_done': 'Locked {month}.',
+        'err_lock_early': "{month} isn't over yet — it can be locked from {date}.",
+        'unlock_month': 'Unlock',
+        'unlock_reason': 'Reason for unlocking',
+        'unlock_help': 'Required — it is kept in the change log.',
+        'err_unlock_reason': 'Give a reason for unlocking.',
+        'month_unlocked': 'Unlocked {month}. Its work can be changed again; every change goes in the change log.',
+
+        'stale_notice': (
+            '{count} entries this month were saved at a price that differs from the price list for their day '
+            '— a rate was changed or backdated after they were saved.'
+        ),
+        'stale_review': 'Review and re-price',
+        'reprice_title': 'Re-price — {month}',
+        'reprice_intro': (
+            'These entries were saved at a different price than the price list now gives for their work date. '
+            'Re-pricing moves them to the list price. Every change is kept in the change log.'
+        ),
+        'saved_price': 'Saved price',
+        'list_price': 'List price',
+        'change_col': 'Change',
+        'no_rate_now': 'No rate now',
+        'reprice_apply': 'Re-price {count} entries',
+        'reprice_total_change': 'Change to the month total: {delta}',
+        'confirm_reprice': 'Re-price {count} entries to the price list? The month total changes by {delta}.',
+        'reprice_done': 'Re-priced {count} entries — the month total changed by {delta}.',
+        'reprice_none': 'Every entry in {month} matches the price list.',
+        'reprice_no_rate': (
+            '{count} entries have no rate on their work date any more, so they stay as saved. '
+            'Add a rate covering that date to re-price them.'
+        ),
+        'reprice_changed': 'The price list or the entries changed while this page was open — check the list again.',
+
+        'tile_audit': 'Change log',
+        'tile_audit_desc': 'Every correction, deletion, re-price, price change and month lock — who and when.',
+        'audit_title': 'Change log',
+        'audit_month_title': 'Change log — {month}',
+        'audit_intro': 'Written automatically with every change. Entries are never edited or removed.',
+        'all_months': 'All months',
+        'audit_none': 'No changes recorded.',
+        'view_change_log': 'Change log',
+        'newer': '← Newer',
+        'older': 'Older →',
+        'page_of': 'Page {page} of {pages}',
+        'reason': 'Reason',
+        'reason_optional': 'Reason (optional)',
+        'reason_help': 'Kept in the change log.',
+        'rate_line': '{item}: ₩{price} from {date}',
+        'was_locked': 'had been locked by {name} on {when}',
+        'entered_note': 'entered by {name} at {when}',
+        'action_edit': 'Corrected',
+        'action_delete_record': 'Row deleted',
+        'action_delete_batch': 'Deleted with its entry',
+        'action_reprice': 'Re-priced',
+        'action_lock': 'Month locked',
+        'action_unlock': 'Month unlocked',
+        'action_rate_add': 'New rate',
+        'action_rate_edit': 'Rate changed',
+        'action_rate_delete': 'Rate deleted',
     },
     'ko': {
         'nav': '손질 작업',
@@ -330,7 +406,10 @@ STRINGS = {
             '새 단가를 먼저 추가하거나 크기를 비활성화하세요.'
         ),
         'confirm_delete_rate': '이 단가를 삭제할까요? 이미 기록된 작업은 저장된 단가를 유지합니다.',
-        'rate_change_note': '단가를 바꿔도 이미 기록된 작업은 바뀌지 않습니다. 각 기록은 저장 당시의 단가를 유지합니다.',
+        'rate_change_note': (
+            '단가를 바꿔도 이미 기록된 작업은 바뀌지 않습니다. 각 기록은 저장 당시의 단가를 유지합니다. '
+            '이미 기록된 작업에도 적용해야 하는 정정이라면 해당 월 정산 화면의 "확인하고 단가 재적용"을 사용하세요.'
+        ),
         'err_duplicate_item': '{item} 항목은 이미 단가표에 있습니다.',
         'err_duplicate_rate_date': '이 크기에는 같은 날짜에 시작하는 단가가 이미 있습니다. 그 단가를 수정하세요.',
         'style_tongpo_desc': '통째로 펼쳐 손질',
@@ -470,5 +549,78 @@ STRINGS = {
         'xl_rate': '단가 (₩)',
         'xl_amount_col': '금액 (₩)',
         'xl_total_row': '합계',
+
+        'err_month_locked': (
+            '{month} 정산은 지급이 끝나 잠겨 있습니다. '
+            '이 달의 작업을 바꾸려면 먼저 월별 정산 화면에서 잠금을 해제하세요.'
+        ),
+        'locked_banner': (
+            '🔒 {month} 정산 잠김(지급 완료) — {name}, {when}. '
+            '이 달의 작업은 입력·수정·삭제할 수 없습니다.'
+        ),
+        'locked_badge': '잠김',
+        'lock_month': '🔒 월 잠금 (지급 완료)',
+        'lock_intro': '모두에게 지급한 뒤 월을 잠그면 이 달의 금액이 더 이상 바뀌지 않습니다.',
+        'confirm_lock': '{month} 정산을 잠글까요? 잠금을 해제할 때까지 이 달의 작업을 입력·수정·삭제할 수 없습니다.',
+        'lock_not_yet': '월 잠금은 말일({date})부터 할 수 있습니다.',
+        'month_locked_done': '{month} 정산을 잠갔습니다.',
+        'err_lock_early': '{month} 정산은 아직 끝나지 않았습니다. {date}부터 잠글 수 있습니다.',
+        'unlock_month': '잠금 해제',
+        'unlock_reason': '잠금 해제 사유',
+        'unlock_help': '필수 — 변경 기록에 남습니다.',
+        'err_unlock_reason': '잠금 해제 사유를 입력하세요.',
+        'month_unlocked': '{month} 정산 잠금을 해제했습니다. 다시 수정할 수 있으며, 모든 변경은 변경 기록에 남습니다.',
+
+        'stale_notice': (
+            '이 달의 입력 {count}건은 저장된 단가가 작업일 기준 현재 단가표와 다릅니다 '
+            '— 저장한 뒤에 단가가 바뀌었거나 소급 적용되었습니다.'
+        ),
+        'stale_review': '확인하고 단가 재적용',
+        'reprice_title': '단가 재적용 — {month}',
+        'reprice_intro': (
+            '아래 입력은 저장된 단가가 현재 단가표의 작업일 단가와 다릅니다. '
+            '재적용하면 단가표 단가로 바뀌며, 모든 변경은 변경 기록에 남습니다.'
+        ),
+        'saved_price': '저장 단가',
+        'list_price': '단가표 단가',
+        'change_col': '차액',
+        'no_rate_now': '현재 단가 없음',
+        'reprice_apply': '{count}건 단가 재적용',
+        'reprice_total_change': '월 합계 변동: {delta}',
+        'confirm_reprice': '{count}건을 단가표 단가로 바꿀까요? 월 합계가 {delta} 바뀝니다.',
+        'reprice_done': '{count}건에 단가를 재적용했습니다 — 월 합계 변동 {delta}.',
+        'reprice_none': '{month}의 모든 입력이 단가표와 일치합니다.',
+        'reprice_no_rate': (
+            '{count}건은 작업일에 적용되는 단가가 없어 저장된 그대로 둡니다. '
+            '재적용하려면 그 날짜를 포함하는 단가를 추가하세요.'
+        ),
+        'reprice_changed': '이 화면을 여는 동안 단가표나 입력이 바뀌었습니다. 목록을 다시 확인하세요.',
+
+        'tile_audit': '변경 기록',
+        'tile_audit_desc': '수정·삭제·단가 재적용·단가 변경·월 잠금 — 누가, 언제 했는지.',
+        'audit_title': '변경 기록',
+        'audit_month_title': '변경 기록 — {month}',
+        'audit_intro': '변경할 때마다 자동으로 기록되며, 기록은 수정하거나 삭제할 수 없습니다.',
+        'all_months': '전체 기간',
+        'audit_none': '기록된 변경이 없습니다.',
+        'view_change_log': '변경 기록',
+        'newer': '← 최근',
+        'older': '이전 →',
+        'page_of': '{page} / {pages} 페이지',
+        'reason': '사유',
+        'reason_optional': '사유 (선택)',
+        'reason_help': '변경 기록에 남습니다.',
+        'rate_line': '{item}: {date}부터 ₩{price}',
+        'was_locked': '잠금: {name}, {when}',
+        'entered_note': '입력: {name}, {when}',
+        'action_edit': '수정',
+        'action_delete_record': '행 삭제',
+        'action_delete_batch': '입력 전체 삭제',
+        'action_reprice': '단가 재적용',
+        'action_lock': '월 잠금',
+        'action_unlock': '잠금 해제',
+        'action_rate_add': '새 단가',
+        'action_rate_edit': '단가 수정',
+        'action_rate_delete': '단가 삭제',
     },
 }

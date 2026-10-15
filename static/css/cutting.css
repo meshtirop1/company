@@ -183,6 +183,35 @@ a.cut-name:hover { text-decoration: underline; }
 }
 .cut-summary-lines li span:last-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
 
+/* ---- Month lock, re-pricing and the change log ---- */
+.cut-locked {
+    background: var(--color-primary-light); border: 1px solid #b9c6d6; border-left: 4px solid var(--color-primary);
+    border-radius: var(--radius); color: var(--color-primary); font-weight: 600; font-size: 0.92rem;
+    padding: 0.65rem 1rem; margin-bottom: 1rem;
+}
+.cut-locked a { color: inherit; white-space: nowrap; }
+.cut-stale { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem 1rem; }
+.cut-stale span { flex: 1 1 22rem; }
+.cut-lock-panel .cut-panel-intro { margin: 0 0 0.75rem; }
+.cut-unlock summary { display: inline-flex; list-style: none; cursor: pointer; }
+.cut-unlock summary::-webkit-details-marker { display: none; }
+.cut-unlock[open] summary { margin-bottom: 0.75rem; }
+.cut-reprice-total { margin: 0 auto 0 0; align-self: center; }
+
+.cut-log { list-style: none; margin: 0 0 1rem; padding: 0.25rem 1.25rem; }
+.cut-log-row { padding: 0.8rem 0; border-bottom: 1px solid var(--color-border); }
+.cut-log-row:last-child { border-bottom: 0; }
+.cut-log-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.25rem 0.75rem; }
+.cut-log-action { font-weight: 700; color: var(--color-primary); }
+.cut-log-action.action-delete_record, .cut-log-action.action-delete_batch, .cut-log-action.action-unlock { color: var(--color-danger); }
+.cut-log-what { margin-top: 0.2rem; }
+.cut-log-what a { color: var(--color-primary); font-weight: 600; text-decoration: none; }
+.cut-log-change { margin-top: 0.25rem; font-size: 0.92rem; overflow-wrap: anywhere; }
+.cut-log-change del { color: var(--color-text-muted); }
+.cut-log-change ins { text-decoration: none; font-weight: 600; }
+.cut-log-meta, .cut-log-reason { margin-top: 0.2rem; font-size: 0.85rem; }
+.cut-pager { justify-content: center; }
+
 /* ---- Phones: stack rows, larger tap targets ---- */
 @media (max-width: 600px) {
     .cut-list-row { flex-direction: column; align-items: flex-start; }
@@ -191,6 +220,7 @@ a.cut-name:hover { text-decoration: underline; }
     .cut-row-main { grid-template-columns: 1fr 6.5rem; }
     .cut-daynav-jump { margin-left: 0; width: 100%; }
     .cut-savebar { margin-left: -0.25rem; margin-right: -0.25rem; }
+    .cut-log { padding: 0.25rem 0.9rem; }
 
     /* Report tables → one compact card per row: name + amount on top, everything else below.
        Cells marked .phone-hide are summarised in the name cell's .cut-phone-detail instead. */

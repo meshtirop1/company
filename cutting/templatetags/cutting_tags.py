@@ -9,3 +9,11 @@ def won(amount):
     if amount in (None, ''):
         return ''
     return f'{int(amount):,}'
+
+
+@register.filter
+def signed_won(amount):
+    """A change in pay: 12000 → '+₩12,000', -3000 → '−₩3,000'."""
+    if amount in (None, ''):
+        return ''
+    return f"{'−' if amount < 0 else '+'}₩{abs(int(amount)):,}"

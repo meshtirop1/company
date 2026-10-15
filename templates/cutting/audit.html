@@ -1,0 +1,65 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb">
+  {% if month %}<a href="{% url 'cutting:month' month %}">{{ T.back_to_month }}</a>{% else %}<a href="{% url 'cutting:hub' %}">{{ T.home }}</a>{% endif %}
+</p>
+<h2>{{ heading }}</h2>
+<p class="cut-lead">{{ T.audit_intro }}</p>
+{% include 'cutting/_messages.html' %}
+
+<nav class="cut-daynav" aria-label="{{ T.go_to_month }}">
+  {% if month %}<a class="button-secondary btn-sm" href="{% url 'cutting:audit' %}">{{ T.all_months }}</a>{% endif %}
+  <form method="get" action="{% url 'cutting:audit' %}" class="cut-daynav-jump">
+    <label for="cut-log-month" class="sr-only">{{ T.go_to_month }}</label>
+    <input type="month" id="cut-log-month" name="month" value="{% if month %}{{ month|date:'Y-m' }}{% endif %}" class="input-field">
+    <button type="submit" class="button-secondary btn-sm">{{ T.go }}</button>
+  </form>
+</nav>
+
+{% if rows %}
+<ol class="panel cut-log">
+  {% for row in rows %}
+  <li class="cut-log-row">
+    <div class="cut-log-head">
+      <span class="cut-log-action action-{{ row.entry.action }}">{{ row.action }}</span>
+      <span class="muted">{{ row.when }} · {{ row.entry.user_name|default:"—" }}</span>
+    </div>
+    {% if row.entry.work_date and not row.is_rate %}
+    <div class="cut-log-what">
+      <a href="{% url 'cutting:day' row.entry.work_date %}">{{ row.entry.work_date|date:'Y-m-d' }}</a>{% if row.entry.cutter_name %} · <span class="cut-name">{{ row.entry.cutter_name }}</span>{% endif %}
+    </div>
+    {% elif row.entry.action == 'lock' or row.entry.action == 'unlock' %}
+    <div class="cut-log-what"><a href="{% url 'cutting:month' row.entry.month %}">{{ row.entry.month|date:'Y-m' }}</a></div>
+    {% endif %}
+    {% if row.before or row.after %}
+    <div class="cut-log-change">
+      {% if row.before %}<del>{{ row.before }}</del>{% endif %}
+      {% if row.before and row.after %}<span aria-hidden="true">→</span>{% endif %}
+      {% if row.after %}<ins>{{ row.after }}</ins>{% endif %}
+    </div>
+    {% endif %}
+    {% if row.entered %}<div class="cut-log-meta muted">{{ row.entered }}</div>{% endif %}
+    {% if row.entry.reason %}<div class="cut-log-reason"><span class="muted">{{ T.reason }}:</span> {{ row.entry.reason }}</div>{% endif %}
+  </li>
+  {% endfor %}
+</ol>
+
+{% if page.has_other_pages %}
+<nav class="cut-daynav cut-pager" aria-label="{{ page_label }}">
+  {% if page.has_previous %}<a class="button-secondary btn-sm" href="?{{ page_query }}page={{ page.previous_page_number }}">{{ T.newer }}</a>{% endif %}
+  <span class="muted">{{ page_label }}</span>
+  {% if page.has_next %}<a class="button-secondary btn-sm" href="?{{ page_query }}page={{ page.next_page_number }}">{{ T.older }}</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+<div class="panel"><p class="empty-state">{{ T.audit_none }}</p></div>
+{% endif %}
+{% endblock %}

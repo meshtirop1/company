@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CutBatch, CutRecord, Cutter, PriceItem, PriceRate
+from .models import AuditEntry, CutBatch, CutRecord, Cutter, MonthLock, PriceItem, PriceRate
 
 
 @admin.register(Cutter)
@@ -65,3 +65,20 @@ class CutRecordAdmin(ViewOnly, admin.ModelAdmin):
     date_hierarchy = 'work_date'
     readonly_fields = ['batch', 'cutter', 'item', 'work_date', 'style', 'size', 'boxes', 'unit_price', 'total',
                        'created_at', 'updated_at']
+
+
+@admin.register(MonthLock)
+class MonthLockAdmin(ViewOnly, admin.ModelAdmin):
+    """Locking and unlocking happen on the monthly pay page, where they are logged."""
+    list_display = ['month', 'locked_by_name', 'locked_at']
+    readonly_fields = ['month', 'locked_by', 'locked_by_name', 'locked_at']
+
+
+@admin.register(AuditEntry)
+class AuditEntryAdmin(ViewOnly, admin.ModelAdmin):
+    list_display = ['at', 'action', 'month', 'work_date', 'cutter_name', 'user_name', 'reason']
+    list_filter = ['action', 'month']
+    search_fields = ['cutter_name', 'user_name', 'reason']
+    date_hierarchy = 'at'
+    readonly_fields = ['action', 'month', 'work_date', 'cutter_name', 'record_id', 'batch_id', 'before', 'after',
+                       'reason', 'user', 'user_name', 'at']

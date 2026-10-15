@@ -11,6 +11,7 @@
 <p class="cut-crumb"><a href="{% url 'cutting:hub' %}">{{ T.home }}</a></p>
 <h2>{{ heading }}</h2>
 {% include 'cutting/_messages.html' %}
+{% if lock_banner %}<div class="cut-locked" role="note">{{ lock_banner }} <a href="{% url 'cutting:month' month %}#lock">{{ T.back_to_month }}</a></div>{% endif %}
 
 <nav class="cut-daynav" aria-label="{{ T.go_to_date }}">
   <a class="button-secondary btn-sm" href="{% url 'cutting:day' previous_day %}">{{ T.previous_day }}</a>
@@ -57,11 +58,13 @@
 <section class="panel">
   <div class="panel-title">
     <span>{{ T.saved_label }} {{ block.batch.created_at|time:"H:i" }} · {{ block.entered_by }}</span>
+    {% if not locked %}
     <form method="post" action="{% url 'cutting:batch_delete' block.batch.pk %}"
           onsubmit="return confirm('{{ block.confirm_delete|escapejs }}');">
       {% csrf_token %}
       <button type="submit" class="button-danger btn-sm">{{ T.delete_batch }}</button>
     </form>
+    {% endif %}
   </div>
   <div class="table-wrap">
     <table class="table-custom compact cut-cards">
@@ -69,7 +72,7 @@
         <tr>
           <th>{{ T.cutter }}</th><th>{{ T.item_col }}</th>
           <th class="num">{{ T.boxes }}</th><th class="num">{{ T.rate_col }}</th><th class="num">{{ T.amount_col }}</th>
-          <th><span class="sr-only">{{ T.edit }}</span></th>
+          {% if not locked %}<th><span class="sr-only">{{ T.edit }}</span></th>{% endif %}
         </tr>
       </thead>
       <tbody>
@@ -83,6 +86,7 @@
           <td class="num phone-hide">{{ row.record.boxes }}</td>
           <td class="num phone-hide">₩{{ row.record.unit_price|won }}</td>
           <td class="num cut-col-amount"><strong>₩{{ row.record.total|won }}</strong></td>
+          {% if not locked %}
           <td class="cut-col-actions">
             <div class="cut-actions">
               <a class="button-secondary btn-sm" href="{% url 'cutting:record_edit' row.record.pk %}">{{ T.edit }}</a>
@@ -93,11 +97,12 @@
               </form>
             </div>
           </td>
+          {% endif %}
         </tr>
         {% endfor %}
       </tbody>
       <tfoot>
-        <tr><th colspan="4">{{ T.batch_total }}</th><th class="num">₩{{ block.total|won }}</th><th></th></tr>
+        <tr><th colspan="4">{{ T.batch_total }}</th><th class="num">₩{{ block.total|won }}</th>{% if not locked %}<th></th>{% endif %}</tr>
       </tfoot>
     </table>
   </div>

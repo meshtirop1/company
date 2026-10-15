@@ -10,7 +10,8 @@ from functools import wraps
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.db import IntegrityError
+from django.core.paginator import Paginator
+from django.db import IntegrityError, transaction
 from django.db.models import Prefetch, ProtectedError, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -21,10 +22,11 @@ from django.views.decorators.http import require_POST
 from . import exports, reports, services
 from .forms import (
     BatchEntryForm, CutterForm, PriceItemCreateForm, PriceItemEditForm, PriceRateForm, RecordEditForm,
-    ordered_items,
+    UnlockForm, ordered_items,
 )
 from .i18n import STRINGS, get_lang
-from .models import CutBatch, CutRecord, Cutter, CuttingStyle, PriceItem, PriceRate
+from .models import AuditAction, AuditEntry, CutBatch, CutRecord, Cutter, CuttingStyle, PriceItem, PriceRate
+from .templatetags.cutting_tags import signed_won
 
 
 def manager_required(view):
@@ -181,7 +183,10 @@ def prices(request):
     if request.method == 'POST':
         form = PriceItemCreateForm(request.POST, T=T)
         if form.is_valid():
-            item = form.save(user=request.user)
+            with transaction.atomic():
+                item = form.save(user=request.user)
+                services.log_rate(AuditAction.RATE_ADD, user=request.user,
+                                  after=services.rate_snapshot(item.rates.get()))
             messages.success(request, T['item_added'].format(item=item, price=won(form.cleaned_data['unit_price'])))
             return to_item(item)
         messages.error(request, T['err_form'])
@@ -248,7 +253,9 @@ def rate_add(request, item_pk):
     if request.method == 'POST':
         form = PriceRateForm(request.POST, item=item, T=T)
         if form.is_valid():
-            rate = form.save(user=request.user)
+            with transaction.atomic():
+                rate = form.save(user=request.user)
+                services.log_rate(AuditAction.RATE_ADD, user=request.user, after=services.rate_snapshot(rate))
             messages.success(request, T['rate_added'].format(
                 item=item, price=won(rate.unit_price), date=rate.effective_from.isoformat(),
             ))
@@ -265,9 +272,14 @@ def rate_edit(request, pk):
     rate = get_object_or_404(PriceRate.objects.select_related('item'), pk=pk)
     item = rate.item
     if request.method == 'POST':
+        before = services.rate_snapshot(rate)  # the form writes into `rate` as it validates
         form = PriceRateForm(request.POST, instance=rate, item=item, T=T)
         if form.is_valid():
-            form.save(user=request.user)
+            with transaction.atomic():
+                form.save(user=request.user)
+                after = services.rate_snapshot(rate)
+                if after != before:
+                    services.log_rate(AuditAction.RATE_EDIT, user=request.user, before=before, after=after)
             messages.success(request, T['rate_saved'].format(item=item))
             return to_item(item)
         messages.error(request, T['err_form'])
@@ -287,7 +299,9 @@ def rate_delete(request, pk):
         messages.error(request, T['rate_only_one'].format(item=item))
     else:
         started = rate.effective_from.isoformat()
-        rate.delete()
+        with transaction.atomic():
+            services.log_rate(AuditAction.RATE_DELETE, user=request.user, before=services.rate_snapshot(rate))
+            rate.delete()
         messages.success(request, T['rate_deleted'].format(item=item, date=started))
     return to_item(item)
 
@@ -365,6 +379,8 @@ def entry(request):
                     raise
             except services.NoRate as missing:  # a rate removed while the form was open
                 messages.error(request, T['err_no_rate'].format(item=missing.item, date=missing.day.isoformat()))
+            except services.MonthLocked as locked:  # the month was locked while the form was open
+                messages.error(request, locked_message(T, locked.month))
             else:
                 total = batch.records.aggregate(total=Sum('total'))['total']
                 messages.success(request, T['batch_saved'].format(
@@ -410,6 +426,28 @@ def entered_by_label(batch):
     return batch.entered_by_name or services.user_label(batch.entered_by) or '—'
 
 
+def locked_message(T, month):
+    return T['err_month_locked'].format(month=f'{month:%Y-%m}')
+
+
+def lock_banner(T, lock):
+    """'🔒 2026-09 is locked (paid) — by …, on …' for a locked month's pages, else ''."""
+    if lock is None:
+        return ''
+    return T['locked_banner'].format(
+        month=f'{lock.month:%Y-%m}', name=lock.locked_by_name or '—',
+        when=timezone.localtime(lock.locked_at).strftime('%Y-%m-%d %H:%M'),
+    )
+
+
+def refuse_if_locked(request, T, day):
+    """The day page with an explanation, when `day` is in a locked month; else None."""
+    if services.lock_for(day):
+        messages.error(request, locked_message(T, services.month_of(day)))
+        return redirect('cutting:day', day)
+    return None
+
+
 @manager_required
 def day(request, day=None):
     if day is None:
@@ -425,6 +463,7 @@ def day(request, day=None):
         .prefetch_related(Prefetch('records', queryset=records))
         .order_by('created_at')
     )
+    lock = services.lock_for(day)
     blocks, day_total = [], 0
     for batch in batches:
         rows = list(batch.records.all())
@@ -449,8 +488,11 @@ def day(request, day=None):
         day_total=day_total,
         previous_day=day - timedelta(days=1),
         next_day=day + timedelta(days=1) if day < today else None,
-        can_enter=day <= today,
+        can_enter=day <= today and lock is None,
         is_today=day == today,
+        locked=lock is not None,
+        lock_banner=lock_banner(T, lock),
+        month=services.month_of(day),
     )
 
 
@@ -458,14 +500,22 @@ def day(request, day=None):
 def record_edit(request, pk):
     T = strings(request)
     record = get_object_or_404(CutRecord.objects.select_related('cutter', 'item'), pk=pk)
+    refused = refuse_if_locked(request, T, record.work_date)
+    if refused:
+        return refused
     heading = T['edit_record_title'].format(name=record.cutter.name, date=record.work_date.isoformat())
     if request.method == 'POST':
         form = RecordEditForm(request.POST, T=T, record=record, items=entry_items())
         if form.is_valid():
+            data = form.cleaned_data
             try:
-                services.update_record(record, item=form.cleaned_data['item'], boxes=form.cleaned_data['boxes'])
+                services.update_record(
+                    record, item=data['item'], boxes=data['boxes'], user=request.user, reason=data['reason'],
+                )
             except services.NoRate as missing:
                 messages.error(request, T['err_no_rate'].format(item=missing.item, date=missing.day.isoformat()))
+            except services.MonthLocked:
+                return refuse_if_locked(request, T, record.work_date)
             else:
                 messages.success(request, T['record_saved'].format(name=record.cutter.name))
                 return redirect('cutting:day', record.work_date)
@@ -482,7 +532,10 @@ def record_delete(request, pk):
     T = strings(request)
     record = get_object_or_404(CutRecord.objects.select_related('cutter', 'batch'), pk=pk)
     work_date, name = record.work_date, record.cutter.name
-    services.delete_record(record)
+    try:
+        services.delete_record(record, user=request.user)
+    except services.MonthLocked:
+        return refuse_if_locked(request, T, work_date)
     messages.success(request, T['record_deleted'].format(name=name))
     return redirect('cutting:day', work_date)
 
@@ -493,7 +546,10 @@ def batch_delete(request, pk):
     T = strings(request)
     batch = get_object_or_404(CutBatch, pk=pk)
     work_date, count = batch.work_date, batch.records.count()
-    services.delete_batch(batch)
+    try:
+        services.delete_batch(batch, user=request.user)
+    except services.MonthLocked:
+        return refuse_if_locked(request, T, work_date)
     messages.success(request, T['batch_deleted'].format(count=count))
     return redirect('cutting:day', work_date)
 
@@ -528,15 +584,26 @@ def month_report(request, month=None):
             return redirect('cutting:month', parse_month(request.GET['month'], this_month()))
         month = this_month()
     T = strings(request)
+    label = month_label(month)
+    lock = services.lock_for(month)
+    stale = [] if lock else services.stale_records(month)
     return render_page(
         request, 'month.html',
         month=month,
-        heading=T['month_title'].format(month=month_label(month)),
+        heading=T['month_title'].format(month=label),
         provisional=reports.provisional_note(T, month),
         summary=reports.month_summary(month),
         previous_month=(month - timedelta(days=1)).replace(day=1),
         next_month=next_month(month) if month < this_month() else None,
         is_current=month == this_month(),
+        lock=lock,
+        lock_banner=lock_banner(T, lock),
+        can_lock=lock is None and services.can_lock(month),
+        lock_not_yet=T['lock_not_yet'].format(date=reports.month_bounds(month)[1].isoformat()),
+        confirm_lock=T['confirm_lock'].format(month=label),
+        unlock_form=UnlockForm(T=T) if lock else None,
+        stale_notice=T['stale_notice'].format(count=len(stale)) if stale else '',
+        log_url=f"{reverse('cutting:audit')}?month={label}",
     )
 
 
@@ -549,7 +616,160 @@ def cutter_report(request, month, cutter_pk):
         month=month,
         heading=T['cutter_month_title'].format(name=cutter.name, month=month_label(month)),
         provisional=reports.provisional_note(T, month),
+        lock_banner=lock_banner(T, services.lock_for(month)),
         data=reports.cutter_month(cutter, month),
+    )
+
+
+# ─── Month lock and re-pricing ────────────────────────────────
+
+@manager_required
+@require_POST
+def month_lock(request, month):
+    T = strings(request)
+    try:
+        services.lock_month(month, user=request.user)
+    except services.MonthNotOver as early:
+        messages.error(request, T['err_lock_early'].format(month=month_label(month), date=early.last_day.isoformat()))
+    else:
+        messages.success(request, T['month_locked_done'].format(month=month_label(month)))
+    return redirect('cutting:month', month)
+
+
+@manager_required
+@require_POST
+def month_unlock(request, month):
+    T = strings(request)
+    form = UnlockForm(request.POST, T=T)
+    if not form.is_valid():
+        messages.error(request, form.errors['reason'][0])
+    elif services.unlock_month(month, user=request.user, reason=form.cleaned_data['reason']):
+        messages.success(request, T['month_unlocked'].format(month=month_label(month)))
+    return redirect('cutting:month', month)
+
+
+def reprice_plan(month):
+    stale = services.stale_records(month)
+    rows = []
+    for record, list_price in stale:
+        new_total = list_price * record.boxes if list_price is not None else None
+        rows.append({
+            'record': record, 'list_price': list_price, 'new_total': new_total,
+            'change': new_total - record.total if new_total is not None else None,
+        })
+    plan = [(record, price) for record, price in stale if price is not None]
+    return rows, plan
+
+
+@manager_required
+def reprice(request, month):
+    """Review the month's entries whose saved price no longer matches the price list, and
+    bring them to the list price in one go."""
+    T = strings(request)
+    label = month_label(month)
+    if services.lock_for(month):
+        messages.error(request, locked_message(T, month))
+        return redirect('cutting:month', month)
+
+    if request.method == 'POST':
+        try:
+            changed, delta = services.reprice_month(month, user=request.user, expected=request.POST.get('plan', ''))
+        except services.MonthLocked:
+            messages.error(request, locked_message(T, month))
+            return redirect('cutting:month', month)
+        except services.PlanChanged:
+            messages.warning(request, T['reprice_changed'])
+            return redirect('cutting:reprice', month)
+        if changed:
+            messages.success(request, T['reprice_done'].format(count=changed, delta=signed_won(delta)))
+        else:
+            messages.info(request, T['reprice_none'].format(month=label))
+        return redirect('cutting:month', month)
+
+    rows, plan = reprice_plan(month)
+    fixable = len(plan)
+    delta = sum(row['change'] for row in rows if row['change'] is not None)
+    return render_page(
+        request, 'reprice.html',
+        month=month,
+        heading=T['reprice_title'].format(month=label),
+        rows=rows,
+        fixable=fixable,
+        plan_token=services.plan_token(plan),
+        no_rate=len(rows) - fixable,
+        apply_label=T['reprice_apply'].format(count=fixable),
+        confirm=T['confirm_reprice'].format(count=fixable, delta=signed_won(delta)),
+        total_change=T['reprice_total_change'].format(delta=signed_won(delta)),
+        no_rate_note=T['reprice_no_rate'].format(count=len(rows) - fixable),
+        none_note=T['reprice_none'].format(month=label),
+    )
+
+
+# ─── Change log ───────────────────────────────────────────────
+
+LOG_PAGE_SIZE = 50
+RATE_ACTIONS = {AuditAction.RATE_ADD, AuditAction.RATE_EDIT, AuditAction.RATE_DELETE}
+STYLE_LABELS = dict(CuttingStyle.choices)
+
+
+def record_text(data):
+    """'통포 7 · 10 × ₩4,000 = ₩40,000' from a change-log snapshot."""
+    style = STYLE_LABELS.get(data['style'], data['style'])
+    return f"{style} {data['size']} · {data['boxes']} × ₩{won(data['unit_price'])} = ₩{won(data['total'])}"
+
+
+def change_texts(T, entry):
+    """The before and after of a change-log entry, as text."""
+    if entry.action in RATE_ACTIONS:
+        def text(data):
+            return T['rate_line'].format(item=data['item'], price=won(data['unit_price']), date=data['effective_from'])
+    elif entry.action == AuditAction.UNLOCK:
+        def text(data):
+            return T['was_locked'].format(name=data.get('locked_by') or '—', when=data.get('locked_at', '')[:16].replace('T', ' '))
+    elif entry.action == AuditAction.LOCK:
+        return '', ''
+    else:
+        text = record_text
+    return (text(entry.before) if entry.before else ''), (text(entry.after) if entry.after else '')
+
+
+def entered_text(T, entry):
+    """Who first entered a deleted row, and when."""
+    data = entry.before or {}
+    if entry.action not in (AuditAction.DELETE_RECORD, AuditAction.DELETE_BATCH) or 'saved_at' not in data:
+        return ''
+    return T['entered_note'].format(name=data.get('entered_by') or '—', when=data['saved_at'][:16].replace('T', ' '))
+
+
+@manager_required
+def audit_log(request):
+    T = strings(request)
+    month = parse_month(request.GET.get('month'), None)
+    entries = AuditEntry.objects.all()
+    if month:
+        entries = entries.filter(month=month)
+    page = Paginator(entries, LOG_PAGE_SIZE).get_page(request.GET.get('page'))
+    rows = []
+    for entry in page:
+        before, after = change_texts(T, entry)
+        rows.append({
+            'entry': entry,
+            'action': T[f'action_{entry.action}'],
+            'when': timezone.localtime(entry.at).strftime('%Y-%m-%d %H:%M'),
+            'before': before,
+            'after': after,
+            'entered': entered_text(T, entry),
+            'is_rate': entry.action in RATE_ACTIONS,
+        })
+    query = f'month={month_label(month)}&' if month else ''
+    return render_page(
+        request, 'audit.html',
+        heading=T['audit_month_title'].format(month=month_label(month)) if month else T['audit_title'],
+        month=month,
+        rows=rows,
+        page=page,
+        page_label=T['page_of'].format(page=page.number, pages=page.paginator.num_pages),
+        page_query=query,
     )
 
 

@@ -7,11 +7,13 @@ from django.db import transaction
 from django.db.models import Max
 from django.utils import timezone
 
-from .models import Cutter, CuttingStyle, PriceItem, PriceRate
+from .models import AuditEntry, Cutter, CuttingStyle, PriceItem, PriceRate
+from .services import lock_for
 
 DATE_WIDGET = forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d')
 SORT_ORDER_MAX = 32767  # PositiveSmallIntegerField's ceiling on every database
 BOXES_MAX = 9999
+REASON_MAX = AuditEntry._meta.get_field('reason').max_length
 
 
 class WonField(forms.DecimalField):
@@ -308,6 +310,8 @@ class BatchEntryForm(forms.Form):
         day = self.cleaned_data['work_date']
         if day > timezone.localdate():
             raise ValidationError(self.T['err_future_date'])
+        if lock_for(day):
+            raise ValidationError(self.T['err_month_locked'].format(month=f'{day:%Y-%m}'))
         return day
 
     def clean(self):
@@ -373,6 +377,7 @@ class BatchEntryForm(forms.Form):
 class RecordEditForm(forms.Form):
     """Correct one saved row: its boxes, or the size and style it was cut at."""
     boxes = forms.IntegerField(min_value=1, max_value=BOXES_MAX)
+    reason = forms.CharField(max_length=REASON_MAX, required=False)
 
     def __init__(self, *args, T, record, items, **kwargs):
         kwargs.setdefault('initial', {'item': str(record.item_id), 'boxes': record.boxes})
@@ -385,7 +390,10 @@ class RecordEditForm(forms.Form):
             label=T['item_col'], choices=grouped_item_choices(ordered_items(self.items.values()), with_style=True),
         )
         self.fields['boxes'].widget = forms.TextInput(attrs={'inputmode': 'numeric', 'pattern': '[0-9]*'})
-        self.order_fields(['item', 'boxes'])
+        self.fields['reason'].label = T['reason_optional']
+        self.fields['reason'].help_text = T['reason_help']
+        self.fields['reason'].widget.attrs['autocomplete'] = 'off'
+        self.order_fields(['item', 'boxes', 'reason'])
         localize(self, T)
         localize_boxes(self.fields['boxes'], T)
 
@@ -398,3 +406,23 @@ class RecordEditForm(forms.Form):
             ))
         cleaned['item'] = item
         return cleaned
+
+
+class UnlockForm(forms.Form):
+    """Reopening a paid month needs a reason; it goes into the change log."""
+    reason = forms.CharField(max_length=REASON_MAX)
+
+    def __init__(self, *args, T, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.T = T
+        self.fields['reason'].label = T['unlock_reason']
+        self.fields['reason'].help_text = T['unlock_help']
+        self.fields['reason'].widget.attrs['autocomplete'] = 'off'
+        localize(self, T)
+        self.fields['reason'].error_messages['required'] = T['err_unlock_reason']
+
+    def clean_reason(self):
+        reason = ' '.join(self.cleaned_data['reason'].split())
+        if not reason:
+            raise ValidationError(self.T['err_unlock_reason'])
+        return reason

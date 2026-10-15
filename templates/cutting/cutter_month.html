@@ -12,6 +12,7 @@
 <h2>{{ heading }}</h2>
 {% if data.cutter.note %}<p class="cut-lead">{{ data.cutter.note }}</p>{% endif %}
 {% include 'cutting/_messages.html' %}
+{% if lock_banner %}<div class="cut-locked" role="note">{{ lock_banner }}</div>{% endif %}
 {% if provisional %}<div class="cut-provisional" role="note">{{ provisional }}</div>{% endif %}
 
 <div class="stat-grid">

@@ -44,5 +44,10 @@
     <span class="cut-tile-title">{{ T.tile_prices }}</span>
     <span class="cut-tile-desc">{{ T.tile_prices_desc }}</span>
   </a>
+  <a class="cut-tile" href="{% url 'cutting:audit' %}">
+    <span class="cut-tile-icon" aria-hidden="true">&#128220;</span>
+    <span class="cut-tile-title">{{ T.tile_audit }}</span>
+    <span class="cut-tile-desc">{{ T.tile_audit_desc }}</span>
+  </a>
 </nav>
 {% endblock %}

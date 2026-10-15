@@ -141,3 +141,62 @@ class CutRecord(models.Model):
     @property
     def item_label(self):
         return f'{self.get_style_display()} {self.size}'
+
+
+class MonthLock(models.Model):
+    """A month that has been paid. While it is locked, its work can't be entered, corrected,
+    deleted or re-priced. Unlocking removes the row; the change log keeps the history."""
+    month = models.DateField(unique=True)  # always the first day of the month
+    locked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='+',
+    )
+    locked_by_name = models.CharField(max_length=150, blank=True)
+    locked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-month']
+
+    def __str__(self):
+        return f'{self.month:%Y-%m} locked'
+
+
+class AuditAction(models.TextChoices):
+    EDIT = 'edit', 'Corrected'
+    DELETE_RECORD = 'delete_record', 'Deleted row'
+    DELETE_BATCH = 'delete_batch', 'Deleted with its entry'
+    REPRICE = 'reprice', 'Re-priced'
+    LOCK = 'lock', 'Locked month'
+    UNLOCK = 'unlock', 'Unlocked month'
+    RATE_ADD = 'rate_add', 'New rate'
+    RATE_EDIT = 'rate_edit', 'Rate changed'
+    RATE_DELETE = 'rate_delete', 'Rate deleted'
+
+
+class AuditEntry(models.Model):
+    """One change to recorded work, to a rate, or to a month's lock.
+
+    Written by cutting/services.py and never changed or deleted. Names and figures are
+    copied in, so an entry still reads correctly after the record, the cutter or the
+    supervisor's account is gone.
+    """
+    action = models.CharField(max_length=20, choices=AuditAction.choices)
+    month = models.DateField()  # first day of the month the change belongs to
+    work_date = models.DateField(null=True, blank=True)  # the work's day, or a rate's start date
+    cutter_name = models.CharField(max_length=100, blank=True)
+    record_id = models.PositiveIntegerField(null=True, blank=True)  # plain ids: the rows may be gone
+    batch_id = models.PositiveIntegerField(null=True, blank=True)
+    before = models.JSONField(null=True, blank=True)
+    after = models.JSONField(null=True, blank=True)
+    reason = models.CharField(max_length=200, blank=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='+',
+    )
+    user_name = models.CharField(max_length=150, blank=True)
+    at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-at', '-pk']
+        indexes = [models.Index(fields=['month', 'at'], name='cutting_audit_month_idx')]
+
+    def __str__(self):
+        return f'{self.at:%Y-%m-%d %H:%M} {self.action} {self.cutter_name}'.strip()

@@ -49,6 +49,10 @@ urlpatterns = [
     path('month/<yearmonth:month>/payslips/', views.payslips, name='payslips'),
     path('month/<yearmonth:month>/cutters/<int:cutter_pk>/', views.cutter_report, name='cutter_month'),
     path('month/<yearmonth:month>/cutters/<int:cutter_pk>/payslip/', views.payslip, name='payslip'),
+    path('month/<yearmonth:month>/lock/', views.month_lock, name='month_lock'),
+    path('month/<yearmonth:month>/unlock/', views.month_unlock, name='month_unlock'),
+    path('month/<yearmonth:month>/reprice/', views.reprice, name='reprice'),
+    path('log/', views.audit_log, name='audit'),
 
     path('cutters/', views.cutters, name='cutters'),
     path('cutters/<int:pk>/edit/', views.cutter_edit, name='cutter_edit'),
