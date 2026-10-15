@@ -98,6 +98,9 @@ if _db_url:
     except ImportError:
         pass
 
+# Where `manage.py backup_db` writes database copies (run before every deploy and nightly).
+BACKUP_DIR = Path(os.environ.get("DJANGO_BACKUP_DIR", BASE_DIR / "backups"))
+
 if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
     # Take SQLite's write lock when a transaction begins. A transaction that reads first and then
     # writes (e.g. a save that checks the month lock) otherwise fails at once with "database is
