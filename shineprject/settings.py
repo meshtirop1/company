@@ -36,6 +36,8 @@ CSRF_TRUSTED_ORIGINS = [
     ).split(",")
     if o.strip()
 ]
+# A friendly "this page had expired" page instead of Django's bare CSRF error.
+CSRF_FAILURE_VIEW = 'hours_tracker.views.csrf_failure'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
