@@ -1,0 +1,60 @@
+{% extends base_template %}
+{% load static cutting_tags %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:month' month %}">{{ T.back_to_month }}</a></p>
+<h2>{{ heading }}</h2>
+{% include 'cutting/_messages.html' %}
+
+{% if rows %}
+<p class="cut-lead">{{ T.reprice_intro }}</p>
+<div class="panel">
+  <div class="table-wrap">
+    <table class="table-custom compact cut-cards">
+      <thead>
+        <tr>
+          <th>{{ T.date_col }}</th><th>{{ T.cutter }}</th><th>{{ T.item_col }}</th><th class="num">{{ T.boxes }}</th>
+          <th class="num">{{ T.saved_price }}</th><th class="num">{{ T.list_price }}</th><th class="num">{{ T.change_col }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td class="cut-col-name">
+            <a class="cut-name" href="{% url 'cutting:day' row.record.work_date %}">{{ row.record.work_date|date:'Y-m-d' }}</a>
+            <span class="cut-phone-detail">{{ row.record.cutter.name }} · {{ row.record.get_style_display }} {{ row.record.size }} · {{ row.record.boxes }} × ₩{{ row.record.unit_price|won }} → {% if row.list_price is not None %}₩{{ row.list_price|won }}{% else %}{{ T.no_rate_now }}{% endif %}</span>
+          </td>
+          <td class="phone-hide">{{ row.record.cutter.name }}</td>
+          <td class="phone-hide"><span class="style-badge badge-sm style-{{ row.record.style }}">{{ row.record.get_style_display }}</span> {{ row.record.size }}</td>
+          <td class="num phone-hide">{{ row.record.boxes }}</td>
+          <td class="num phone-hide">₩{{ row.record.unit_price|won }}</td>
+          <td class="num phone-hide">{% if row.list_price is not None %}₩{{ row.list_price|won }}{% else %}{{ T.no_rate_now }}{% endif %}</td>
+          <td class="num cut-col-amount">{% if row.change is not None %}<strong>{{ row.change|signed_won }}</strong>{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if no_rate %}<div class="cut-provisional" role="note">{{ no_rate_note }}</div>{% endif %}
+
+{% if fixable %}
+<form method="post" class="cut-actions cut-form-actions" onsubmit="return confirm('{{ confirm|escapejs }}');">
+  {% csrf_token %}
+  <input type="hidden" name="plan" value="{{ plan_token }}">
+  <p class="cut-reprice-total"><strong>{{ total_change }}</strong></p>
+  <button type="submit" class="button-primary">{{ apply_label }}</button>
+  <a class="button-secondary" href="{% url 'cutting:month' month %}">{{ T.cancel }}</a>
+</form>
+{% endif %}
+{% else %}
+<div class="panel"><p class="empty-state">{{ none_note }}</p></div>
+{% endif %}
+{% endblock %}

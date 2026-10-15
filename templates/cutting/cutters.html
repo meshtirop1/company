@@ -1,0 +1,84 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ T.cutters_title }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:hub' %}">{{ T.home }}</a></p>
+<h2>{{ T.cutters_title }}</h2>
+<p class="cut-lead">{{ T.cutters_intro }}</p>
+{% include 'cutting/_messages.html' %}
+
+<div class="panel">
+  <div class="panel-title">{{ T.add_cutter }}</div>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="cut-form-row">
+      {% include 'cutting/_field.html' with field=form.name %}
+      {% include 'cutting/_field.html' with field=form.note %}
+    </div>
+    {% include 'cutting/_field.html' with field=form.payslip_language %}
+    <button type="submit" class="button-primary">{{ T.add_cutter }}</button>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="panel-title">{{ T.active_cutters }} <span class="cut-count">{{ active|length }}</span></div>
+  {% if active %}
+  <ul class="cut-list">
+    {% for cutter in active %}
+    <li class="cut-list-row">
+      <div class="cut-list-main">
+        <span class="cut-name">{{ cutter.name }}</span>
+        {% if cutter.note %}<span class="cut-note">{{ cutter.note }}</span>{% endif %}
+        {% if cutter.payslip_language %}<span class="cut-note">{{ T.payslip_language }}: {{ cutter.get_payslip_language_display }}</span>{% endif %}
+      </div>
+      <div class="cut-actions">
+        <a class="button-secondary btn-sm" href="{% url 'cutting:cutter_edit' cutter.pk %}">{{ T.edit }}</a>
+        <form method="post" action="{% url 'cutting:cutter_set_active' cutter.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="active" value="0">
+          <button type="submit" class="button-secondary btn-sm">{{ T.deactivate }}</button>
+        </form>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty-state">{% if inactive_rows %}{{ T.roster_no_active }}{% else %}{{ T.no_cutters }}{% endif %}</p>
+  {% endif %}
+</div>
+
+{% if inactive_rows %}
+<div class="panel">
+  <div class="panel-title">{{ T.inactive_cutters }} <span class="cut-count">{{ inactive_rows|length }}</span></div>
+  <ul class="cut-list is-inactive">
+    {% for row in inactive_rows %}
+    <li class="cut-list-row">
+      <div class="cut-list-main">
+        <span class="cut-name">{{ row.cutter.name }}</span>
+        {% if row.cutter.note %}<span class="cut-note">{{ row.cutter.note }}</span>{% endif %}
+      </div>
+      <div class="cut-actions">
+        <form method="post" action="{% url 'cutting:cutter_set_active' row.cutter.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="active" value="1">
+          <button type="submit" class="button-secondary btn-sm">{{ T.activate }}</button>
+        </form>
+        <a class="button-secondary btn-sm" href="{% url 'cutting:cutter_edit' row.cutter.pk %}">{{ T.edit }}</a>
+        <form method="post" action="{% url 'cutting:cutter_delete' row.cutter.pk %}"
+              onsubmit="return confirm('{{ row.confirm_delete|escapejs }}');">
+          {% csrf_token %}
+          <button type="submit" class="button-danger btn-sm">{{ T.delete }}</button>
+        </form>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% endblock %}

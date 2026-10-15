@@ -1,0 +1,117 @@
+{% extends base_template %}
+{% load static cutting_tags %}
+
+{% block title %}{{ T.prices_title }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:hub' %}">{{ T.home }}</a></p>
+<h2>{{ T.prices_title }}</h2>
+<p class="cut-lead">{{ T.prices_intro }}</p>
+{% include 'cutting/_messages.html' %}
+
+{% for group in groups %}
+<section class="panel" aria-labelledby="style-{{ group.style }}">
+  <div class="panel-title" id="style-{{ group.style }}">
+    <span><span class="style-badge style-{{ group.style }}">{{ group.label }}</span> <span class="muted">{{ group.desc }}</span></span>
+  </div>
+  {% if group.rows %}
+  <div class="price-items">
+    {% for row in group.rows %}
+    <article class="price-item{% if not row.item.is_active %} is-hidden{% endif %}" id="item-{{ row.item.pk }}">
+      <header class="price-item-head">
+        <span class="price-item-size">{{ row.item.size }}{% if not row.item.is_active %} <span class="badge-muted">{{ T.hidden }}</span>{% endif %}</span>
+        <span class="price-item-current">
+          {% if row.current %}
+            <strong>₩{{ row.current.unit_price|won }}</strong>
+            <span class="muted">{{ row.current_since }}</span>
+          {% else %}
+            <span class="text-danger">{{ T.no_current_rate }}</span>
+          {% endif %}
+        </span>
+      </header>
+      {% for label in row.upcoming %}<div class="price-upcoming">{{ label }}</div>{% endfor %}
+
+      <details class="price-history">
+        <summary>{{ T.rate_history }} ({{ row.history|length }})</summary>
+        <div class="table-wrap">
+          <table class="table-custom compact">
+            <thead>
+              <tr><th>{{ T.effective_from }}</th><th>{{ T.unit_price }}</th><th><span class="sr-only">{{ T.edit }}</span></th></tr>
+            </thead>
+            <tbody>
+              {% for entry in row.history %}
+              <tr{% if entry.is_current %} class="is-current"{% endif %}>
+                <td>{{ entry.rate.effective_from|date:"Y-m-d" }}</td>
+                <td>₩{{ entry.rate.unit_price|won }}</td>
+                <td>
+                  <div class="cut-actions">
+                    <a class="button-secondary btn-sm" href="{% url 'cutting:rate_edit' entry.rate.pk %}">{{ T.edit }}</a>
+                    {% if row.can_delete_rate %}
+                    <form method="post" action="{% url 'cutting:rate_delete' entry.rate.pk %}"
+                          onsubmit="return confirm('{{ T.confirm_delete_rate|escapejs }}');">
+                      {% csrf_token %}
+                      <button type="submit" class="button-danger btn-sm">{{ T.delete }}</button>
+                    </form>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      <footer class="cut-actions">
+        <a class="btn-gold btn-sm" href="{% url 'cutting:rate_add' row.item.pk %}">+ {{ T.add_rate }}</a>
+        <a class="button-secondary btn-sm" href="{% url 'cutting:item_edit' row.item.pk %}">{{ T.edit }}</a>
+        <form method="post" action="{% url 'cutting:item_set_active' row.item.pk %}">
+          {% csrf_token %}
+          {% if row.item.is_active %}
+          <input type="hidden" name="active" value="0">
+          <button type="submit" class="button-secondary btn-sm">{{ T.deactivate }}</button>
+          {% else %}
+          <input type="hidden" name="active" value="1">
+          <button type="submit" class="button-secondary btn-sm">{{ T.activate }}</button>
+          {% endif %}
+        </form>
+        {% if not row.item.is_active %}
+        <form method="post" action="{% url 'cutting:item_delete' row.item.pk %}"
+              onsubmit="return confirm('{{ row.confirm_delete_item|escapejs }}');">
+          {% csrf_token %}
+          <button type="submit" class="button-danger btn-sm">{{ T.delete }}</button>
+        </form>
+        {% endif %}
+      </footer>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty-state">{{ T.no_items }}</p>
+  {% endif %}
+</section>
+{% endfor %}
+
+<div class="panel" id="add-size">
+  <div class="panel-title">{{ T.add_item }}</div>
+  <p class="muted cut-panel-intro">{{ T.add_item_intro }}</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="cut-form-row">
+      {% include 'cutting/_field.html' with field=form.style %}
+      {% include 'cutting/_field.html' with field=form.size %}
+      {% include 'cutting/_field.html' with field=form.unit_price %}
+      {% include 'cutting/_field.html' with field=form.effective_from %}
+      {% include 'cutting/_field.html' with field=form.sort_order %}
+    </div>
+    <button type="submit" class="button-primary">{{ T.add_item }}</button>
+  </form>
+</div>
+{% if form.errors %}
+<script>document.getElementById('add-size').scrollIntoView({block: 'start'});</script>
+{% endif %}
+{% endblock %}

@@ -432,6 +432,15 @@ main.container input:focus, main.container select:focus, main.container textarea
 .nav-item { flex: 0 0 auto; }
 .nav-link { white-space: nowrap; font-size: 0.95rem; }
 
+/* Desktop widths: compact the links so a manager's full menu fits on one line, and wrap
+   rather than overflow if it still doesn't (narrow windows, longer English labels) — an
+   overflowing menu pushes Logout and the language switcher off the right edge. */
+@media (min-width: 1025px) {
+    .navbar .container { max-width: 1440px; }  /* the header may be wider than the 1200px content */
+    .nav-list { flex: 1 1 auto; min-width: 0; flex-wrap: wrap; justify-content: flex-end; gap: 0.25rem 0.45rem; }
+    .nav-link { padding: 0.5rem 0.55rem; font-size: 0.9rem; }
+}
+
 @media (max-width: 1024px) {
     .navbar .container { position: relative; }
     .navbar-toggle { display: block; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); }

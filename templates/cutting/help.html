@@ -1,0 +1,23 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ T.help_title }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:hub' %}">{{ T.home }}</a></p>
+<h2>{{ T.help_title }}</h2>
+<p class="cut-lead">{{ T.help_intro }}</p>
+
+{% for section in sections %}
+<section class="panel cut-help">
+  <h3 class="panel-title">{{ section.title }}</h3>
+  <ol>
+    {% for step in section.steps %}<li>{{ step }}</li>{% endfor %}
+  </ol>
+</section>
+{% endfor %}
+{% endblock %}

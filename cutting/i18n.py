@@ -1,0 +1,741 @@
+"""UI text for the cutting module, in English and Korean.
+
+Each page has a single template shared by both languages; only these strings differ.
+A test checks that the two dictionaries carry the same keys and the same placeholders,
+so a string added in one language can't be forgotten in the other.
+
+Placeholders: messages built in views use named `{fields}` filled by str.format.
+The `err_max_length` string is filled by Django itself, so it uses `%(limit_value)d`.
+"""
+
+
+def get_lang(request):
+    """The UI language chosen in the navbar switcher (stored in the session by set_language)."""
+    return 'ko' if request.session.get('language') == 'ko' else 'en'
+
+
+STRINGS = {
+    'en': {
+        'nav': 'Fish Cutting',
+        'module': 'Fish cutting pay',
+        'hub_intro': (
+            "Records and prices the cutting crew's work. Cutters never log in — "
+            'the supervisor enters everything here.'
+        ),
+        'home': '← Cutting home',
+        'save': 'Save',
+        'cancel': 'Cancel',
+        'edit': 'Edit',
+        'delete': 'Delete',
+        'activate': 'Activate',
+        'deactivate': 'Deactivate',
+
+        'tile_cutters': 'Cutters',
+        'tile_cutters_desc': 'The crew roster — add, rename or deactivate cutters.',
+        'tile_prices': 'Price list',
+        'tile_prices_desc': 'Per-box rates by style and size, each with a start date.',
+        'stat_active_cutters': 'Active cutters',
+        'stat_price_items': 'Priced sizes',
+
+        'cutters_title': 'Cutters',
+        'cutters_intro': (
+            "Cutters are records only — they don't get a login. Deactivate someone who has left: "
+            'they drop off the daily entry list, but their past work stays.'
+        ),
+        'add_cutter': 'Add a cutter',
+        'edit_cutter': 'Edit cutter — {name}',
+        'name': 'Name',
+        'note': 'Note',
+        'note_help': 'Optional — e.g. phone number or team.',
+        'active_cutters': 'Active cutters',
+        'inactive_cutters': 'Inactive cutters',
+        'no_cutters': 'No cutters yet — add the first one above.',
+        'roster_no_active': 'No active cutters — reactivate someone below, or add a new cutter above.',
+        'cutter_added': 'Added {name}.',
+        'cutter_saved': 'Saved {name}.',
+        'cutter_activated': '{name} is active again.',
+        'cutter_deactivated': '{name} is now inactive.',
+        'cutter_deleted': 'Deleted {name}.',
+        'cutter_in_use': "{name} has work records, so they can't be deleted. Keep them inactive instead — their past work stays on record.",
+        'confirm_delete_cutter': "Delete {name}? This can't be undone.",
+        'err_duplicate_name': (
+            'There is already a cutter with this name. Add something to tell them apart, e.g. "Kim (A)".'
+        ),
+
+        'prices_title': 'Price list',
+        'prices_intro': (
+            'Pay is per box. Each rate has a start date and applies from that day on. '
+            'When a rate changes, work already recorded keeps the price it was saved with.'
+        ),
+        'style': 'Style',
+        'size': 'Size',
+        'size_help': 'As written on the price list — e.g. 7, 10~11, 4,5,6.',
+        'sort_order': 'Display order',
+        'sort_order_help': 'Smaller numbers show first. Leave blank to add it at the end.',
+        'sort_order_help_edit': 'Smaller numbers show first.',
+        'unit_price': 'Price per box (₩)',
+        'effective_from': 'Starts on',
+        'since': 'since {date}',
+        'no_current_rate': 'No rate in force today',
+        'upcoming_rate': 'From {date}: ₩{price}',
+        'rate_history': 'Rate history',
+        'add_rate': 'New rate',
+        'add_rate_title': 'New rate — {item}',
+        'edit_rate_title': 'Edit rate — {item}',
+        'add_item': 'Add a size',
+        'add_item_intro': 'Adds a new line to the price list together with its first rate.',
+        'edit_item': 'Edit size — {item}',
+        'item_added': 'Added {item} at ₩{price}.',
+        'item_saved': 'Saved {item}.',
+        'item_activated': '{item} is back in daily entry.',
+        'item_deactivated': '{item} is hidden from daily entry.',
+        'item_deleted': 'Deleted {item} and its rates.',
+        'item_in_use': "{item} is used by work records, so it can't be deleted. Leave it hidden instead — it stays out of daily entry.",
+        'confirm_delete_item': 'Delete {item} and its whole rate history?',
+        'rate_added': 'New rate for {item}: ₩{price} from {date}.',
+        'rate_saved': 'Saved the rate for {item}.',
+        'rate_deleted': 'Deleted the {item} rate that started on {date}.',
+        'rate_only_one': (
+            "This is the only rate for {item}, so it can't be deleted. "
+            'Add a replacement first, or deactivate the size.'
+        ),
+        'confirm_delete_rate': 'Delete this rate? Work already recorded keeps its saved price.',
+        'rate_change_note': (
+            'Changing a rate never changes work that is already recorded — '
+            'each record keeps the price it was saved with. If a correction should also apply to work '
+            'already recorded, use "Review and re-price" on that month\'s pay page.'
+        ),
+        'err_duplicate_item': '{item} is already on the price list.',
+        'err_duplicate_rate_date': 'This size already has a rate starting on that date — edit that one instead.',
+        'style_tongpo_desc': 'fully cut and opened out',
+        'style_tonghalbok_desc': 'belly slit and gutted',
+        'hidden': 'Hidden',
+        'no_items': 'Nothing on the price list for this style yet.',
+
+        'err_form': 'Please fix the highlighted fields.',
+        'err_required': 'This field is required.',
+        'err_number': 'Enter a whole number, e.g. 4500.',
+        'err_price_min': 'The price must be at least ₩1.',
+        'err_date': 'Enter a valid date.',
+        'err_choice': 'Choose one of the options.',
+        'err_max_length': 'Too long — at most %(limit_value)d characters.',
+        'err_order_range': 'Enter a number from 0 to 32767.',
+
+        'tile_entry': 'Enter work',
+        'tile_entry_desc': "Record the crew's boxes — everyone in one save.",
+        'tile_day': 'Daily view',
+        'tile_day_desc': 'What each cutter did and earned, and the entries to correct.',
+        'stat_today': "Today's work",
+        'stat_today_value': '{rows} rows · ₩{total}',
+
+        'entry_title': 'Enter work',
+        'entry_intro': (
+            'Choose the date, style and size, tick everyone who worked and type their boxes. '
+            'One tap saves the whole crew — or nothing at all if a row needs fixing.'
+        ),
+        'work_date': 'Work date',
+        'select_all': 'Select all',
+        'boxes': 'Boxes',
+        'change_row': 'Different size or style',
+        'same_as_batch': 'Same as above',
+        'save_batch': 'Save',
+        'js_per_box': '₩{price}/box',
+        'js_no_rate': 'No rate on this date',
+        'js_summary': '{count} cutters · ₩{total}',
+        'no_active_cutters': 'There are no active cutters — add or reactivate one on the Cutters page first.',
+        'no_active_items': 'The price list has no active sizes — add one first.',
+        'batch_saved': 'Saved {count} cutters for {date} — ₩{total} in total.',
+        'batch_already_saved': 'That entry was already saved, so nothing was added twice.',
+        'err_batch_rows': 'Nothing was saved — please fix the problems marked below.',
+        'err_no_rows': 'Tick at least one cutter and enter their boxes.',
+        'err_boxes_required': 'Enter the number of boxes.',
+        'err_boxes_range': 'Enter a whole number of boxes from 1 to 9999.',
+        'err_future_date': "Work can't be entered for a future date.",
+        'err_no_rate': 'There is no rate for {item} on {date} — add one on the price list first.',
+        'err_style_mismatch': 'Pick a size from the chosen style.',
+        'err_cutter_inactive': "{name} was deactivated while this form was open, so their row can't be saved.",
+        'err_cutter_gone': "A ticked cutter was deleted while this form was open, so their row can't be saved.",
+        'err_token_spent': (
+            'This form was already saved at {time} (work date {date}), so the rows below were NOT saved. '
+            'Check them, then tap Save to add them as a new entry. '
+            'To change the earlier entry, edit it in Daily view.'
+        ),
+
+        'day_title': 'Day — {date}',
+        'previous_day': '← Previous day',
+        'next_day': 'Next day →',
+        'today': 'Today',
+        'go_to_date': 'Go to date',
+        'go': 'Go',
+        'enter_for_day': 'Enter work for this day',
+        'saved_label': 'Saved',
+        'cutter': 'Cutter',
+        'item_col': 'Style · size',
+        'rate_col': 'Rate',
+        'amount_col': 'Amount',
+        'batch_total': 'Total',
+        'day_total': 'Day total',
+        'no_entries': 'Nothing has been entered for this day.',
+        'delete_batch': 'Delete whole entry',
+        'confirm_delete_batch': "Delete this whole entry ({count} rows)? This can't be undone.",
+        'confirm_delete_record': "Delete {name}'s row?",
+        'batch_deleted': 'Deleted the entry ({count} rows).',
+        'record_deleted': "Deleted {name}'s row.",
+        'record_saved': "Saved {name}'s row.",
+        'edit_record_title': 'Correct entry — {name}, {date}',
+        'edit_record_note': (
+            'Changing only the boxes keeps the rate this row was saved with. '
+            'Choosing another size or style uses the rate in force on the work date.'
+        ),
+        'saved_as': 'Saved as',
+        'record_unchanged': 'Nothing changed, so nothing was saved. A reason is only recorded together with a change.',
+
+        'tile_month': 'Monthly pay',
+        'tile_month_desc': "Each cutter's month, split by style — export to Excel or print payslips.",
+        'by_cutter': 'By cutter',
+        'entries_heading': 'Entries',
+        'total': 'Total',
+        'month_title': 'Monthly pay — {month}',
+        'month_intro': (
+            'Totals for each cutter from the first to the last day of the month, '
+            'using the price saved with each entry.'
+        ),
+        'previous_month': '← Previous month',
+        'next_month': 'Next month →',
+        'this_month': 'This month',
+        'go_to_month': 'Go to month',
+        'export_excel': 'Export to Excel',
+        'print_payslips': 'Print all payslips',
+        'month_total': 'Month total',
+        'stat_cutters_paid': 'Cutters with work',
+        'no_month_work': 'No work has been recorded for this month.',
+        'provisional_note': 'Provisional — the month is not over. Figures cover work recorded up to {date}.',
+        'payslip': 'Payslip',
+        'details': 'Details',
+        'cutter_month_title': '{name} — {month}',
+        'days_worked': 'Days worked',
+        'by_day': 'By day',
+        'by_style': 'By style',
+        'date_col': 'Date',
+        'back_to_month': '← Monthly pay',
+
+        'payslip_title': 'Cutting payslip',
+        'payslip_heading': 'PAYSLIP',
+        'brand': 'Shinhe Hours Tracker',
+        'period': 'Period',
+        'print': 'Print / Save PDF',
+        'back': 'Back',
+        'earnings': 'Earnings',
+        'description': 'Description',
+        'rate_per_box': 'Rate per box',
+        'subtotal': '{style} subtotal',
+        'total_pay': 'TOTAL PAY',
+        'daily_detail': 'Daily detail',
+        'received_by': 'Received by (signature)',
+        'generated': 'Generated',
+        'no_work_slip': 'No work recorded in this period.',
+        'payslip_note': 'Amounts use the price saved with each entry.',
+        'no_payslips': 'Nobody has work recorded for this month, so there are no payslips.',
+
+        'xl_summary_sheet': 'Summary',
+        'xl_detail_sheet': 'Detail',
+        'xl_title': 'Fish cutting pay — {month}',
+        'xl_period': 'Period: {first} – {last}',
+        'xl_boxes': '{style} boxes',
+        'xl_amount': '{style} (₩)',
+        'xl_total_boxes': 'Total boxes',
+        'xl_total_amount': 'Total (₩)',
+        'xl_rate': 'Rate (₩)',
+        'xl_amount_col': 'Amount (₩)',
+        'xl_total_row': 'Total',
+        'xl_filename': 'fish-cutting-{month}.xlsx',
+        'err_form_expired': 'This form had expired, so nothing was saved. Check the rows below and tap Save again.',
+
+        'err_month_locked': (
+            '{month} is locked because it has been paid. '
+            'To change its work, unlock it on the monthly pay page first.'
+        ),
+        'locked_banner': (
+            "🔒 {month} is locked (paid) — locked by {name} on {when}. "
+            "Its work can't be entered, corrected or deleted."
+        ),
+        'locked_badge': 'Locked',
+        'lock_month': '🔒 Lock month (paid)',
+        'lock_intro': 'Lock the month once everyone has been paid, so its figures can no longer change.',
+        'confirm_lock': (
+            "Lock {month}? Its work can't be entered, corrected or deleted until someone unlocks it."
+        ),
+        'lock_not_yet': 'The month can be locked from its last day ({date}).',
+        'month_locked_done': 'Locked {month}.',
+        'err_lock_early': "{month} isn't over yet — it can be locked from {date}.",
+        'unlock_month': 'Unlock',
+        'unlock_reason': 'Reason for unlocking',
+        'unlock_help': 'Required — it is kept in the change log.',
+        'err_unlock_reason': 'Give a reason for unlocking.',
+        'month_unlocked': 'Unlocked {month}. Its work can be changed again; every change goes in the change log.',
+
+        'stale_notice': (
+            '{count} entries this month were saved at a price that differs from the price list for their day '
+            '— a rate was changed or backdated after they were saved.'
+        ),
+        'stale_review': 'Review and re-price',
+        'reprice_title': 'Re-price — {month}',
+        'reprice_intro': (
+            'These entries were saved at a different price than the price list now gives for their work date. '
+            'Re-pricing moves them to the list price. Every change is kept in the change log.'
+        ),
+        'saved_price': 'Saved price',
+        'list_price': 'List price',
+        'change_col': 'Change',
+        'no_rate_now': 'No rate now',
+        'reprice_apply': 'Re-price {count} entries',
+        'reprice_total_change': 'Change to the month total: {delta}',
+        'confirm_reprice': 'Re-price {count} entries to the price list? The month total changes by {delta}.',
+        'reprice_done': 'Re-priced {count} entries — the month total changed by {delta}.',
+        'reprice_none': 'Every entry in {month} matches the price list.',
+        'reprice_no_rate': (
+            '{count} entries have no rate on their work date any more, so they stay as saved. '
+            'Add a rate covering that date to re-price them.'
+        ),
+        'reprice_changed': 'Nothing was re-priced — the price list or the entries changed while this page was open. Check the list again.',
+
+        'tile_audit': 'Change log',
+        'tile_audit_desc': 'Every correction, deletion, re-price, price change and month lock — who and when.',
+        'audit_title': 'Change log',
+        'audit_month_title': 'Change log — {month}',
+        'audit_intro': "Written automatically with every change. The log itself can't be edited or deleted.",
+        'all_months': 'All months',
+        'audit_none': 'No changes recorded.',
+        'view_change_log': 'Change log',
+        'newer': '← Newer',
+        'older': 'Older →',
+        'page_of': 'Page {page} of {pages}',
+        'reason': 'Reason',
+        'reason_optional': 'Reason (optional)',
+        'reason_help': 'Kept in the change log.',
+        'rate_line': '{item}: ₩{price} from {date}',
+        'was_locked': 'had been locked by {name} on {when}',
+        'entered_note': 'entered by {name} at {when}',
+        'action_edit': 'Corrected',
+        'action_delete_record': 'Row deleted',
+        'action_delete_batch': 'Deleted with its entry',
+        'action_reprice': 'Re-priced',
+        'action_lock': 'Month locked',
+        'action_unlock': 'Month unlocked',
+        'action_rate_add': 'New rate',
+        'action_rate_edit': 'Rate changed',
+        'action_rate_delete': 'Rate deleted',
+
+        # Singular forms, picked by counted() when the count is 1.
+        'stat_today_value_one': '{rows} row · ₩{total}',
+        'batch_saved_one': 'Saved {count} cutter for {date} — ₩{total} in total.',
+        'confirm_delete_batch_one': "Delete this whole entry ({count} row)? This can't be undone.",
+        'batch_deleted_one': 'Deleted the entry ({count} row).',
+        'stale_notice_one': (
+            '{count} entry this month was saved at a price that differs from the price list for its day '
+            '— a rate was changed or backdated after it was saved.'
+        ),
+        'reprice_apply_one': 'Re-price {count} entry',
+        'confirm_reprice_one': 'Re-price {count} entry to the price list? The month total changes by {delta}.',
+        'reprice_done_one': 'Re-priced {count} entry — the month total changed by {delta}.',
+        'reprice_no_rate_one': (
+            '{count} entry has no rate on its work date any more, so it stays as saved. '
+            'Add a rate covering that date to re-price it.'
+        ),
+        'js_summary_one': '{count} cutter · ₩{total}',
+
+        'payslip_language': 'Payslip language',
+        'payslip_language_help': "Their payslip prints in this language — pick the one they read best.",
+        'same_as_screen': 'Same as the screen',
+        'print_in': 'Print in',
+        'each_cutters_language': "Each cutter's language",
+
+        'help_link': 'How it works',
+        'help_title': 'How it works',
+        'help_intro': 'A short guide for the supervisor. Everything can be done on a phone or a PC.',
+        'help_daily_title': 'Every day',
+        'help_daily_1': (
+            'Open "Enter work", check the date, pick the style and size, tap "Select all", '
+            'then untick anyone who is absent.'
+        ),
+        'help_daily_2': "Type each person's boxes. If someone cut a different size or style, change it on their row.",
+        'help_daily_3': (
+            'Tap Save once: the whole crew is saved together, or nothing is if a row needs fixing. '
+            'You can save several entries a day — for example one per style.'
+        ),
+        'help_fix_title': 'Fixing a mistake',
+        'help_fix_1': 'Open the day in "Daily view", then edit or delete the row. Changing only the boxes keeps the saved price.',
+        'help_fix_2': (
+            'Every correction and deletion is kept in the change log with who did it and when. '
+            'Add a reason when you correct something.'
+        ),
+        'help_month_title': 'End of the month',
+        'help_month_1': 'Open "Monthly pay". Until the month is over, its figures are marked provisional.',
+        'help_month_2': (
+            "Export to Excel for the office and print the payslips — each cutter's slip prints in their payslip language."
+        ),
+        'help_month_3': (
+            "Once everyone is paid, lock the month. A locked month can't be changed; "
+            'unlocking needs a reason and is logged.'
+        ),
+        'help_prices_title': 'Prices',
+        'help_prices_1': (
+            'Each rate has a start date. Add a new rate from the day it applies — '
+            'work already recorded keeps the price it was saved with.'
+        ),
+        'help_prices_2': (
+            'If a price was wrong and should also apply to work already saved, '
+            'use "Review and re-price" on that month\'s pay page.'
+        ),
+    },
+    'ko': {
+        'nav': '손질 작업',
+        'module': '생선 손질 수당',
+        'hub_intro': (
+            '손질 작업자의 작업량과 수당을 기록합니다. 작업자는 로그인하지 않으며, '
+            '모든 입력은 관리자가 합니다.'
+        ),
+        'home': '← 손질 작업 홈',
+        'save': '저장',
+        'cancel': '취소',
+        'edit': '수정',
+        'delete': '삭제',
+        'activate': '활성화',
+        'deactivate': '비활성화',
+
+        'tile_cutters': '작업자',
+        'tile_cutters_desc': '작업자 명단 — 추가, 이름 수정, 비활성화.',
+        'tile_prices': '단가표',
+        'tile_prices_desc': '손질 방식·크기별 박스당 단가와 적용 시작일.',
+        'stat_active_cutters': '활성 작업자',
+        'stat_price_items': '단가 등록 크기',
+
+        'cutters_title': '작업자',
+        'cutters_intro': (
+            '작업자는 기록용이며 로그인 계정이 없습니다. 그만둔 작업자는 비활성화하세요. '
+            '작업 입력 목록에서는 빠지지만 지난 작업 기록은 그대로 남습니다.'
+        ),
+        'add_cutter': '작업자 추가',
+        'edit_cutter': '작업자 수정 — {name}',
+        'name': '이름',
+        'note': '메모',
+        'note_help': '선택 사항 — 예: 연락처, 조.',
+        'active_cutters': '활성 작업자',
+        'inactive_cutters': '비활성 작업자',
+        'no_cutters': '등록된 작업자가 없습니다. 위에서 첫 작업자를 추가하세요.',
+        'roster_no_active': '활성 작업자가 없습니다. 아래에서 다시 활성화하거나 위에서 새로 추가하세요.',
+        'cutter_added': '{name} 님을 추가했습니다.',
+        'cutter_saved': '{name} 님 정보를 저장했습니다.',
+        'cutter_activated': '{name} 님을 다시 활성화했습니다.',
+        'cutter_deactivated': '{name} 님을 비활성화했습니다.',
+        'cutter_deleted': '{name} 님을 삭제했습니다.',
+        'cutter_in_use': '{name} 님은 작업 기록이 있어 삭제할 수 없습니다. 비활성 상태로 두면 지난 작업 기록은 그대로 남습니다.',
+        'confirm_delete_cutter': '{name} 님을 삭제할까요? 되돌릴 수 없습니다.',
+        'err_duplicate_name': '같은 이름의 작업자가 이미 있습니다. 구분할 수 있게 덧붙여 주세요. 예: "김민수 A".',
+
+        'prices_title': '단가표',
+        'prices_intro': (
+            '수당은 박스 단위로 계산합니다. 단가마다 적용 시작일이 있으며 그날부터 적용됩니다. '
+            '단가가 바뀌어도 이미 기록된 작업은 저장 당시의 단가를 그대로 유지합니다.'
+        ),
+        'style': '손질 방식',
+        'size': '크기',
+        'size_help': '단가표에 적힌 그대로 — 예: 7, 10~11, 4,5,6.',
+        'sort_order': '표시 순서',
+        'sort_order_help': '숫자가 작을수록 먼저 표시됩니다. 비워 두면 맨 뒤에 추가됩니다.',
+        'sort_order_help_edit': '숫자가 작을수록 먼저 표시됩니다.',
+        'unit_price': '박스당 단가 (₩)',
+        'effective_from': '적용 시작일',
+        'since': '{date}부터',
+        'no_current_rate': '오늘 적용되는 단가 없음',
+        'upcoming_rate': '{date}부터: ₩{price}',
+        'rate_history': '단가 이력',
+        'add_rate': '새 단가',
+        'add_rate_title': '새 단가 — {item}',
+        'edit_rate_title': '단가 수정 — {item}',
+        'add_item': '크기 추가',
+        'add_item_intro': '단가표에 새 항목을 첫 단가와 함께 추가합니다.',
+        'edit_item': '크기 수정 — {item}',
+        'item_added': '{item} 항목을 추가했습니다 (₩{price}).',  # no particle after a number: 로/으로 depends on how it's read
+        'item_saved': '{item} 항목을 저장했습니다.',
+        'item_activated': '{item} 항목을 작업 입력 화면에 다시 표시했습니다.',
+        'item_deactivated': '{item} 항목을 작업 입력 화면에서 숨겼습니다.',
+        'item_deleted': '{item} 항목과 단가 이력을 삭제했습니다.',
+        'item_in_use': '{item} 항목은 작업 기록에 사용되어 삭제할 수 없습니다. 숨김 상태로 두면 작업 입력 화면에 표시되지 않습니다.',
+        'confirm_delete_item': '{item} 항목과 모든 단가 이력을 삭제할까요?',
+        'rate_added': '{item} 새 단가: {date}부터 ₩{price}.',
+        'rate_saved': '{item} 단가를 저장했습니다.',
+        'rate_deleted': '{item}의 {date} 시작 단가를 삭제했습니다.',
+        'rate_only_one': (
+            '{item}의 유일한 단가라 삭제할 수 없습니다. '
+            '새 단가를 먼저 추가하거나 크기를 비활성화하세요.'
+        ),
+        'confirm_delete_rate': '이 단가를 삭제할까요? 이미 기록된 작업은 저장된 단가를 유지합니다.',
+        'rate_change_note': (
+            '단가를 바꿔도 이미 기록된 작업은 바뀌지 않습니다. 각 기록은 저장 당시의 단가를 유지합니다. '
+            '이미 기록된 작업에도 적용해야 하는 정정이라면 해당 월 정산 화면의 "확인하고 단가 재적용"을 사용하세요.'
+        ),
+        'err_duplicate_item': '{item} 항목은 이미 단가표에 있습니다.',
+        'err_duplicate_rate_date': '이 크기에는 같은 날짜에 시작하는 단가가 이미 있습니다. 그 단가를 수정하세요.',
+        'style_tongpo_desc': '통째로 펼쳐 손질',
+        'style_tonghalbok_desc': '배만 갈라 내장 제거',
+        'hidden': '숨김',
+        'no_items': '이 손질 방식에는 아직 단가가 없습니다.',
+
+        'err_form': '표시된 항목을 확인해 주세요.',
+        'err_required': '필수 입력 항목입니다.',
+        'err_number': '소수점 없이 숫자만 입력하세요. 예: 4500.',
+        'err_price_min': '단가는 1원 이상이어야 합니다.',
+        'err_date': '올바른 날짜를 입력하세요.',
+        'err_choice': '목록에서 선택하세요.',
+        'err_max_length': '너무 깁니다 — 최대 %(limit_value)d자.',
+        'err_order_range': '0부터 32767 사이의 숫자를 입력하세요.',
+
+        'tile_entry': '작업 입력',
+        'tile_entry_desc': '작업자 전원의 박스 수를 한 번에 저장합니다.',
+        'tile_day': '일일 현황',
+        'tile_day_desc': '작업자별 작업량과 수당, 입력 기록 수정.',
+        'stat_today': '오늘 작업',
+        'stat_today_value': '{rows}건 · ₩{total}',
+
+        'entry_title': '작업 입력',
+        'entry_intro': (
+            '날짜·손질 방식·크기를 고르고, 작업한 사람을 체크한 뒤 박스 수를 입력하세요. '
+            '한 번에 전원이 저장되며, 고칠 행이 있으면 아무것도 저장되지 않습니다.'
+        ),
+        'work_date': '작업일',
+        'select_all': '전체 선택',
+        'boxes': '박스 수',
+        'change_row': '다른 크기·방식',
+        'same_as_batch': '위와 같음',
+        'save_batch': '저장',
+        'js_per_box': '박스당 ₩{price}',
+        'js_no_rate': '이 날짜 단가 없음',
+        'js_summary': '{count}명 · ₩{total}',
+        'no_active_cutters': '활성 작업자가 없습니다. 먼저 작업자 화면에서 추가하거나 다시 활성화하세요.',
+        'no_active_items': '단가표에 활성 크기가 없습니다. 먼저 추가하세요.',
+        'batch_saved': '{date} 작업 {count}명 저장 — 합계 ₩{total}.',
+        'batch_already_saved': '이미 저장된 입력이라 중복으로 추가하지 않았습니다.',
+        'err_batch_rows': '저장되지 않았습니다 — 아래 표시된 항목을 확인해 주세요.',
+        'err_no_rows': '작업자를 한 명 이상 체크하고 박스 수를 입력하세요.',
+        'err_boxes_required': '박스 수를 입력하세요.',
+        'err_boxes_range': '박스 수는 1부터 9999까지의 정수로 입력하세요.',
+        'err_future_date': '미래 날짜의 작업은 입력할 수 없습니다.',
+        'err_no_rate': '{date}에 적용되는 {item} 단가가 없습니다. 단가표에 먼저 추가하세요.',
+        'err_style_mismatch': '선택한 손질 방식의 크기를 고르세요.',
+        'err_cutter_inactive': '이 화면이 열려 있는 동안 {name} 님이 비활성화되어 해당 행을 저장할 수 없습니다.',
+        'err_cutter_gone': '이 화면이 열려 있는 동안 체크한 작업자가 삭제되어 해당 행을 저장할 수 없습니다.',
+        'err_token_spent': (
+            '이 화면은 이미 {date} 작업으로 {time}에 저장되었습니다. 그래서 아래 행은 저장되지 않았습니다. '
+            '확인한 뒤 저장을 누르면 새 입력으로 추가됩니다. '
+            '앞서 저장한 입력을 고치려면 해당 날짜의 일일 현황에서 수정하세요.'
+        ),
+
+        'day_title': '일일 현황 — {date}',
+        'previous_day': '← 이전 날',
+        'next_day': '다음 날 →',
+        'today': '오늘',
+        'go_to_date': '날짜로 이동',
+        'go': '이동',
+        'enter_for_day': '이 날짜 작업 입력',
+        'saved_label': '저장',
+        'cutter': '작업자',
+        'item_col': '방식 · 크기',
+        'rate_col': '단가',
+        'amount_col': '금액',
+        'batch_total': '합계',
+        'day_total': '일 합계',
+        'no_entries': '이 날짜에 입력된 작업이 없습니다.',
+        'delete_batch': '입력 전체 삭제',
+        'confirm_delete_batch': '이 입력 전체({count}건)를 삭제할까요? 되돌릴 수 없습니다.',
+        'confirm_delete_record': '{name} 님의 행을 삭제할까요?',
+        'batch_deleted': '입력({count}건)을 삭제했습니다.',
+        'record_deleted': '{name} 님의 행을 삭제했습니다.',
+        'record_saved': '{name} 님의 행을 저장했습니다.',
+        'edit_record_title': '입력 수정 — {name}, {date}',
+        'edit_record_note': (
+            '박스 수만 바꾸면 저장 당시의 단가가 유지됩니다. '
+            '다른 크기·방식을 고르면 작업일에 적용되는 단가로 계산됩니다.'
+        ),
+        'saved_as': '저장된 내용',
+        'record_unchanged': '바뀐 내용이 없어 저장하지 않았습니다. 사유는 변경 내용과 함께만 기록됩니다.',
+
+        'tile_month': '월별 정산',
+        'tile_month_desc': '작업자별 월 합계(방식별) — 엑셀로 내보내거나 명세서를 인쇄합니다.',
+        'by_cutter': '작업자별',
+        'entries_heading': '입력 기록',
+        'total': '합계',
+        'month_title': '월별 정산 — {month}',
+        'month_intro': '매월 1일부터 말일까지 작업자별 합계입니다. 각 입력에 저장된 단가로 계산합니다.',
+        'previous_month': '← 이전 달',
+        'next_month': '다음 달 →',
+        'this_month': '이번 달',
+        'go_to_month': '월로 이동',
+        'export_excel': '엑셀로 내보내기',
+        'print_payslips': '전체 명세서 인쇄',
+        'month_total': '월 합계',
+        'stat_cutters_paid': '작업한 인원',
+        'no_month_work': '해당 월에 기록된 작업이 없습니다.',
+        'provisional_note': '잠정 — 아직 월이 끝나지 않았습니다. {date}까지 기록된 작업 기준입니다.',
+        'payslip': '명세서',
+        'details': '상세',
+        'cutter_month_title': '{name} 님 — {month}',
+        'days_worked': '작업 일수',
+        'by_day': '일별',
+        'by_style': '방식별',
+        'date_col': '날짜',
+        'back_to_month': '← 월별 정산',
+
+        'payslip_title': '손질 수당 명세서',
+        'payslip_heading': '수당 명세서',
+        'brand': '신해경 근무 시간 추적기',
+        'period': '기간',
+        'print': '인쇄 / PDF 저장',
+        'back': '뒤로',
+        'earnings': '지급 내역',
+        'description': '항목',
+        'rate_per_box': '박스당 단가',
+        'subtotal': '{style} 소계',
+        'total_pay': '지급 합계',
+        'daily_detail': '일별 내역',
+        'received_by': '수령인 (서명)',
+        'generated': '발행일',
+        'no_work_slip': '이 기간에 기록된 작업이 없습니다.',
+        'payslip_note': '금액은 각 입력에 저장된 단가로 계산했습니다.',
+        'no_payslips': '해당 월에 작업이 기록된 사람이 없어 명세서가 없습니다.',
+
+        'xl_summary_sheet': '요약',
+        'xl_detail_sheet': '상세',
+        'xl_title': '생선 손질 수당 — {month}',
+        'xl_period': '기간: {first} – {last}',
+        'xl_boxes': '{style} 박스',
+        'xl_amount': '{style} 금액 (₩)',
+        'xl_total_boxes': '총 박스',
+        'xl_total_amount': '합계 (₩)',
+        'xl_rate': '단가 (₩)',
+        'xl_amount_col': '금액 (₩)',
+        'xl_total_row': '합계',
+        'xl_filename': '생선손질수당-{month}.xlsx',
+        'err_form_expired': '입력 화면이 만료되어 저장하지 않았습니다. 아래 행을 확인한 뒤 다시 저장을 누르세요.',
+
+        'err_month_locked': (
+            '{month} 정산은 지급이 끝나 잠겨 있습니다. '
+            '해당 월의 작업을 바꾸려면 먼저 월별 정산 화면에서 잠금을 해제하세요.'
+        ),
+        'locked_banner': (
+            '🔒 {month} 정산 잠김(지급 완료) — 잠금: {name}, {when}. '
+            '해당 월의 작업은 입력·수정·삭제할 수 없습니다.'
+        ),
+        'locked_badge': '잠김',
+        'lock_month': '🔒 월 잠금 (지급 완료)',
+        'lock_intro': '모두에게 지급한 뒤 월을 잠그면 해당 월의 금액이 더 이상 바뀌지 않습니다.',
+        'confirm_lock': '{month} 정산을 잠글까요? 잠금을 해제할 때까지 해당 월의 작업을 입력·수정·삭제할 수 없습니다.',
+        'lock_not_yet': '월 잠금은 말일({date})부터 할 수 있습니다.',
+        'month_locked_done': '{month} 정산을 잠갔습니다.',
+        'err_lock_early': '아직 월이 끝나지 않았습니다. {month} 정산은 말일({date})부터 잠글 수 있습니다.',
+        'unlock_month': '잠금 해제',
+        'unlock_reason': '잠금 해제 사유',
+        'unlock_help': '필수 — 변경 기록에 남습니다.',
+        'err_unlock_reason': '잠금 해제 사유를 입력하세요.',
+        'month_unlocked': '{month} 정산 잠금을 해제했습니다. 다시 수정할 수 있으며, 모든 변경은 변경 기록에 남습니다.',
+
+        'stale_notice': (
+            '해당 월의 입력 {count}건은 저장된 단가가 작업일 기준 현재 단가표와 다릅니다 '
+            '— 저장한 뒤에 단가가 바뀌었거나 소급 적용되었습니다.'
+        ),
+        'stale_review': '확인하고 단가 재적용',
+        'reprice_title': '단가 재적용 — {month}',
+        'reprice_intro': (
+            '아래 입력은 저장된 단가가 현재 단가표의 작업일 단가와 다릅니다. '
+            '재적용하면 단가표 단가로 바뀌며, 모든 변경은 변경 기록에 남습니다.'
+        ),
+        'saved_price': '저장 단가',
+        'list_price': '단가표 단가',
+        'change_col': '차액',
+        'no_rate_now': '현재 단가 없음',
+        'reprice_apply': '{count}건 단가 재적용',
+        'reprice_total_change': '월 합계 변동: {delta}',
+        'confirm_reprice': '{count}건을 단가표 단가로 바꿀까요? 월 합계 변동: {delta}.',
+        'reprice_done': '{count}건에 단가를 재적용했습니다 — 월 합계 변동 {delta}.',
+        'reprice_none': '{month}의 모든 입력이 단가표와 일치합니다.',
+        'reprice_no_rate': (
+            '{count}건은 작업일에 적용되는 단가가 없어 저장된 그대로 둡니다. '
+            '재적용하려면 그 날짜를 포함하는 단가를 추가하세요.'
+        ),
+        'reprice_changed': '이 화면이 열려 있는 동안 단가표나 입력이 바뀌어 아무것도 재적용하지 않았습니다. 목록을 다시 확인하세요.',
+
+        'tile_audit': '변경 기록',
+        'tile_audit_desc': '수정·삭제·단가 재적용·단가 변경·월 잠금 — 누가, 언제 했는지.',
+        'audit_title': '변경 기록',
+        'audit_month_title': '변경 기록 — {month}',
+        'audit_intro': '변경할 때마다 자동으로 기록되며, 기록은 수정하거나 삭제할 수 없습니다.',
+        'all_months': '전체 기간',
+        'audit_none': '기록된 변경이 없습니다.',
+        'view_change_log': '변경 기록',
+        'newer': '← 최근',
+        'older': '이전 →',
+        'page_of': '{page} / {pages} 페이지',
+        'reason': '사유',
+        'reason_optional': '사유 (선택)',
+        'reason_help': '변경 기록에 남습니다.',
+        'rate_line': '{item}: {date}부터 ₩{price}',
+        'was_locked': '잠금: {name}, {when}',
+        'entered_note': '입력: {name}, {when}',
+        'action_edit': '수정',
+        'action_delete_record': '행 삭제',
+        'action_delete_batch': '입력 전체 삭제',
+        'action_reprice': '단가 재적용',
+        'action_lock': '월 잠금',
+        'action_unlock': '잠금 해제',
+        'action_rate_add': '새 단가',
+        'action_rate_edit': '단가 수정',
+        'action_rate_delete': '단가 삭제',
+
+        'payslip_language': '명세서 언어',
+        'payslip_language_help': '이 작업자의 명세서는 이 언어로 인쇄됩니다. 작업자가 가장 잘 읽을 수 있는 언어를 고르세요.',
+        'same_as_screen': '화면 언어와 같게',
+        'print_in': '인쇄 언어',
+        'each_cutters_language': '작업자별 언어',
+
+        'help_link': '사용 방법',
+        'help_title': '사용 방법',
+        'help_intro': '관리자를 위한 간단한 안내입니다. 모든 작업은 휴대폰이나 PC에서 할 수 있습니다.',
+        'help_daily_title': '매일',
+        'help_daily_1': (
+            '"작업 입력"을 열어 날짜를 확인하고 손질 방식과 크기를 고른 뒤, '
+            '"전체 선택"을 누르고 결근한 사람의 체크를 해제하세요.'
+        ),
+        'help_daily_2': '각자의 박스 수를 입력하세요. 다른 크기나 방식으로 작업한 사람은 그 행에서 바꾸면 됩니다.',
+        'help_daily_3': (
+            '저장을 한 번 누르면 전원이 함께 저장되고, 고칠 행이 있으면 아무것도 저장되지 않습니다. '
+            '하루에 여러 번 입력할 수 있습니다 — 예를 들어 손질 방식별로 한 번씩.'
+        ),
+        'help_fix_title': '잘못 입력했을 때',
+        'help_fix_1': '"일일 현황"에서 해당 날짜를 열고 행을 수정하거나 삭제하세요. 박스 수만 바꾸면 저장된 단가가 유지됩니다.',
+        'help_fix_2': '모든 수정과 삭제는 누가 언제 했는지와 함께 변경 기록에 남습니다. 수정할 때는 사유를 적어 두세요.',
+        'help_month_title': '월말',
+        'help_month_1': '"월별 정산"을 여세요. 월이 끝나기 전까지는 금액이 잠정으로 표시됩니다.',
+        'help_month_2': '사무실용 엑셀을 내보내고 명세서를 인쇄하세요. 명세서는 작업자마다 지정한 언어로 인쇄됩니다.',
+        'help_month_3': '모두에게 지급한 뒤 월을 잠그세요. 잠긴 월은 바꿀 수 없으며, 잠금 해제에는 사유가 필요하고 기록에 남습니다.',
+        'help_prices_title': '단가',
+        'help_prices_1': (
+            '단가마다 적용 시작일이 있습니다. 새 단가를 추가할 때는 그 단가가 적용되는 첫날을 적용 시작일로 입력하세요. '
+            '이미 기록된 작업은 저장 당시의 단가를 유지합니다.'
+        ),
+        'help_prices_2': '단가가 잘못되어 이미 저장된 작업에도 적용해야 한다면 해당 월 정산 화면의 "확인하고 단가 재적용"을 사용하세요.',
+    },
+}
+
+# Messages with a count, which English words differently for exactly one (see counted()).
+COUNTED = (
+    'stat_today_value', 'batch_saved', 'confirm_delete_batch', 'batch_deleted', 'stale_notice',
+    'reprice_apply', 'confirm_reprice', 'reprice_done', 'reprice_no_rate', 'js_summary',
+)
+# Korean counters (명, 건) read the same for one or many, so its singular forms repeat the plural.
+for _key in COUNTED:
+    STRINGS['ko'].setdefault(f'{_key}_one', STRINGS['ko'][_key])
+
+
+def counted(T, key, count):
+    """T[key], or its singular T[key + '_one'] when the count is 1 ("1 cutter", not "1 cutters")."""
+    return T[f'{key}_one'] if count == 1 else T[key]

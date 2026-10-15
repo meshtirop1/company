@@ -1,0 +1,53 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ T.module }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<h2>{{ T.module }}</h2>
+<p class="cut-lead">{{ T.hub_intro }} <a href="{% url 'cutting:help' %}">{{ T.help_link }} →</a></p>
+{% include 'cutting/_messages.html' %}
+
+<div class="stat-grid">
+  <a class="stat-card cut-stat-link" href="{% url 'cutting:day_today' %}"><div class="label">{{ T.stat_today }}</div><div class="value">{{ today_summary }}</div></a>
+  <div class="stat-card"><div class="label">{{ T.stat_active_cutters }}</div><div class="value">{{ active_cutters }}</div></div>
+  <div class="stat-card"><div class="label">{{ T.stat_price_items }}</div><div class="value">{{ priced_items }}</div></div>
+</div>
+
+<nav class="cut-tiles" aria-label="{{ T.module }}">
+  <a class="cut-tile is-primary" href="{% url 'cutting:entry' %}">
+    <span class="cut-tile-icon" aria-hidden="true">&#9998;</span>
+    <span class="cut-tile-title">{{ T.tile_entry }}</span>
+    <span class="cut-tile-desc">{{ T.tile_entry_desc }}</span>
+  </a>
+  <a class="cut-tile" href="{% url 'cutting:day_today' %}">
+    <span class="cut-tile-icon" aria-hidden="true">&#128197;</span>
+    <span class="cut-tile-title">{{ T.tile_day }}</span>
+    <span class="cut-tile-desc">{{ T.tile_day_desc }}</span>
+  </a>
+  <a class="cut-tile" href="{% url 'cutting:month_current' %}">
+    <span class="cut-tile-icon" aria-hidden="true">&#128202;</span>
+    <span class="cut-tile-title">{{ T.tile_month }}</span>
+    <span class="cut-tile-desc">{{ T.tile_month_desc }}</span>
+  </a>
+  <a class="cut-tile" href="{% url 'cutting:cutters' %}">
+    <span class="cut-tile-icon" aria-hidden="true">&#128101;</span>
+    <span class="cut-tile-title">{{ T.tile_cutters }}</span>
+    <span class="cut-tile-desc">{{ T.tile_cutters_desc }}</span>
+  </a>
+  <a class="cut-tile" href="{% url 'cutting:prices' %}">
+    <span class="cut-tile-icon" aria-hidden="true">&#128176;</span>
+    <span class="cut-tile-title">{{ T.tile_prices }}</span>
+    <span class="cut-tile-desc">{{ T.tile_prices_desc }}</span>
+  </a>
+  <a class="cut-tile" href="{% url 'cutting:audit' %}">
+    <span class="cut-tile-icon" aria-hidden="true">&#128220;</span>
+    <span class="cut-tile-title">{{ T.tile_audit }}</span>
+    <span class="cut-tile-desc">{{ T.tile_audit_desc }}</span>
+  </a>
+</nav>
+{% endblock %}

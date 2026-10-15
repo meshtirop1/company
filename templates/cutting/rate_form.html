@@ -1,0 +1,46 @@
+{% extends base_template %}
+{% load static cutting_tags %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:prices' %}#item-{{ item.pk }}">← {{ T.prices_title }}</a></p>
+<h2>{{ heading }}</h2>
+{% include 'cutting/_messages.html' %}
+
+<div class="cut-note-box">{{ T.rate_change_note }}</div>
+
+<div class="panel">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="cut-form-row">
+      {% include 'cutting/_field.html' with field=form.unit_price %}
+      {% include 'cutting/_field.html' with field=form.effective_from %}
+    </div>
+    <div class="cut-actions cut-form-actions">
+      <button type="submit" class="button-primary">{{ T.save }}</button>
+      <a class="button-secondary" href="{% url 'cutting:prices' %}#item-{{ item.pk }}">{{ T.cancel }}</a>
+    </div>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="panel-title">{{ T.rate_history }}</div>
+  <div class="table-wrap">
+    <table class="table-custom compact">
+      <thead><tr><th>{{ T.effective_from }}</th><th>{{ T.unit_price }}</th></tr></thead>
+      <tbody>
+        {% for rate in history %}
+        <tr><td>{{ rate.effective_from|date:"Y-m-d" }}</td><td>₩{{ rate.unit_price|won }}</td></tr>
+        {% empty %}
+        <tr><td colspan="2" class="empty-state">{{ T.no_current_rate }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

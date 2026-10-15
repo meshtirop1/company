@@ -1,0 +1,29 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:cutters' %}">← {{ T.cutters_title }}</a></p>
+<h2>{{ heading }}</h2>
+{% include 'cutting/_messages.html' %}
+
+<div class="panel">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="cut-form-row">
+      {% include 'cutting/_field.html' with field=form.name %}
+      {% include 'cutting/_field.html' with field=form.note %}
+    </div>
+    {% include 'cutting/_field.html' with field=form.payslip_language %}
+    <div class="cut-actions cut-form-actions">
+      <button type="submit" class="button-primary">{{ T.save }}</button>
+      <a class="button-secondary" href="{% url 'cutting:cutters' %}">{{ T.cancel }}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
