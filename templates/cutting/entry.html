@@ -1,0 +1,80 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ T.entry_title }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:hub' %}">{{ T.home }}</a></p>
+<h2>{{ T.entry_title }}</h2>
+<p class="cut-lead">{{ T.entry_intro }}</p>
+{% include 'cutting/_messages.html' %}
+
+{% if not rows %}
+<div class="panel"><p class="empty-state">{{ T.no_active_cutters }}<br><a href="{% url 'cutting:cutters' %}">{{ T.tile_cutters }} →</a></p></div>
+{% elif not has_items %}
+<div class="panel"><p class="empty-state">{{ T.no_active_items }}<br><a href="{% url 'cutting:prices' %}">{{ T.tile_prices }} →</a></p></div>
+{% else %}
+<form method="post" id="cut-entry" novalidate>
+  {% csrf_token %}
+  {{ form.token }}
+  {% if form.non_field_errors or form.token.errors %}
+  <div class="cut-error-box" role="alert">
+    {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+    {% for error in form.token.errors %}<div>{{ error }}</div>{% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="panel">
+    <div class="cut-form-row">
+      {% include 'cutting/_field.html' with field=form.work_date %}
+      <div class="form-group{% if form.style.errors %} has-error{% endif %}">
+        <span class="form-label" id="cut-style-label">{{ form.style.label }}</span>
+        <div class="cut-segment" role="radiogroup" aria-labelledby="cut-style-label">
+          {% for radio in form.style %}
+          <label class="cut-segment-option">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+        {% for error in form.style.errors %}<div class="field-error" role="alert">{{ error }}</div>{% endfor %}
+      </div>
+      {% include 'cutting/_field.html' with field=form.item %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">
+      <label class="cut-select-all"><input type="checkbox" id="cut-select-all" class="checkbox-input"> {{ T.select_all }}</label>
+      <span class="cut-count">{{ rows|length }}</span>
+    </div>
+    <ul class="cut-rows">
+      {% for row in rows %}
+      <li class="cut-row{% if row.include.value %} is-on{% endif %}{% if row.boxes.errors or row.item.errors %} has-error{% endif %}">
+        <div class="cut-row-main">
+          <label class="cut-row-name">{{ row.include }}<span>{{ row.cutter.name }}</span></label>
+          {{ row.boxes }}
+        </div>
+        <div class="cut-row-calc" aria-live="polite"><span class="cut-row-price"></span><strong class="cut-row-total"></strong></div>
+        <details class="cut-row-override"{% if row.overridden or row.item.errors %} open{% endif %}>
+          <summary>{{ T.change_row }}</summary>
+          {{ row.item }}
+        </details>
+        {% for error in row.boxes.errors %}<div class="field-error" role="alert">{{ error }}</div>{% endfor %}
+        {% for error in row.item.errors %}<div class="field-error" role="alert">{{ error }}</div>{% endfor %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="cut-savebar">
+    <span id="cut-summary" class="cut-savebar-summary" aria-live="polite"></span>
+    <button type="submit" class="button-primary">{{ T.save_batch }}</button>
+  </div>
+</form>
+{{ price_data|json_script:"cut-prices" }}
+{{ js_text|json_script:"cut-text" }}
+<script src="{% static 'js/cutting_entry.js' %}"></script>
+{% endif %}
+{% endblock %}

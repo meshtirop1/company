@@ -81,3 +81,61 @@ class PriceRate(models.Model):
 
     def __str__(self):
         return f'{self.item}: ₩{self.unit_price:,.0f} from {self.effective_from}'
+
+
+class CutBatch(models.Model):
+    """One save from the entry screen: the rows a supervisor entered together.
+
+    `token` is minted when the entry form is shown, so a double tap or a browser
+    resubmit can only ever create the batch once.
+    """
+    work_date = models.DateField()
+    token = models.UUIDField(unique=True, editable=False)
+    entered_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='+',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['work_date', 'created_at']
+        indexes = [models.Index(fields=['work_date'], name='cutting_batch_date_idx')]
+
+    def __str__(self):
+        return f'{self.work_date} #{self.pk}'
+
+
+class CutRecord(models.Model):
+    """One cutter's boxes in a batch.
+
+    The style, size, unit price and total are copied when the record is saved, so later
+    changes to the price list never alter pay that has already been recorded.
+    """
+    batch = models.ForeignKey(CutBatch, on_delete=models.CASCADE, related_name='records')
+    cutter = models.ForeignKey(Cutter, on_delete=models.PROTECT, related_name='records')
+    item = models.ForeignKey(PriceItem, on_delete=models.PROTECT, related_name='records')
+    work_date = models.DateField()
+    style = models.CharField(max_length=20, choices=CuttingStyle.choices)
+    size = models.CharField(max_length=20)
+    boxes = models.PositiveIntegerField()
+    unit_price = models.DecimalField(max_digits=10, decimal_places=0)
+    total = models.DecimalField(max_digits=14, decimal_places=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['work_date', 'batch_id', 'pk']
+        indexes = [
+            models.Index(fields=['work_date'], name='cutting_record_date_idx'),
+            models.Index(fields=['cutter', 'work_date'], name='cutting_record_cutter_date_idx'),
+        ]
+        constraints = [
+            models.CheckConstraint(condition=Q(boxes__gt=0), name='cutting_record_boxes_positive'),
+            models.CheckConstraint(condition=Q(unit_price__gt=0), name='cutting_record_price_positive'),
+        ]
+
+    def __str__(self):
+        return f'{self.cutter} {self.work_date} {self.get_style_display()} {self.size} × {self.boxes}'
+
+    @property
+    def item_label(self):
+        return f'{self.get_style_display()} {self.size}'

@@ -1,0 +1,83 @@
+{% extends base_template %}
+{% load static cutting_tags %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:hub' %}">{{ T.home }}</a></p>
+<h2>{{ heading }}</h2>
+{% include 'cutting/_messages.html' %}
+
+<nav class="cut-daynav" aria-label="{{ T.go_to_date }}">
+  <a class="button-secondary btn-sm" href="{% url 'cutting:day' previous_day %}">{{ T.previous_day }}</a>
+  {% if not is_today %}<a class="button-secondary btn-sm" href="{% url 'cutting:day_today' %}">{{ T.today }}</a>{% endif %}
+  {% if next_day %}<a class="button-secondary btn-sm" href="{% url 'cutting:day' next_day %}">{{ T.next_day }}</a>{% endif %}
+  <form method="get" action="{% url 'cutting:day_today' %}" class="cut-daynav-jump">
+    <label for="cut-jump-date" class="sr-only">{{ T.go_to_date }}</label>
+    <input type="date" id="cut-jump-date" name="date" value="{{ day|date:'Y-m-d' }}" class="input-field">
+    <button type="submit" class="button-secondary btn-sm">{{ T.go }}</button>
+  </form>
+</nav>
+
+<div class="cut-day-summary">
+  <div class="stat-card"><div class="label">{{ T.day_total }}</div><div class="value">₩{{ day_total|won }}</div></div>
+  {% if can_enter %}<a class="button-primary" href="{% url 'cutting:entry' %}?date={{ day|date:'Y-m-d' }}">+ {{ T.enter_for_day }}</a>{% endif %}
+</div>
+
+{% for block in blocks %}
+<section class="panel">
+  <div class="panel-title">
+    <span>{{ T.saved_label }} {{ block.batch.created_at|time:"H:i" }} · {{ block.entered_by }}</span>
+    <form method="post" action="{% url 'cutting:batch_delete' block.batch.pk %}"
+          onsubmit="return confirm('{{ block.confirm_delete|escapejs }}');">
+      {% csrf_token %}
+      <button type="submit" class="button-danger btn-sm">{{ T.delete_batch }}</button>
+    </form>
+  </div>
+  <div class="table-wrap">
+    <table class="table-custom compact cut-day-table">
+      <thead>
+        <tr>
+          <th>{{ T.cutter }}</th><th>{{ T.item_col }}</th>
+          <th class="num">{{ T.boxes }}</th><th class="num">{{ T.rate_col }}</th><th class="num">{{ T.amount_col }}</th>
+          <th><span class="sr-only">{{ T.edit }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in block.rows %}
+        <tr>
+          <td class="cut-col-name">
+            <span class="cut-name">{{ row.record.cutter.name }}</span>
+            <span class="cut-phone-detail">{{ row.record.get_style_display }} {{ row.record.size }} · {{ row.record.boxes }} × ₩{{ row.record.unit_price|won }}</span>
+          </td>
+          <td class="cut-col-item"><span class="style-badge badge-sm style-{{ row.record.style }}">{{ row.record.get_style_display }}</span> {{ row.record.size }}</td>
+          <td class="num cut-col-boxes">{{ row.record.boxes }}</td>
+          <td class="num cut-col-rate">₩{{ row.record.unit_price|won }}</td>
+          <td class="num cut-col-amount"><strong>₩{{ row.record.total|won }}</strong></td>
+          <td class="cut-col-actions">
+            <div class="cut-actions">
+              <a class="button-secondary btn-sm" href="{% url 'cutting:record_edit' row.record.pk %}">{{ T.edit }}</a>
+              <form method="post" action="{% url 'cutting:record_delete' row.record.pk %}"
+                    onsubmit="return confirm('{{ row.confirm_delete|escapejs }}');">
+                {% csrf_token %}
+                <button type="submit" class="button-danger btn-sm">{{ T.delete }}</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr><th colspan="4">{{ T.batch_total }}</th><th class="num">₩{{ block.total|won }}</th><th></th></tr>
+      </tfoot>
+    </table>
+  </div>
+</section>
+{% empty %}
+<div class="panel"><p class="empty-state">{{ T.no_entries }}</p></div>
+{% endfor %}
+{% endblock %}

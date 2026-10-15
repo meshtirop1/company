@@ -13,11 +13,22 @@
 {% include 'cutting/_messages.html' %}
 
 <div class="stat-grid">
+  <div class="stat-card"><div class="label">{{ T.stat_today }}</div><div class="value">{{ today_summary }}</div></div>
   <div class="stat-card"><div class="label">{{ T.stat_active_cutters }}</div><div class="value">{{ active_cutters }}</div></div>
   <div class="stat-card"><div class="label">{{ T.stat_price_items }}</div><div class="value">{{ priced_items }}</div></div>
 </div>
 
 <nav class="cut-tiles" aria-label="{{ T.module }}">
+  <a class="cut-tile is-primary" href="{% url 'cutting:entry' %}">
+    <span class="cut-tile-icon" aria-hidden="true">&#9998;</span>
+    <span class="cut-tile-title">{{ T.tile_entry }}</span>
+    <span class="cut-tile-desc">{{ T.tile_entry_desc }}</span>
+  </a>
+  <a class="cut-tile" href="{% url 'cutting:day_today' %}">
+    <span class="cut-tile-icon" aria-hidden="true">&#128197;</span>
+    <span class="cut-tile-title">{{ T.tile_day }}</span>
+    <span class="cut-tile-desc">{{ T.tile_day_desc }}</span>
+  </a>
   <a class="cut-tile" href="{% url 'cutting:cutters' %}">
     <span class="cut-tile-icon" aria-hidden="true">&#128101;</span>
     <span class="cut-tile-title">{{ T.tile_cutters }}</span>

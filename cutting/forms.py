@@ -1,3 +1,4 @@
+import re
 import unicodedata
 
 from django import forms
@@ -10,6 +11,7 @@ from .models import Cutter, CuttingStyle, PriceItem, PriceRate
 
 DATE_WIDGET = forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d')
 SORT_ORDER_MAX = 32767  # PositiveSmallIntegerField's ceiling on every database
+BOXES_MAX = 9999
 
 
 class WonField(forms.DecimalField):
@@ -55,7 +57,8 @@ def localize(form, T):
         elif isinstance(field, forms.IntegerField):  # DecimalField subclasses IntegerField
             messages.update(dict.fromkeys(number_codes, T['err_number']))
         field.error_messages.update(messages)
-        field.widget.attrs['class'] = f"{field.widget.attrs.get('class', '')} input-field".strip()
+        if not isinstance(field.widget, (forms.CheckboxInput, forms.RadioSelect)):  # .input-field is text-box styling
+            field.widget.attrs['class'] = f"{field.widget.attrs.get('class', '')} input-field".strip()
 
 
 def localize_price(field, T):
@@ -197,3 +200,181 @@ class PriceRateForm(forms.ModelForm):
             rate.created_by = user
         rate.save()
         return rate
+
+
+# ─── Work entry ───────────────────────────────────────────────
+
+def ordered_items(items):
+    """Price-list lines in sheet order: 통포 first, then 통할복, each by display order."""
+    style_rank = {value: rank for rank, value in enumerate(CuttingStyle.values)}
+    return sorted(items, key=lambda item: (style_rank.get(item.style, len(style_rank)), item.sort_order, item.pk))
+
+
+def grouped_item_choices(items, *, with_style):
+    """Choices grouped by style, e.g. [('통포', [('3', '7'), ...]), ('통할복', [...])]."""
+    groups = []
+    for value, label in CuttingStyle.choices:
+        members = [(str(item.pk), f'{label} {item.size}' if with_style else item.size)
+                   for item in items if item.style == value]
+        if members:
+            groups.append((label, members))
+    return groups
+
+
+class ItemSelect(forms.Select):
+    """A size picker whose options carry their style, so the page can show one style at a time."""
+
+    def __init__(self, *args, item_styles=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.item_styles = item_styles or {}
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        if style := self.item_styles.get(str(value)):
+            option['attrs']['data-style'] = style
+        return option
+
+
+def localize_boxes(field, T):
+    field.label = T['boxes']
+    field.error_messages.update(dict.fromkeys(('invalid', 'min_value', 'max_value'), T['err_boxes_range']))
+
+
+class BatchEntryForm(forms.Form):
+    """The entry screen: a work date, a default style and size, and a row per active cutter.
+
+    A row counts when its box is ticked. Its size is the batch default unless the row
+    picks its own. `self.rows` holds (cutter, item, boxes) for every valid ticked row.
+    """
+    token = forms.UUIDField(widget=forms.HiddenInput)
+    work_date = forms.DateField(widget=DATE_WIDGET)
+    style = forms.ChoiceField(choices=CuttingStyle.choices, widget=forms.RadioSelect)
+
+    def __init__(self, *args, T, cutters, items, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.T = T
+        self.cutters = list(cutters)
+        self.items = {str(item.pk): item for item in items}
+        item_styles = {pk: item.style for pk, item in self.items.items()}
+        self.rows = []
+
+        self.fields['work_date'].label = T['work_date']
+        self.fields['style'].label = T['style']
+        self.fields['item'] = forms.ChoiceField(
+            label=T['size'], choices=grouped_item_choices(items, with_style=False),
+            widget=ItemSelect(item_styles=item_styles),
+        )
+        override_choices = [('', T['same_as_batch'])] + grouped_item_choices(items, with_style=True)
+        for cutter in self.cutters:
+            self.fields[f'include_{cutter.pk}'] = forms.BooleanField(
+                required=False, label=cutter.name, widget=forms.CheckboxInput(attrs={'class': 'cut-include'}),
+            )
+            self.fields[f'boxes_{cutter.pk}'] = forms.IntegerField(
+                required=False, min_value=1, max_value=BOXES_MAX,
+                widget=forms.TextInput(attrs={
+                    'class': 'cut-boxes', 'inputmode': 'numeric', 'pattern': '[0-9]*', 'autocomplete': 'off',
+                    'aria-label': f"{cutter.name} — {T['boxes']}",
+                }),
+            )
+            self.fields[f'item_{cutter.pk}'] = forms.ChoiceField(
+                required=False, label=T['change_row'], choices=override_choices,
+                widget=ItemSelect(item_styles=item_styles, attrs={'class': 'cut-override'}),
+            )
+        localize(self, T)
+        for cutter in self.cutters:
+            localize_boxes(self.fields[f'boxes_{cutter.pk}'], T)
+
+    def entry_rows(self):
+        """One row per active cutter, for the template."""
+        for cutter in self.cutters:
+            override = self[f'item_{cutter.pk}']
+            yield {
+                'cutter': cutter,
+                'include': self[f'include_{cutter.pk}'],
+                'boxes': self[f'boxes_{cutter.pk}'],
+                'item': override,
+                'overridden': bool(override.value()),
+            }
+
+    def clean_work_date(self):
+        day = self.cleaned_data['work_date']
+        if day > timezone.localdate():
+            raise ValidationError(self.T['err_future_date'])
+        return day
+
+    def clean(self):
+        cleaned = super().clean()
+        T = self.T
+        day = cleaned.get('work_date')
+        style = cleaned.get('style')
+        default_item = self.items.get(cleaned.get('item') or '')
+        if default_item and style and default_item.style != style:
+            self.add_error('item', T['err_style_mismatch'])
+            default_item = None
+
+        for cutter in self.cutters:
+            if not cleaned.get(f'include_{cutter.pk}'):
+                continue
+            boxes_field, item_field = f'boxes_{cutter.pk}', f'item_{cutter.pk}'
+            boxes = cleaned.get(boxes_field)
+            if boxes is None:
+                if boxes_field not in self.errors:
+                    self.add_error(boxes_field, T['err_boxes_required'])
+                continue
+            own_item = self.items.get(cleaned.get(item_field) or '')
+            item = own_item or default_item
+            if item is None:
+                continue  # the size field already explains why
+            if day and item.rate_on(day) is None:
+                field = item_field if own_item else 'item'
+                message = T['err_no_rate'].format(item=item, date=day.isoformat())
+                if message not in self.errors.get(field, []):
+                    self.add_error(field, message)
+                continue
+            self.rows.append((cutter, item, boxes))
+
+        for name in self._ticked_inactive_cutters():
+            self.add_error(None, T['err_cutter_inactive'].format(name=name))
+        if not self.rows and not self.errors:
+            raise ValidationError(T['err_no_rows'])
+        return cleaned
+
+    def _ticked_inactive_cutters(self):
+        """Names of cutters ticked on the form but deactivated before it was saved."""
+        listed = {cutter.pk for cutter in self.cutters}
+        ticked = set()
+        for key, value in self.data.items():
+            match = re.fullmatch(r'include_(\d+)', key)
+            if match and value and int(match.group(1)) not in listed:
+                ticked.add(int(match.group(1)))
+        return list(Cutter.objects.filter(pk__in=ticked).values_list('name', flat=True))
+
+
+class RecordEditForm(forms.Form):
+    """Correct one saved row: its boxes, or the size and style it was cut at."""
+    boxes = forms.IntegerField(min_value=1, max_value=BOXES_MAX)
+
+    def __init__(self, *args, T, record, items, **kwargs):
+        kwargs.setdefault('initial', {'item': str(record.item_id), 'boxes': record.boxes})
+        super().__init__(*args, **kwargs)
+        self.T = T
+        self.record = record
+        self.items = {str(item.pk): item for item in items}
+        self.items.setdefault(str(record.item_id), record.item)  # still editable if since hidden
+        self.fields['item'] = forms.ChoiceField(
+            label=T['item_col'], choices=grouped_item_choices(ordered_items(self.items.values()), with_style=True),
+        )
+        self.fields['boxes'].widget = forms.TextInput(attrs={'inputmode': 'numeric', 'pattern': '[0-9]*'})
+        self.order_fields(['item', 'boxes'])
+        localize(self, T)
+        localize_boxes(self.fields['boxes'], T)
+
+    def clean(self):
+        cleaned = super().clean()
+        item = self.items.get(cleaned.get('item') or '')
+        if item and item.pk != self.record.item_id and item.rate_on(self.record.work_date) is None:
+            self.add_error('item', self.T['err_no_rate'].format(
+                item=item, date=self.record.work_date.isoformat(),
+            ))
+        cleaned['item'] = item
+        return cleaned

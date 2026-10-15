@@ -1,0 +1,35 @@
+{% extends base_template %}
+{% load static cutting_tags %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:day' record.work_date %}">← {{ record.work_date|date:'Y-m-d' }}</a></p>
+<h2>{{ heading }}</h2>
+{% include 'cutting/_messages.html' %}
+
+<div class="cut-note-box">{{ T.edit_record_note }}</div>
+
+<div class="panel">
+  <p class="cut-panel-intro">
+    <span class="muted">{{ T.saved_as }}:</span>
+    <span class="style-badge badge-sm style-{{ record.style }}">{{ record.get_style_display }}</span> {{ record.size }}
+    · {{ record.boxes }} × ₩{{ record.unit_price|won }} = <strong>₩{{ record.total|won }}</strong>
+  </p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="cut-form-row">
+      {% include 'cutting/_field.html' with field=form.item %}
+      {% include 'cutting/_field.html' with field=form.boxes %}
+    </div>
+    <div class="cut-actions cut-form-actions">
+      <button type="submit" class="button-primary">{{ T.save }}</button>
+      <a class="button-secondary" href="{% url 'cutting:day' record.work_date %}">{{ T.cancel }}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

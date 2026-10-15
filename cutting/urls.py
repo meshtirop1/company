@@ -1,11 +1,34 @@
-from django.urls import path
+from datetime import date
+
+from django.urls import path, register_converter
 
 from . import views
+
+
+class IsoDateConverter:
+    """`2026-10-15` in a URL ⇄ a date. An impossible date (2026-02-30) is a 404, not a 500."""
+    regex = r'\d{4}-\d{2}-\d{2}'
+
+    def to_python(self, value):
+        return date.fromisoformat(value)  # ValueError → the pattern doesn't match → 404
+
+    def to_url(self, value):
+        return value.isoformat() if isinstance(value, date) else value
+
+
+register_converter(IsoDateConverter, 'isodate')
 
 app_name = 'cutting'
 
 urlpatterns = [
     path('', views.hub, name='hub'),
+
+    path('entry/', views.entry, name='entry'),
+    path('day/', views.day, name='day_today'),
+    path('day/<isodate:day>/', views.day, name='day'),
+    path('records/<int:pk>/edit/', views.record_edit, name='record_edit'),
+    path('records/<int:pk>/delete/', views.record_delete, name='record_delete'),
+    path('batches/<int:pk>/delete/', views.batch_delete, name='batch_delete'),
 
     path('cutters/', views.cutters, name='cutters'),
     path('cutters/<int:pk>/edit/', views.cutter_edit, name='cutter_edit'),

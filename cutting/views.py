@@ -3,20 +3,27 @@
 Only managers (is_admin) and superusers may use them; anyone else gets the 403 page.
 Every page renders one shared template with the session language's strings (see i18n.py).
 """
+import uuid
+from datetime import date, timedelta
 from functools import wraps
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.db.models import ProtectedError
+from django.db import IntegrityError
+from django.db.models import Prefetch, ProtectedError, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .forms import CutterForm, PriceItemCreateForm, PriceItemEditForm, PriceRateForm
+from . import services
+from .forms import (
+    BatchEntryForm, CutterForm, PriceItemCreateForm, PriceItemEditForm, PriceRateForm, RecordEditForm,
+    ordered_items,
+)
 from .i18n import STRINGS, get_lang
-from .models import Cutter, CuttingStyle, PriceItem, PriceRate
+from .models import CutBatch, CutRecord, Cutter, CuttingStyle, PriceItem, PriceRate
 
 
 def manager_required(view):
@@ -57,8 +64,12 @@ def posted_active(request):
 
 @manager_required
 def hub(request):
+    T = strings(request)
+    today_records = CutRecord.objects.filter(work_date=timezone.localdate())
+    today_total = today_records.aggregate(total=Sum('total'))['total'] or 0
     return render_page(
         request, 'hub.html',
+        today_summary=T['stat_today_value'].format(rows=today_records.count(), total=won(today_total)),
         active_cutters=Cutter.objects.filter(is_active=True).count(),
         priced_items=PriceItem.objects.filter(is_active=True).count(),
     )
@@ -278,3 +289,186 @@ def rate_delete(request, pk):
         rate.delete()
         messages.success(request, T['rate_deleted'].format(item=item, date=started))
     return to_item(item)
+
+
+# ─── Work entry ───────────────────────────────────────────────
+
+def parse_day(value, default):
+    try:
+        return date.fromisoformat(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def saved_batch(token):
+    """The batch already saved with this form token, if any."""
+    try:
+        return CutBatch.objects.filter(token=uuid.UUID(str(token))).first()
+    except ValueError:
+        return None
+
+
+def entry_items():
+    return ordered_items(PriceItem.objects.filter(is_active=True).prefetch_related('rates'))
+
+
+def price_data(items):
+    """Every active size's rate history, for the entry page's live pay preview."""
+    return {
+        str(item.pk): {
+            'style': item.style,
+            'rates': [[rate.effective_from.isoformat(), int(rate.unit_price)] for rate in item.rates.all()],
+        }
+        for item in items
+    }
+
+
+def already_saved(request, T, batch):
+    messages.info(request, T['batch_already_saved'])
+    return redirect('cutting:day', batch.work_date)
+
+
+@manager_required
+def entry(request):
+    T = strings(request)
+    today = timezone.localdate()
+    cutters = Cutter.objects.filter(is_active=True)
+    items = entry_items()
+
+    if request.method == 'POST':
+        token = request.POST.get('token')
+        if batch := saved_batch(token):
+            return already_saved(request, T, batch)
+        form = BatchEntryForm(request.POST, T=T, cutters=cutters, items=items)
+        if form.is_valid():
+            data = form.cleaned_data
+            try:
+                batch = services.save_batch(
+                    work_date=data['work_date'], rows=form.rows, entered_by=request.user, token=data['token'],
+                )
+            except IntegrityError:
+                if batch := saved_batch(token):  # the same form, saved a moment ago
+                    return already_saved(request, T, batch)
+                raise
+            except services.NoRate as missing:  # a rate removed while the form was open
+                messages.error(request, T['err_no_rate'].format(item=missing.item, date=missing.day.isoformat()))
+            else:
+                total = batch.records.aggregate(total=Sum('total'))['total']
+                messages.success(request, T['batch_saved'].format(
+                    count=len(form.rows), date=batch.work_date.isoformat(), total=won(total),
+                ))
+                return redirect('cutting:day', batch.work_date)
+        else:
+            messages.error(request, T['err_batch_rows'])
+    else:
+        day = min(parse_day(request.GET.get('date'), today), today)
+        first = items[0] if items else None
+        form = BatchEntryForm(T=T, cutters=cutters, items=items, initial={
+            'token': uuid.uuid4(),
+            'work_date': day,
+            'style': first.style if first else CuttingStyle.TONGPO,
+            'item': str(first.pk) if first else '',
+        })
+
+    return render_page(
+        request, 'entry.html',
+        form=form,
+        rows=list(form.entry_rows()),
+        has_items=bool(items),
+        today=today,
+        price_data=price_data(items),
+        js_text={'per_box': T['js_per_box'], 'no_rate': T['js_no_rate'], 'summary': T['js_summary']},
+    )
+
+
+def entered_by_label(user):
+    if user is None:
+        return '—'
+    return user.get_full_name() or user.username
+
+
+@manager_required
+def day(request, day=None):
+    if day is None:
+        if 'date' in request.GET:  # the "go to date" box
+            return redirect('cutting:day', parse_day(request.GET['date'], timezone.localdate()))
+        day = timezone.localdate()
+    T = strings(request)
+    today = timezone.localdate()
+    records = CutRecord.objects.select_related('cutter').order_by('cutter__name', 'pk')
+    batches = (
+        CutBatch.objects.filter(work_date=day)
+        .select_related('entered_by')
+        .prefetch_related(Prefetch('records', queryset=records))
+        .order_by('created_at')
+    )
+    blocks, day_total = [], 0
+    for batch in batches:
+        rows = list(batch.records.all())
+        batch_total = sum(record.total for record in rows)
+        day_total += batch_total
+        blocks.append({
+            'batch': batch,
+            'entered_by': entered_by_label(batch.entered_by),
+            'total': batch_total,
+            'confirm_delete': T['confirm_delete_batch'].format(count=len(rows)),
+            'rows': [
+                {'record': record, 'confirm_delete': T['confirm_delete_record'].format(name=record.cutter.name)}
+                for record in rows
+            ],
+        })
+    return render_page(
+        request, 'day.html',
+        day=day,
+        heading=T['day_title'].format(date=day.isoformat()),
+        blocks=blocks,
+        day_total=day_total,
+        previous_day=day - timedelta(days=1),
+        next_day=day + timedelta(days=1) if day < today else None,
+        can_enter=day <= today,
+        is_today=day == today,
+    )
+
+
+@manager_required
+def record_edit(request, pk):
+    T = strings(request)
+    record = get_object_or_404(CutRecord.objects.select_related('cutter', 'item'), pk=pk)
+    heading = T['edit_record_title'].format(name=record.cutter.name, date=record.work_date.isoformat())
+    if request.method == 'POST':
+        form = RecordEditForm(request.POST, T=T, record=record, items=entry_items())
+        if form.is_valid():
+            try:
+                services.update_record(record, item=form.cleaned_data['item'], boxes=form.cleaned_data['boxes'])
+            except services.NoRate as missing:
+                messages.error(request, T['err_no_rate'].format(item=missing.item, date=missing.day.isoformat()))
+            else:
+                messages.success(request, T['record_saved'].format(name=record.cutter.name))
+                return redirect('cutting:day', record.work_date)
+        else:
+            messages.error(request, T['err_form'])
+    else:
+        form = RecordEditForm(T=T, record=record, items=entry_items())
+    return render_page(request, 'record_edit.html', form=form, record=record, heading=heading)
+
+
+@manager_required
+@require_POST
+def record_delete(request, pk):
+    T = strings(request)
+    record = get_object_or_404(CutRecord.objects.select_related('cutter', 'batch'), pk=pk)
+    work_date, name = record.work_date, record.cutter.name
+    services.delete_record(record)
+    messages.success(request, T['record_deleted'].format(name=name))
+    return redirect('cutting:day', work_date)
+
+
+@manager_required
+@require_POST
+def batch_delete(request, pk):
+    T = strings(request)
+    batch = get_object_or_404(CutBatch, pk=pk)
+    work_date, count = batch.work_date, batch.records.count()
+    services.delete_batch(batch)
+    messages.success(request, T['batch_deleted'].format(count=count))
+    return redirect('cutting:day', work_date)

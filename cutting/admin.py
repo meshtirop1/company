@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Cutter, PriceItem, PriceRate
+from .models import CutBatch, CutRecord, Cutter, PriceItem, PriceRate
 
 
 @admin.register(Cutter)
@@ -26,3 +26,28 @@ class PriceItemAdmin(admin.ModelAdmin):
     ordering = ['style', 'sort_order']
     readonly_fields = ['created_at', 'updated_at']
     inlines = [PriceRateInline]
+
+
+class CutRecordInline(admin.TabularInline):
+    model = CutRecord
+    extra = 0
+    fields = ['cutter', 'style', 'size', 'boxes', 'unit_price', 'total']
+    readonly_fields = fields  # priced at save time; correct records on the Entries page
+
+
+@admin.register(CutBatch)
+class CutBatchAdmin(admin.ModelAdmin):
+    list_display = ['work_date', 'created_at', 'entered_by']
+    date_hierarchy = 'work_date'
+    readonly_fields = ['work_date', 'token', 'entered_by', 'created_at']
+    inlines = [CutRecordInline]
+
+
+@admin.register(CutRecord)
+class CutRecordAdmin(admin.ModelAdmin):
+    list_display = ['work_date', 'cutter', 'style', 'size', 'boxes', 'unit_price', 'total']
+    list_filter = ['style', 'work_date']
+    search_fields = ['cutter__name']
+    date_hierarchy = 'work_date'
+    readonly_fields = ['batch', 'cutter', 'item', 'work_date', 'style', 'size', 'boxes', 'unit_price', 'total',
+                       'created_at', 'updated_at']
