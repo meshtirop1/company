@@ -60,7 +60,7 @@
 
 <div class="toolbar">
   <span class="t-title">{% if lang == 'ko' %}급여 명세서{% else %}Payslip{% endif %} — {{ month_name }} {{ year }}</span>
-  <button class="btn-print" onclick="window.print()">&#128438; {% if lang == 'ko' %}인쇄 / PDF 저장{% else %}Print / Save PDF{% endif %}</button>
+  <button class="btn-print" onclick="window.print()">&#128424;&#65039; {% if lang == 'ko' %}인쇄 / PDF 저장{% else %}Print / Save PDF{% endif %}</button>
   {% if is_manager %}
   <form method="post" style="display:inline;" onsubmit="return confirm('{% if lang == 'ko' %}{{ employee.email|escapejs }} (으)로 이 급여 명세서를 보낼까요?{% else %}Email this payslip to {{ employee.email|escapejs }}?{% endif %}');">
     {% csrf_token %}
