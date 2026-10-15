@@ -1,0 +1,6 @@
+# Nightly shinhe database backup at 03:00 Korea time (18:00 UTC - the server runs on UTC).
+# Installed (by root) as /etc/cron.d/shinhe-backup; it runs deploy/backup.sh as the deploy user.
+# The -x test makes it a no-op until a deploy has put backup.sh on the server.
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+0 18 * * * deploy [ -x /home/deploy/sites/shinhe/deploy/backup.sh ] && /home/deploy/sites/shinhe/deploy/backup.sh nightly

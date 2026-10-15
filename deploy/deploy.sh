@@ -3,8 +3,8 @@
 # Idempotent re-deploy. Run on the server (or via SSH from CI):
 #   /home/deploy/sites/shinhe/deploy/deploy.sh
 #
-# Pulls the latest master, installs deps, runs migrations + collectstatic,
-# and restarts gunicorn. Bails out on any error.
+# Pulls the latest master, installs deps, backs up the database, runs migrations +
+# collectstatic, and restarts gunicorn. Bails out on any error.
 
 set -euo pipefail
 
@@ -26,15 +26,11 @@ log "Installing/updating dependencies"
 .venv/bin/pip install -r requirements.txt --quiet
 
 log "Loading env (systemd EnvironmentFile style; parsed, not sourced)"
-set -a
-while IFS= read -r line; do
-  case "$line" in ''|\#*) continue ;; esac
-  [ "${line#*=}" = "$line" ] && continue
-  key="${line%%=*}"; val="${line#*=}"
-  val="${val%\"}"; val="${val#\"}"; val="${val%\'}"; val="${val#\'}"
-  export "$key=$val"
-done < "$ENV_FILE"
-set +a
+. "$APP_DIR/deploy/load_env.sh"
+
+log "Backing up the database before migrating"
+# A failed backup stops the deploy: never migrate without a copy to go back to.
+.venv/bin/python manage.py backup_db --label predeploy
 
 log "Running Django steps"
 .venv/bin/python manage.py migrate --noinput
