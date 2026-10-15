@@ -59,6 +59,8 @@ urlpatterns = [
     path('cutters/<int:pk>/edit/', views.cutter_edit, name='cutter_edit'),
     path('cutters/<int:pk>/active/', views.cutter_set_active, name='cutter_set_active'),
     path('cutters/<int:pk>/delete/', views.cutter_delete, name='cutter_delete'),
+    path('cutters/<int:pk>/deductions/', views.cutter_deduction_set, name='cutter_deduction_set'),
+    path('deductions/<int:pk>/delete/', views.cutter_deduction_delete, name='cutter_deduction_delete'),
 
     path('prices/', views.prices, name='prices'),
     path('prices/<int:pk>/edit/', views.item_edit, name='item_edit'),

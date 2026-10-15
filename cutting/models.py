@@ -4,6 +4,8 @@ from django.db.models import Q
 from django.db.models.functions import Lower
 from django.utils import timezone
 
+from hours_tracker.models import DeductionRate
+
 
 class CuttingStyle(models.TextChoices):
     """The two ways a fish is cut. 통포 is the bigger job, so it pays more."""
@@ -38,6 +40,23 @@ class Cutter(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class CutterDeduction(DeductionRate):
+    """Tax and health insurance taken off a cutter's monthly pay (see hours_tracker.deductions).
+
+    Written only through cutting/services.py, which refuses a change that would alter a
+    locked month's payslips and records every change in the change log.
+    """
+    cutter = models.ForeignKey(Cutter, on_delete=models.CASCADE, related_name='deductions')
+
+    class Meta(DeductionRate.Meta):
+        constraints = [
+            models.UniqueConstraint(fields=['cutter', 'effective_from'], name='cutting_cutterdeduction_month_unique'),
+        ]
+
+    def __str__(self):
+        return f'{self.cutter} from {self.effective_from:%Y-%m}'
 
 
 class PriceItem(models.Model):
@@ -179,6 +198,8 @@ class AuditAction(models.TextChoices):
     RATE_ADD = 'rate_add', 'New rate'
     RATE_EDIT = 'rate_edit', 'Rate changed'
     RATE_DELETE = 'rate_delete', 'Rate deleted'
+    DEDUCTION_SET = 'deduction_set', 'Tax/insurance set'
+    DEDUCTION_DELETE = 'deduction_delete', 'Tax/insurance deleted'
 
 
 class AuditEntry(models.Model):

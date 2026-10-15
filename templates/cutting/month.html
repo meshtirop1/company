@@ -34,6 +34,13 @@
 
 <div class="stat-grid">
   <div class="stat-card"><div class="label">{{ T.month_total }}</div><div class="value">₩{{ summary.total|won }}</div></div>
+  {% if summary.has_deductions %}
+  <div class="stat-card">
+    <div class="label">{{ T.month_net }}</div>
+    <div class="value">₩{{ summary.net|won }}</div>
+    <div class="muted">{{ T.deductions_col }}: <span style="white-space:nowrap">−₩{{ summary.deductions_total|won }}</span></div>
+  </div>
+  {% endif %}
   {% for cell in summary.style_cells %}
   <div class="stat-card">
     <div class="label">{{ cell.label }}</div>
@@ -63,6 +70,7 @@
           <th rowspan="2">{{ T.cutter }}</th>
           {% for cell in summary.style_cells %}<th colspan="2" class="center">{{ cell.label }}</th>{% endfor %}
           <th colspan="2" class="center">{{ T.total }}</th>
+          {% if summary.has_deductions %}<th rowspan="2" class="num">{{ T.deductions_col }}</th><th rowspan="2" class="num">{{ T.net_col }}</th>{% endif %}
           <th rowspan="2"><span class="sr-only">{{ T.payslip }}</span></th>
         </tr>
         <tr>
@@ -75,7 +83,7 @@
         <tr>
           <td class="cut-col-name">
             <a class="cut-name" href="{% url 'cutting:cutter_month' month row.cutter.pk %}">{{ row.cutter.name }}</a>
-            <span class="cut-phone-detail">{% for cell in row.style_cells %}{% if cell.boxes %}<span class="cut-phone-part">{{ cell.label }} {{ cell.boxes }} · ₩{{ cell.amount|won }}</span>{% endif %}{% endfor %}</span>
+            <span class="cut-phone-detail">{% for cell in row.style_cells %}{% if cell.boxes %}<span class="cut-phone-part">{{ cell.label }} {{ cell.boxes }} · ₩{{ cell.amount|won }}</span>{% endif %}{% endfor %}{% if row.deductions.shown %}<span class="cut-phone-part">{{ T.net_col }} ₩{{ row.deductions.net|won }}</span>{% endif %}</span>
           </td>
           {% for cell in row.style_cells %}
           <td class="num phone-hide">{{ cell.boxes|default:"—" }}</td>
@@ -83,6 +91,10 @@
           {% endfor %}
           <td class="num phone-hide">{{ row.boxes }}</td>
           <td class="num cut-col-amount"><strong>₩{{ row.total|won }}</strong></td>
+          {% if summary.has_deductions %}
+          <td class="num phone-hide">{% if row.deductions.total %}−₩{{ row.deductions.total|won }}{% else %}—{% endif %}</td>
+          <td class="num phone-hide"><strong>₩{{ row.deductions.net|won }}</strong></td>
+          {% endif %}
           <td>
             <div class="cut-actions">
               <a class="button-secondary btn-sm" href="{% url 'cutting:cutter_month' month row.cutter.pk %}">{{ T.details }}</a>
@@ -98,6 +110,7 @@
           {% for cell in summary.style_cells %}<th class="num phone-hide">{{ cell.boxes }}</th><th class="num phone-hide">₩{{ cell.amount|won }}</th>{% endfor %}
           <th class="num phone-hide">{{ summary.boxes }}</th>
           <th class="num">₩{{ summary.total|won }}</th>
+          {% if summary.has_deductions %}<th class="num phone-hide">−₩{{ summary.deductions_total|won }}</th><th class="num phone-hide">₩{{ summary.net|won }}</th>{% endif %}
           <th></th>
         </tr>
       </tfoot>

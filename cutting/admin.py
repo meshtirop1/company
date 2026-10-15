@@ -1,20 +1,12 @@
 from django.contrib import admin
 
-from .models import AuditEntry, CutBatch, CutRecord, Cutter, MonthLock, PriceItem, PriceRate
-
-
-@admin.register(Cutter)
-class CutterAdmin(admin.ModelAdmin):
-    list_display = ['name', 'note', 'is_active', 'created_at']
-    list_filter = ['is_active']
-    search_fields = ['name', 'note']
-    readonly_fields = ['created_at', 'updated_at']
+from .models import AuditEntry, CutBatch, CutRecord, Cutter, CutterDeduction, MonthLock, PriceItem, PriceRate
 
 
 class ViewOnly:
-    """Work records and prices change only on the supervisor pages — where the month lock,
-    the change log and the price-list rules (e.g. a size keeps at least one rate) apply.
-    Here they can be looked at, not changed."""
+    """Work records, prices and tax/insurance rates change only on the supervisor pages — where
+    the month lock, the change log and the price-list rules (e.g. a size keeps at least one rate)
+    apply. Here they can be looked at, not changed."""
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -24,6 +16,22 @@ class ViewOnly:
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+class CutterDeductionInline(ViewOnly, admin.TabularInline):
+    model = CutterDeduction
+    extra = 0
+    fields = ['effective_from', 'tax_percent', 'insurance_mode', 'insurance_value', 'updated_at']
+    readonly_fields = fields
+
+
+@admin.register(Cutter)
+class CutterAdmin(admin.ModelAdmin):
+    list_display = ['name', 'note', 'is_active', 'created_at']
+    list_filter = ['is_active']
+    search_fields = ['name', 'note']
+    readonly_fields = ['created_at', 'updated_at']
+    inlines = [CutterDeductionInline]
 
 
 class PriceRateInline(ViewOnly, admin.TabularInline):

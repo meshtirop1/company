@@ -5,6 +5,7 @@ Every page renders one shared template with the session language's strings (see 
 """
 import uuid
 from datetime import date, timedelta
+from decimal import Decimal
 from functools import wraps
 
 from django.contrib import messages
@@ -20,13 +21,17 @@ from django.utils import timezone
 from django.utils.http import content_disposition_header
 from django.views.decorators.http import require_POST
 
+from hours_tracker import deductions
+
 from . import exports, reports, services
 from .forms import (
     BatchEntryForm, CutterForm, PriceItemCreateForm, PriceItemEditForm, PriceRateForm, RecordEditForm,
     UnlockForm, ordered_items,
 )
 from .i18n import STRINGS, counted, get_lang
-from .models import AuditAction, AuditEntry, CutBatch, CutRecord, Cutter, CuttingStyle, PriceItem, PriceRate
+from .models import (
+    AuditAction, AuditEntry, CutBatch, CutRecord, Cutter, CutterDeduction, CuttingStyle, PriceItem, PriceRate,
+)
 from .templatetags.cutting_tags import signed_won
 
 
@@ -80,7 +85,7 @@ def hub(request):
     )
 
 
-HELP_SECTIONS = (('daily', 3), ('fix', 2), ('month', 3), ('prices', 2))
+HELP_SECTIONS = (('daily', 3), ('fix', 2), ('month', 3), ('prices', 2), ('deductions', 2))
 
 
 @manager_required
@@ -120,11 +125,35 @@ def cutters(request):
     )
 
 
+def render_cutter_edit(request, cutter, *, name=None, form=None, ded_form=None):
+    """The cutter's details form and their tax and insurance panel. `name` is the saved name, for
+    when the details form has already written the typed one into `cutter`."""
+    T = strings(request)
+    D = deductions.strings(get_lang(request))
+    rows = deductions.rate_rows(D, list(cutter.deductions.all()))
+    for row in rows:
+        row['delete_url'] = reverse('cutting:cutter_deduction_delete', args=[row['rate'].pk])
+    return render_page(
+        request, 'cutter_edit.html',
+        cutter=cutter,
+        heading=T['edit_cutter'].format(name=name or cutter.name),
+        form=form or CutterForm(instance=cutter, T=T),
+        D=D,
+        ded_rows=rows,
+        ded_form=ded_form or deductions.DeductionRateForm(D=D),
+        ded_action=reverse('cutting:cutter_deduction_set', args=[cutter.pk]),
+    )
+
+
+def to_cutter_deductions(cutter):
+    return redirect(f"{reverse('cutting:cutter_edit', args=[cutter.pk])}#deductions")
+
+
 @manager_required
 def cutter_edit(request, pk):
     T = strings(request)
     cutter = get_object_or_404(Cutter, pk=pk)
-    heading = T['edit_cutter'].format(name=cutter.name)  # before the form can touch the instance
+    saved_name = cutter.name  # before the form can touch the instance
     if request.method == 'POST':
         form = CutterForm(request.POST, instance=cutter, T=T)
         if form.is_valid():
@@ -132,9 +161,41 @@ def cutter_edit(request, pk):
             messages.success(request, T['cutter_saved'].format(name=cutter.name))
             return redirect('cutting:cutters')
         messages.error(request, T['err_form'])
+        return render_cutter_edit(request, cutter, name=saved_name, form=form)
+    return render_cutter_edit(request, cutter)
+
+
+@manager_required
+@require_POST
+def cutter_deduction_set(request, pk):
+    D = deductions.strings(get_lang(request))
+    cutter = get_object_or_404(Cutter, pk=pk)
+    form = deductions.DeductionRateForm(request.POST, D=D)
+    if not form.is_valid():
+        messages.error(request, D['err_form'])
+        return render_cutter_edit(request, cutter, ded_form=form)
+    first_day = form.cleaned_data['month']
+    try:
+        services.set_deduction(cutter, first_day, form.values(), user=request.user)
+    except services.MonthLocked as locked:
+        messages.error(request, D['err_locked'].format(month=month_label(locked.month)))
+        return render_cutter_edit(request, cutter, ded_form=form)
+    messages.success(request, D['saved'].format(month=month_label(first_day)))
+    return to_cutter_deductions(cutter)
+
+
+@manager_required
+@require_POST
+def cutter_deduction_delete(request, pk):
+    D = deductions.strings(get_lang(request))
+    rate = get_object_or_404(CutterDeduction.objects.select_related('cutter'), pk=pk)
+    try:
+        services.delete_deduction(rate, user=request.user)
+    except services.MonthLocked as locked:
+        messages.error(request, D['err_locked'].format(month=month_label(locked.month)))
     else:
-        form = CutterForm(instance=cutter, T=T)
-    return render_page(request, 'cutter_edit.html', form=form, heading=heading)
+        messages.success(request, D['deleted'].format(month=month_label(rate.effective_from)))
+    return to_cutter_deductions(rate.cutter)
 
 
 @manager_required
@@ -748,6 +809,7 @@ def reprice(request, month):
 
 LOG_PAGE_SIZE = 50
 RATE_ACTIONS = {AuditAction.RATE_ADD, AuditAction.RATE_EDIT, AuditAction.RATE_DELETE}
+DEDUCTION_ACTIONS = {AuditAction.DEDUCTION_SET, AuditAction.DEDUCTION_DELETE}
 STYLE_LABELS = dict(CuttingStyle.choices)
 
 
@@ -757,9 +819,21 @@ def record_text(data):
     return f"{style} {data['size']} · {data['boxes']} × ₩{won(data['unit_price'])} = ₩{won(data['total'])}"
 
 
-def change_texts(T, entry):
+def deduction_text(D, data):
+    """'From 2026-10: tax 3.3%, health insurance ₩150,000' from a change-log snapshot."""
+    rate = CutterDeduction(
+        effective_from=date.fromisoformat(data['effective_from']), tax_percent=Decimal(data['tax_percent']),
+        insurance_mode=data['insurance_mode'], insurance_value=Decimal(data['insurance_value']),
+    )
+    return deductions.rate_summary(D, rate)
+
+
+def change_texts(T, entry, D=None):
     """The before and after of a change-log entry, as text."""
-    if entry.action in RATE_ACTIONS:
+    if entry.action in DEDUCTION_ACTIONS:
+        def text(data):
+            return deduction_text(D, data)
+    elif entry.action in RATE_ACTIONS:
         def text(data):
             return T['rate_line'].format(item=data['item'], price=won(data['unit_price']), date=data['effective_from'])
     elif entry.action == AuditAction.UNLOCK:
@@ -789,8 +863,9 @@ def audit_log(request):
         entries = entries.filter(month=month)
     page = Paginator(entries, LOG_PAGE_SIZE).get_page(request.GET.get('page'))
     rows = []
+    D = deductions.strings(get_lang(request))
     for entry in page:
-        before, after = change_texts(T, entry)
+        before, after = change_texts(T, entry, D)
         rows.append({
             'entry': entry,
             'action': T[f'action_{entry.action}'],
@@ -799,6 +874,7 @@ def audit_log(request):
             'after': after,
             'entered': entered_text(T, entry),
             'is_rate': entry.action in RATE_ACTIONS,
+            'is_deduction': entry.action in DEDUCTION_ACTIONS,
         })
     query = f'month={month_label(month)}&' if month else ''
     return render_page(
@@ -838,6 +914,7 @@ def render_payslips(request, month, slips):
         slip['lang'] = forced or slip['cutter'].payslip_language or screen_lang
         slip['T'] = T = STRINGS[slip['lang']]
         slip['provisional'] = reports.provisional_note(T, month)
+        slip['ded_lines'] = deductions.lines(deductions.strings(slip['lang']), slip['deductions'])
         for group in slip['style_groups']:
             group['subtotal_label'] = T['subtotal'].format(style=group['label'])
     lang = slips[0]['lang'] if len(slips) == 1 else (forced or screen_lang)

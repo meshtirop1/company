@@ -105,6 +105,21 @@
     </table>
   </div>
 
+  {% if ded_lines %}
+  <div class="section deduct">
+    <h2>{% if lang == 'ko' %}공제 (세금 및 보험){% else %}Deductions (tax and insurance){% endif %}</h2>
+    <table class="lines">
+      <thead><tr><th>{% if lang == 'ko' %}항목{% else %}Description{% endif %}</th><th class="amt">{% if lang == 'ko' %}금액 (&#8361;){% else %}Amount (&#8361;){% endif %}</th></tr></thead>
+      <tbody>
+        {% for label, amount in ded_lines %}
+        <tr><td>{{ label }}</td><td class="amt">&#8361;{{ amount|floatformat:0 }}</td></tr>
+        {% endfor %}
+        <tr class="subtotal"><td>{% if lang == 'ko' %}세금 및 보험 합계{% else %}Total tax and insurance{% endif %}</td><td class="amt">&#8361;{{ ded.total|floatformat:0 }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
   <div class="section deduct">
     <h2>{% if lang == 'ko' %}공제 (카드 지출){% else %}Deductions (card expenses){% endif %}</h2>
     <table class="lines">
@@ -113,9 +128,9 @@
         {% for e in expenses %}
         <tr><td>{{ e.date }}</td><td>{{ e.description }}</td><td class="amt">&#8361;{{ e.amount|floatformat:0 }}</td></tr>
         {% empty %}
-        <tr><td colspan="3" style="color:#9ca3af;text-align:center;padding:16px;">{% if lang == 'ko' %}공제 항목 없음{% else %}No deductions{% endif %}</td></tr>
+        <tr><td colspan="3" style="color:#9ca3af;text-align:center;padding:16px;">{% if lang == 'ko' %}카드 지출 없음{% else %}No card expenses{% endif %}</td></tr>
         {% endfor %}
-        <tr class="subtotal"><td colspan="2">{% if lang == 'ko' %}총 공제액{% else %}Total deductions{% endif %}</td><td class="amt">&#8361;{{ exp_total|floatformat:0 }}</td></tr>
+        <tr class="subtotal"><td colspan="2">{% if lang == 'ko' %}카드 지출 합계{% else %}Total card expenses{% endif %}</td><td class="amt">&#8361;{{ exp_total|floatformat:0 }}</td></tr>
       </tbody>
     </table>
   </div>
@@ -125,7 +140,7 @@
     <span class="value">&#8361;{{ net|floatformat:0 }}</span>
   </div>
 
-  <p class="note">{% if lang == 'ko' %}* 실수령액 = 총 지급액 − 카드 지출. 결근: {{ absences }}회.{% else %}* Net pay = gross pay − card expenses. Absences this period: {{ absences }}.{% endif %}</p>
+  <p class="note">{% if lang == 'ko' %}* 실수령액 = 총 지급액{% if ded_lines %} − 세금 및 보험{% endif %} − 카드 지출.{% if ded_lines %} 세금과 보험료는 총 지급액 기준이며 10원 미만은 버립니다.{% endif %} 결근: {{ absences }}회.{% else %}* Net pay = gross pay{% if ded_lines %} − tax and insurance{% endif %} − card expenses.{% if ded_lines %} Tax and insurance are taken from gross pay and rounded down to 10 won.{% endif %} Absences this period: {{ absences }}.{% endif %}</p>
 
   <div class="foot">
     <span>{% if lang == 'ko' %}신해경 근무 시간 추적기{% else %}Shinhe Hours Tracker{% endif %}</span>

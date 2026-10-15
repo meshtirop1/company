@@ -17,6 +17,13 @@
 
 <div class="stat-grid">
   <div class="stat-card"><div class="label">{{ T.month_total }}</div><div class="value">₩{{ data.total|won }}</div></div>
+  {% if data.deductions.shown %}
+  <div class="stat-card">
+    <div class="label">{{ T.month_net }}</div>
+    <div class="value">₩{{ data.deductions.net|won }}</div>
+    <div class="muted">{{ T.deductions_col }}: <span style="white-space:nowrap">−₩{{ data.deductions.total|won }}</span></div>
+  </div>
+  {% endif %}
   {% for cell in data.style_cells %}
   <div class="stat-card">
     <div class="label">{{ cell.label }}</div>

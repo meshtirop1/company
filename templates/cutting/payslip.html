@@ -42,6 +42,8 @@
   table.lines th { background:#f3f6fa; color:#334155; font-size:11px; text-transform:uppercase; letter-spacing:.04em; }
   table.lines .amt { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
   table.lines .subtotal td { font-weight:700; border-top:2px solid #cbd5e1; background:#f8fafc; }
+  table.lines .gross td { font-weight:600; }
+  table.lines .minus { color:#be123c; }
   .empty { color:#9ca3af; text-align:center; padding:18px; }
 
   .net { margin:18px 32px 0; display:flex; justify-content:space-between; align-items:center; background:#1e3a5f; color:#fff; padding:15px 22px; border-radius:8px; }
@@ -153,10 +155,25 @@
     {% endif %}
   </div>
 
+  {% if slip.deductions.shown %}
+  <div class="section deduct">
+    <h2>{{ slip.T.deductions_heading }}</h2>
+    <table class="lines">
+      <tbody>
+        <tr class="gross"><td>{{ slip.T.gross_pay }}</td><td class="amt">₩{{ slip.total|won }}</td></tr>
+        {% for label, amount in slip.ded_lines %}
+        <tr><td>{{ label }}</td><td class="amt minus">−₩{{ amount|won }}</td></tr>
+        {% endfor %}
+        <tr class="subtotal"><td>{{ slip.T.deductions_total }}</td><td class="amt minus">−₩{{ slip.deductions.total|won }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
   <div class="receipt">
     <div class="net">
-      <span class="label">{{ slip.T.total_pay }}</span>
-      <span class="value">₩{{ slip.total|won }}</span>
+      <span class="label">{% if slip.deductions.shown %}{{ slip.T.net_pay }}{% else %}{{ slip.T.total_pay }}{% endif %}</span>
+      <span class="value">₩{{ slip.deductions.net|won }}</span>
     </div>
     <div class="sign"><span>{{ slip.T.received_by }}</span><span class="line"></span></div>
   </div>
@@ -173,7 +190,7 @@
   </div>
   {% endif %}
 
-  <p class="note">* {{ slip.T.payslip_note }}</p>
+  <p class="note">* {{ slip.T.payslip_note }}{% if slip.deductions.shown %} {{ slip.T.payslip_note_deductions }}{% endif %}</p>
   <div class="foot">
     <span>{{ slip.T.brand }}</span>
     <span>{{ slip.T.generated }}: {{ generated|date:'Y-m-d H:i' }}</span>

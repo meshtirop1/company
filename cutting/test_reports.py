@@ -223,10 +223,11 @@ class ReportPageTests(ReportData, ManagerTestCase):
         summary = workbook[EN['xl_summary_sheet']]
         header = [cell.value for cell in summary[4]]
         self.assertEqual(header[0], EN['cutter'])
-        self.assertEqual(header[-1], EN['xl_total_amount'])
+        self.assertEqual(header[-4:], [EN['xl_total_amount'], EN['xl_tax'], EN['xl_insurance'], EN['xl_net']])
         rows = [[cell.value for cell in row] for row in summary.iter_rows(min_row=5)]
-        self.assertEqual(rows[0], ['Kim', 17, 69000, 4, 10000, 21, 79000])
-        self.assertEqual(rows[-1], [EN['xl_total_row'], 20, 90000, 10, 25000, 30, 115000])
+        # No tax or insurance set, so net pay is the total.
+        self.assertEqual(rows[0], ['Kim', 17, 69000, 4, 10000, 21, 79000, 0, 0, 79000])
+        self.assertEqual(rows[-1], [EN['xl_total_row'], 20, 90000, 10, 25000, 30, 115000, 0, 0, 115000])
 
         detail = workbook[EN['xl_detail_sheet']]
         self.assertEqual(detail.max_row - 1, 6)  # six September records, nothing from Aug 31 or Oct 1

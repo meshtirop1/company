@@ -5,7 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Sum
 from django.contrib import messages
-from .models import CustomUser, WorkHours, Holiday, Settings, CardExpense
+from .models import CustomUser, WorkHours, Holiday, Settings, CardExpense, EmployeeDeduction
+from . import deductions
 import calendar
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 from django.http import HttpResponse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
 from urllib.parse import urlsplit
 
 
@@ -740,7 +742,10 @@ def payslip(request, user_id):
     expenses = list(CardExpense.objects.filter(
         user=employee, date__year=year, date__month=month).order_by('date'))
     exp_total = sum((e.amount for e in expenses), 0)
-    net = gross - exp_total
+    # Tax and health insurance under the employee's rate for this month (see deductions.py).
+    ded = deductions.compute(gross, deductions.rate_for(employee.deductions.all(), date(year, month, 1)))
+    ded_lines = deductions.lines(deductions.strings(lang), ded)
+    net = gross - ded['total'] - exp_total
 
     month_names_en = ['', 'January', 'February', 'March', 'April', 'May', 'June',
                       'July', 'August', 'September', 'October', 'November', 'December']
@@ -750,6 +755,7 @@ def payslip(request, user_id):
         'employee': employee, 'year': year, 'month': month, 'month_name': month_name,
         'total_hours': total_hours, 'absences': absences, 'wage': wage,
         'gross': gross, 'expenses': expenses, 'exp_total': exp_total, 'net': net,
+        'ded': ded, 'ded_lines': ded_lines,
         'is_manager': is_manager, 'lang': lang, 'generated': now,
     }
 
@@ -762,6 +768,53 @@ def payslip(request, user_id):
         return redirect(f"{reverse('payslip', args=[employee.id])}?year={year}&month={month}")
 
     return render(request, 'payslip.html', context)
+
+
+def _render_employee_deductions(request, employee, ded_form=None):
+    lang = 'ko' if request.session.get('language') == 'ko' else 'en'
+    D = deductions.strings(lang)
+    rows = deductions.rate_rows(D, list(employee.deductions.all()))
+    for row in rows:
+        row['delete_url'] = reverse('employee_deduction_delete', args=[row['rate'].pk])
+    return render(request, 'employee_deductions.html', {
+        'base_template': f'base_{lang}.html',
+        'D': D,
+        'heading': D['page_title'].format(name=employee.get_full_name() or employee.username),
+        'ded_rows': rows,
+        'ded_form': ded_form or deductions.DeductionRateForm(D=D),
+        'ded_action': reverse('employee_deductions', args=[employee.pk]),
+    })
+
+
+@login_required
+def employee_deductions(request, user_id):
+    """An employee's tax and health-insurance rates (see deductions.py). Managers only."""
+    if not (request.user.is_admin or request.user.is_superuser):
+        return redirect('calendar')
+    employee = get_object_or_404(CustomUser, id=user_id)
+    if request.method == 'POST':
+        D = deductions.strings(request.session.get('language', 'en'))
+        form = deductions.DeductionRateForm(request.POST, D=D)
+        if not form.is_valid():
+            messages.error(request, D['err_form'])
+            return _render_employee_deductions(request, employee, form)
+        first_day = form.cleaned_data['month']
+        EmployeeDeduction.objects.update_or_create(user=employee, effective_from=first_day, defaults=form.values())
+        messages.success(request, D['saved'].format(month=first_day.strftime('%Y-%m')))
+        return redirect('employee_deductions', user_id=employee.pk)
+    return _render_employee_deductions(request, employee)
+
+
+@login_required
+@require_POST
+def employee_deduction_delete(request, pk):
+    if not (request.user.is_admin or request.user.is_superuser):
+        return redirect('calendar')
+    D = deductions.strings(request.session.get('language', 'en'))
+    rate = get_object_or_404(EmployeeDeduction, pk=pk)
+    rate.delete()
+    messages.success(request, D['deleted'].format(month=rate.effective_from.strftime('%Y-%m')))
+    return redirect('employee_deductions', user_id=rate.user_id)
 
 
 @login_required

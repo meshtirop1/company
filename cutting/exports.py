@@ -52,23 +52,26 @@ def summary_sheet(sheet, summary, T, month_label, provisional):
     labels = [T['cutter']]
     for cell in summary['style_cells']:
         labels += [T['xl_boxes'].format(style=cell['label']), T['xl_amount'].format(style=cell['label'])]
-    labels += [T['xl_total_boxes'], T['xl_total_amount']]
+    labels += [T['xl_total_boxes'], T['xl_total_amount'], T['xl_tax'], T['xl_insurance'], T['xl_net']]
     header_row(sheet, 4, labels)
 
-    def write(row, name, cells, boxes, total):
+    def write(row, name, cells, boxes, total, tax, insurance, net):
         text_cell(sheet, row, 1, name)
         values = []
         for cell in cells:
             values += [cell['boxes'], int(cell['amount'])]
-        values += [boxes, int(total)]
+        values += [boxes, int(total), int(tax), int(insurance), int(net)]
         for column, value in enumerate(values, start=2):
             sheet.cell(row=row, column=column, value=value).number_format = NUMBER
 
     row = 5
     for entry in summary['rows']:
-        write(row, entry['cutter'].name, entry['style_cells'], entry['boxes'], entry['total'])
+        ded = entry['deductions']
+        write(row, entry['cutter'].name, entry['style_cells'], entry['boxes'], entry['total'],
+              ded['tax'], ded['insurance'], ded['net'])
         row += 1
-    write(row, T['xl_total_row'], summary['style_cells'], summary['boxes'], summary['total'])
+    write(row, T['xl_total_row'], summary['style_cells'], summary['boxes'], summary['total'],
+          summary['tax'], summary['insurance'], summary['net'])
     for column in range(1, len(labels) + 1):
         sheet.cell(row=row, column=column).font = Font(bold=True)
         sheet.cell(row=row, column=column).fill = TOTAL_FILL
