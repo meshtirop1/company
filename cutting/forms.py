@@ -78,7 +78,7 @@ def localize_price(field, T):
 def localize_sort_order(field, T, help_key='sort_order_help'):
     field.label = T['sort_order']
     field.help_text = T[help_key]
-    field.error_messages.update(min_value=T['err_order_range'], max_value=T['err_order_range'])
+    field.error_messages.update(invalid=T['err_order_range'], min_value=T['err_order_range'], max_value=T['err_order_range'])
 
 
 class CutterForm(forms.ModelForm):
@@ -292,9 +292,13 @@ class BatchEntryForm(forms.Form):
             )
             self.fields[f'item_{cutter.pk}'] = forms.ChoiceField(
                 required=False, label=T['change_row'], choices=override_choices,
-                widget=ItemSelect(item_styles=item_styles, attrs={'class': 'cut-override'}),
+                widget=ItemSelect(item_styles=item_styles, attrs={
+                    'class': 'cut-override', 'aria-label': f"{cutter.name} — {T['change_row']}",
+                }),
             )
         localize(self, T)
+        # The token is hidden: a bad one gets a message a supervisor can act on, not "Enter a valid UUID".
+        self.fields['token'].error_messages.update(required=T['err_form_expired'], invalid=T['err_form_expired'])
         for cutter in self.cutters:
             localize_boxes(self.fields[f'boxes_{cutter.pk}'], T)
 

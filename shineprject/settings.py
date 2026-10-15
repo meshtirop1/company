@@ -96,6 +96,12 @@ if _db_url:
     except ImportError:
         pass
 
+if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+    # Take SQLite's write lock when a transaction begins. A transaction that reads first and then
+    # writes (e.g. a save that checks the month lock) otherwise fails at once with "database is
+    # locked" whenever another request is writing, instead of waiting its turn.
+    DATABASES['default'].setdefault('OPTIONS', {}).update(transaction_mode='IMMEDIATE', timeout=20)
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},

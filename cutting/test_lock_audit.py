@@ -371,6 +371,62 @@ class ChangeLogPageTests(LockTestCase):
                             f"{reverse('cutting:audit')}?month=2026-09")
 
 
+class Phase4ReviewTests(LockTestCase):
+    """Fixes from the Phase 4 review."""
+
+    def test_saved_work_posted_again_after_the_lock_is_recognised_not_offered_again(self):
+        token = uuid.uuid4()
+        self.save_entry({self.park: 5}, day=date(2026, 9, 20), token=token)
+        self.lock()
+        again = self.save_entry({self.park: 5}, day=date(2026, 9, 20), token=token)
+        self.assertIn(EN['batch_already_saved'], message_texts(again))
+        different = self.save_entry({self.park: 6}, day=date(2026, 9, 20), token=token)
+        texts = message_texts(different)
+        self.assertIn(EN['err_month_locked'].format(month='2026-09'), texts)
+        self.assertFalse(any(text.startswith('This form was already saved') for text in texts))
+        self.assertEqual(CutRecord.objects.filter(cutter=self.park).count(), 1)
+
+    def test_a_month_locked_on_its_last_day_is_not_provisional(self):
+        last_day = date(2026, 9, 30)
+        self.assertTrue(reports_note(SEPT, last_day))
+        services.lock_month(SEPT, user=self.manager, today=last_day)
+        self.assertEqual(reports_note(SEPT, last_day), '')
+
+    def test_prices_cannot_be_changed_in_the_admin(self):
+        self.client.force_login(make_user('root', is_superuser=True, is_staff=True))
+        change = reverse('admin:cutting_priceitem_change', args=[self.tongpo7.pk])
+        self.assertEqual(self.client.get(change).status_code, 200)
+        self.assertEqual(self.client.post(change, {'style': 'tongpo', 'size': '7'}).status_code, 403)
+        self.assertEqual(self.client.get(reverse('admin:cutting_priceitem_add')).status_code, 403)
+        self.assertEqual(self.tongpo7.rates.get().unit_price, 4000)
+
+    def test_an_emptied_month_still_links_to_its_change_log(self):
+        services.delete_batch(self.batch, user=self.manager)
+        page = self.client.get(reverse('cutting:month', args=[SEPT]))
+        self.assertContains(page, EN['no_month_work'])
+        self.assertContains(page, f"{reverse('cutting:audit')}?month=2026-09")
+
+    def test_log_entries_are_named_in_local_time(self):
+        entry = services.log(AuditAction.LOCK, user=self.manager, month=SEPT)
+        self.assertTrue(str(entry).startswith(timezone.localtime(entry.at).strftime('%Y-%m-%d %H:%M')))
+
+    def test_saving_a_row_unchanged_says_so_and_logs_nothing(self):
+        response = self.post('cutting:record_edit', self.kim_row.pk,
+                             data={'item': self.tongpo7.pk, 'boxes': 10, 'reason': 'checked, count is right'})
+        self.assertIn(EN['record_unchanged'], message_texts(response))
+        self.assertFalse(AuditEntry.objects.exists())
+
+    def test_sqlite_transactions_take_the_write_lock_up_front(self):
+        from django.db import connection
+        if connection.vendor == 'sqlite':
+            self.assertEqual(connection.settings_dict['OPTIONS'].get('transaction_mode'), 'IMMEDIATE')
+
+
+def reports_note(month, today):
+    from .reports import provisional_note
+    return provisional_note(EN, month, today=today)
+
+
 class Phase4AccessTests(LockTestCase):
     def urls(self):
         return {

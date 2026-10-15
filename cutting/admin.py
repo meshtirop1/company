@@ -11,26 +11,10 @@ class CutterAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at']
 
 
-class PriceRateInline(admin.TabularInline):
-    model = PriceRate
-    extra = 0
-    fields = ['effective_from', 'unit_price', 'created_by', 'created_at']
-    readonly_fields = ['created_by', 'created_at']
-    ordering = ['-effective_from']
-
-
-@admin.register(PriceItem)
-class PriceItemAdmin(admin.ModelAdmin):
-    list_display = ['style', 'size', 'sort_order', 'is_active']
-    list_filter = ['style', 'is_active']
-    ordering = ['style', 'sort_order']
-    readonly_fields = ['created_at', 'updated_at']
-    inlines = [PriceRateInline]
-
-
 class ViewOnly:
-    """Work records change only on the supervisor pages, through cutting/services.py — the one
-    place the month lock and audit log apply. Here they can be looked at, not changed."""
+    """Work records and prices change only on the supervisor pages — where the month lock,
+    the change log and the price-list rules (e.g. a size keeps at least one rate) apply.
+    Here they can be looked at, not changed."""
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -40,6 +24,23 @@ class ViewOnly:
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+class PriceRateInline(ViewOnly, admin.TabularInline):
+    model = PriceRate
+    extra = 0
+    fields = ['effective_from', 'unit_price', 'created_by', 'created_at']
+    readonly_fields = fields
+    ordering = ['-effective_from']
+
+
+@admin.register(PriceItem)
+class PriceItemAdmin(ViewOnly, admin.ModelAdmin):
+    list_display = ['style', 'size', 'sort_order', 'is_active']
+    list_filter = ['style', 'is_active']
+    ordering = ['style', 'sort_order']
+    readonly_fields = ['style', 'size', 'sort_order', 'is_active', 'created_at', 'updated_at']
+    inlines = [PriceRateInline]
 
 
 class CutRecordInline(ViewOnly, admin.TabularInline):

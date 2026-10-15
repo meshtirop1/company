@@ -174,7 +174,7 @@ class ReportPageTests(ReportData, ManagerTestCase):
         Cutter.objects.filter(pk=self.kim.pk).update(note='Late twice this month')
         response = self.client.get(self.month_url('cutting:payslip', self.kim.pk))
         self.assertNotContains(response, 'Late twice')  # the roster note is for managers, not the slip
-        self.assertContains(response, '<title>Kim — Cutting pay slip — 2026-09</title>', html=False)
+        self.assertContains(response, '<title>Kim — Cutting payslip — 2026-09</title>', html=False)
         self.assertContains(response, f"{escape(EN['daily_detail'])} · <span class=\"as-typed\">Kim</span> · 2026-09", html=False)
         # The day-by-day tally: 9/15, 5 boxes, ₩20,000.
         self.assertContains(response, '<span class="d">09-15</span><span class="b">5</span><span class="a">₩20,000</span>', html=False)

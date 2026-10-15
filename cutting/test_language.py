@@ -1,14 +1,16 @@
 """Phase 5: payslips in each cutter's language, and the supervisor's help page."""
 import uuid
 from datetime import date
+from urllib.parse import quote
 
 from django.urls import reverse
+from django.utils import timezone
 
 from . import services
-from .i18n import STRINGS
-from .models import Cutter
+from .i18n import COUNTED, STRINGS, counted
+from .models import CutRecord, Cutter
 from .test_entry import EntryTestCase
-from .tests import make_user
+from .tests import make_user, message_texts
 
 EN, KO = STRINGS['en'], STRINGS['ko']
 SEPT = date(2026, 9, 1)
@@ -69,6 +71,50 @@ class PayslipLanguageTests(EntryTestCase):
         self.assertEqual(Cutter.objects.get(name='Choi').payslip_language, '')
         self.post('cutting:cutters', data={'name': 'Bad', 'note': '', 'payslip_language': 'xx'})
         self.assertFalse(Cutter.objects.filter(name='Bad').exists())
+
+
+class WordingTests(EntryTestCase):
+    def test_one_is_singular_in_english_and_the_same_in_korean(self):
+        self.assertEqual(counted(EN, 'batch_saved', 1), EN['batch_saved_one'])
+        self.assertEqual(counted(EN, 'batch_saved', 2), EN['batch_saved'])
+        for key in COUNTED:
+            self.assertIn(f'{key}_one', EN, key)
+            self.assertEqual(KO[f'{key}_one'], KO[key], key)
+        response = self.save_entry({self.kim: 3})
+        self.assertIn(EN['batch_saved_one'].format(count=1, date='2026-10-10', total='12,000'), message_texts(response))
+        services.save_batch(work_date=timezone.localdate(), entered_by=self.manager, token=uuid.uuid4(),
+                            rows=[(self.kim, self.tongpo7, 1)])
+        self.assertContains(self.client.get(reverse('cutting:hub')), '1 row · ₩4,000')
+        js_text = self.client.get(reverse('cutting:entry')).context['js_text']
+        self.assertEqual(js_text['summary_one'], EN['js_summary_one'])
+
+    def test_a_mangled_form_token_comes_back_ready_to_save(self):
+        data = self.entry_data({self.kim: 3})
+        data['token'] = 'not-a-token'
+        response = self.client.post(reverse('cutting:entry'), data)
+        self.assertIn(EN['err_form_expired'], message_texts(response))
+        self.assertNotContains(response, 'UUID')
+        self.assertFalse(CutRecord.objects.exists())
+        fresh = response.context['form'].data
+        self.assertEqual(len(str(uuid.UUID(fresh['token']))), 36)
+        self.client.post(reverse('cutting:entry'), fresh)
+        self.assertEqual(CutRecord.objects.get().boxes, 3)
+
+    def test_the_excel_file_is_named_in_the_page_language(self):
+        url = reverse('cutting:month_export', args=[SEPT])
+        self.assertIn('filename="fish-cutting-2026-09.xlsx"', self.client.get(url)['Content-Disposition'])
+        self.use_korean()
+        header = self.client.get(url)['Content-Disposition']
+        self.assertIn("filename*=utf-8''", header)
+        self.assertIn(quote('생선손질수당-2026-09.xlsx'), header)
+
+    def test_display_order_errors_say_the_allowed_range(self):
+        response = self.post('cutting:prices', data={'style': 'tongpo', 'size': '14', 'sort_order': 'abc',
+                                                     'unit_price': '8000', 'effective_from': '2026-10-01'})
+        self.assertContains(response, EN['err_order_range'])
+
+    def test_each_rows_size_picker_is_labelled_with_the_cutter(self):
+        self.assertContains(self.client.get(reverse('cutting:entry')), f'aria-label="Kim — {EN["change_row"]}"')
 
 
 class HelpPageTests(EntryTestCase):

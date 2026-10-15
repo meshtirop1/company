@@ -78,7 +78,7 @@
                 totalLabel.textContent = '';
             }
         });
-        summary.textContent = fill(text.summary, {count: count, total: grouped(total)});
+        summary.textContent = fill(count === 1 ? text.summary_one : text.summary, {count: count, total: grouped(total)});
         selectAll.checked = rows.length > 0 && rows.every(function (row) {
             return row.querySelector('.cut-include').checked;
         });

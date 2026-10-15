@@ -8,7 +8,7 @@ import calendar
 from django.db.models import Sum
 from django.utils import timezone
 
-from .models import CutRecord, Cutter, CuttingStyle
+from .models import CutRecord, Cutter, CuttingStyle, MonthLock
 
 STYLE_RANK = {value: rank for rank, value in enumerate(CuttingStyle.values)}
 STYLE_LABELS = dict(CuttingStyle.choices)
@@ -29,9 +29,12 @@ def month_status(first_day, today=None):
 
 
 def provisional_note(T, first_day, today=None):
-    """'Provisional — up to <date>' while the month isn't over, so no one takes it as final pay."""
+    """'Provisional — up to <date>' while the month isn't over, so no one takes it as final pay.
+    A locked month is final even on its last day (when it can first be locked), so it gets none."""
     status = month_status(first_day, today)
-    return T['provisional_note'].format(date=status['through'].isoformat()) if status['provisional'] else ''
+    if not status['provisional'] or MonthLock.objects.filter(month=first_day).exists():
+        return ''
+    return T['provisional_note'].format(date=status['through'].isoformat())
 
 
 def by_name(cutter):

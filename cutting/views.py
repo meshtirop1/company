@@ -17,6 +17,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import content_disposition_header
 from django.views.decorators.http import require_POST
 
 from . import exports, reports, services
@@ -24,7 +25,7 @@ from .forms import (
     BatchEntryForm, CutterForm, PriceItemCreateForm, PriceItemEditForm, PriceRateForm, RecordEditForm,
     UnlockForm, ordered_items,
 )
-from .i18n import STRINGS, get_lang
+from .i18n import STRINGS, counted, get_lang
 from .models import AuditAction, AuditEntry, CutBatch, CutRecord, Cutter, CuttingStyle, PriceItem, PriceRate
 from .templatetags.cutting_tags import signed_won
 
@@ -70,9 +71,10 @@ def hub(request):
     T = strings(request)
     today_records = CutRecord.objects.filter(work_date=timezone.localdate())
     today_total = today_records.aggregate(total=Sum('total'))['total'] or 0
+    rows = today_records.count()
     return render_page(
         request, 'hub.html',
-        today_summary=T['stat_today_value'].format(rows=today_records.count(), total=won(today_total)),
+        today_summary=counted(T, 'stat_today_value', rows).format(rows=rows, total=won(today_total)),
         active_cutters=Cutter.objects.filter(is_active=True).count(),
         priced_items=PriceItem.objects.filter(is_active=True).count(),
     )
@@ -356,9 +358,17 @@ def already_saved(request, T, batch):
     return redirect('cutting:day', batch.work_date)
 
 
+def posted_day(form):
+    """The form's work date — parsed from the post when validation refused it (e.g. a locked month)."""
+    return form.cleaned_data.get('work_date') or parse_day(form.data.get('work_date'), None)
+
+
 def same_work(batch, form):
-    """True when a valid post repeats exactly what `batch` already holds — a double tap."""
-    if batch.work_date != form.cleaned_data['work_date']:
+    """True when a post repeats exactly what `batch` already holds — a double tap, or Back and
+    Save again. Still true if the month has been locked since: the lock only refuses its date,
+    and the work is already saved, not missing."""
+    form.is_valid()
+    if set(form.errors) - {'work_date'} or batch.work_date != posted_day(form):
         return False
     saved = sorted(batch.records.values_list('cutter_id', 'item_id', 'boxes'))
     return saved == sorted((cutter.pk, item.pk, boxes) for cutter, item, boxes in form.rows)
@@ -396,20 +406,31 @@ def entry(request):
                 messages.error(request, locked_message(T, locked.month))
             else:
                 total = batch.records.aggregate(total=Sum('total'))['total']
-                messages.success(request, T['batch_saved'].format(
+                messages.success(request, counted(T, 'batch_saved', len(form.rows)).format(
                     count=len(form.rows), date=batch.work_date.isoformat(), total=won(total),
                 ))
                 return redirect('cutting:day', batch.work_date)
 
-        if spent is not None:
+        if spent is None and 'token' in form.errors:
+            # A missing or mangled form token (an old page, or a tampered post): nothing to save it
+            # under, so the rows come back under a fresh token — one more tap of Save files them.
+            messages.warning(request, T['err_form_expired'])
+            form = BatchEntryForm(with_fresh_token(request.POST), T=T, cutters=cutters, items=items)
+            form.is_valid()
+        elif spent is not None:
             # This form's token was used already — most often a form brought back with the Back
             # button. The very same work again is a double tap. Anything else is new work: it is
             # never dropped, and never saved unseen — it comes back under a fresh token to confirm.
-            if form.is_valid() and same_work(spent, form):
+            if same_work(spent, form):
                 return already_saved(request, T, spent)
-            messages.warning(request, T['err_token_spent'].format(
-                date=spent.work_date.isoformat(), time=timezone.localtime(spent.created_at).strftime('%H:%M'),
-            ))
+            day = posted_day(form)
+            if day and services.lock_for(day):
+                # Different work, but for a locked month: "tap Save to add them" could only fail.
+                messages.error(request, locked_message(T, services.month_of(day)))
+            else:
+                messages.warning(request, T['err_token_spent'].format(
+                    date=spent.work_date.isoformat(), time=timezone.localtime(spent.created_at).strftime('%H:%M'),
+                ))
             form = BatchEntryForm(with_fresh_token(request.POST), T=T, cutters=cutters, items=items)
             form.is_valid()  # show any row errors alongside the notice
         elif form.errors:
@@ -431,7 +452,8 @@ def entry(request):
         has_items=bool(items),
         today=today,
         price_data=price_data(items),
-        js_text={'per_box': T['js_per_box'], 'no_rate': T['js_no_rate'], 'summary': T['js_summary']},
+        js_text={'per_box': T['js_per_box'], 'no_rate': T['js_no_rate'],
+                 'summary': T['js_summary'], 'summary_one': T['js_summary_one']},
     )
 
 
@@ -486,7 +508,7 @@ def day(request, day=None):
             'batch': batch,
             'entered_by': entered_by_label(batch),
             'total': batch_total,
-            'confirm_delete': T['confirm_delete_batch'].format(count=len(rows)),
+            'confirm_delete': counted(T, 'confirm_delete_batch', len(rows)).format(count=len(rows)),
             'rows': [
                 {'record': record, 'confirm_delete': T['confirm_delete_record'].format(name=record.cutter.name)}
                 for record in rows
@@ -521,6 +543,10 @@ def record_edit(request, pk):
         form = RecordEditForm(request.POST, T=T, record=record, items=entry_items())
         if form.is_valid():
             data = form.cleaned_data
+            if data['item'].pk == record.item_id and data['boxes'] == record.boxes:
+                # Saving it as it was changes nothing, so nothing (not even a reason) is logged.
+                messages.info(request, T['record_unchanged'])
+                return redirect('cutting:day', record.work_date)
             try:
                 services.update_record(
                     record, item=data['item'], boxes=data['boxes'], user=request.user, reason=data['reason'],
@@ -563,7 +589,7 @@ def batch_delete(request, pk):
         services.delete_batch(batch, user=request.user)
     except services.MonthLocked:
         return refuse_if_locked(request, T, work_date)
-    messages.success(request, T['batch_deleted'].format(count=count))
+    messages.success(request, counted(T, 'batch_deleted', count).format(count=count))
     return redirect('cutting:day', work_date)
 
 
@@ -615,7 +641,7 @@ def month_report(request, month=None):
         lock_not_yet=T['lock_not_yet'].format(date=reports.month_bounds(month)[1].isoformat()),
         confirm_lock=T['confirm_lock'].format(month=label),
         unlock_form=UnlockForm(T=T) if lock else None,
-        stale_notice=T['stale_notice'].format(count=len(stale)) if stale else '',
+        stale_notice=counted(T, 'stale_notice', len(stale)).format(count=len(stale)) if stale else '',
         log_url=f"{reverse('cutting:audit')}?month={label}",
     )
 
@@ -694,7 +720,7 @@ def reprice(request, month):
             messages.warning(request, T['reprice_changed'])
             return redirect('cutting:reprice', month)
         if changed:
-            messages.success(request, T['reprice_done'].format(count=changed, delta=signed_won(delta)))
+            messages.success(request, counted(T, 'reprice_done', changed).format(count=changed, delta=signed_won(delta)))
         else:
             messages.info(request, T['reprice_none'].format(month=label))
         return redirect('cutting:month', month)
@@ -710,10 +736,10 @@ def reprice(request, month):
         fixable=fixable,
         plan_token=services.plan_token(plan),
         no_rate=len(rows) - fixable,
-        apply_label=T['reprice_apply'].format(count=fixable),
-        confirm=T['confirm_reprice'].format(count=fixable, delta=signed_won(delta)),
+        apply_label=counted(T, 'reprice_apply', fixable).format(count=fixable),
+        confirm=counted(T, 'confirm_reprice', fixable).format(count=fixable, delta=signed_won(delta)),
         total_change=T['reprice_total_change'].format(delta=signed_won(delta)),
-        no_rate_note=T['reprice_no_rate'].format(count=len(rows) - fixable),
+        no_rate_note=counted(T, 'reprice_no_rate', len(rows) - fixable).format(count=len(rows) - fixable),
         none_note=T['reprice_none'].format(month=label),
     )
 
@@ -788,11 +814,13 @@ def audit_log(request):
 
 @manager_required
 def month_export(request, month):
+    T = strings(request)
     response = HttpResponse(
-        exports.month_workbook_bytes(month, strings(request)),
+        exports.month_workbook_bytes(month, T),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     )
-    response['Content-Disposition'] = f'attachment; filename="fish-cutting-{month_label(month)}.xlsx"'
+    # In the page's language; a Korean name goes out RFC 5987-encoded (filename*=utf-8''…).
+    response['Content-Disposition'] = content_disposition_header(True, T['xl_filename'].format(month=month_label(month)))
     return response
 
 

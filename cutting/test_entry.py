@@ -376,7 +376,7 @@ class DayPageTests(EntryTestCase):
         services.save_batch(work_date=timezone.localdate(), entered_by=self.manager, token=uuid.uuid4(),
                             rows=[(self.kim, self.tongpo12, 3)])
         response = self.client.get(reverse('cutting:hub'))
-        self.assertContains(response, EN['stat_today_value'].format(rows=1, total='21,000'))
+        self.assertContains(response, EN['stat_today_value_one'].format(rows=1, total='21,000'))
 
 
 class EntryAccessTests(EntryTestCase):

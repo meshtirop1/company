@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.db.models.functions import Lower
+from django.utils import timezone
 
 
 class CuttingStyle(models.TextChoices):
@@ -207,4 +208,4 @@ class AuditEntry(models.Model):
         indexes = [models.Index(fields=['month', 'at'], name='cutting_audit_month_idx')]
 
     def __str__(self):
-        return f'{self.at:%Y-%m-%d %H:%M} {self.action} {self.cutter_name}'.strip()
+        return f'{timezone.localtime(self.at):%Y-%m-%d %H:%M} {self.action} {self.cutter_name}'.strip()
