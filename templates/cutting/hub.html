@@ -29,6 +29,11 @@
     <span class="cut-tile-title">{{ T.tile_day }}</span>
     <span class="cut-tile-desc">{{ T.tile_day_desc }}</span>
   </a>
+  <a class="cut-tile" href="{% url 'cutting:month_current' %}">
+    <span class="cut-tile-icon" aria-hidden="true">&#128202;</span>
+    <span class="cut-tile-title">{{ T.tile_month }}</span>
+    <span class="cut-tile-desc">{{ T.tile_month_desc }}</span>
+  </a>
   <a class="cut-tile" href="{% url 'cutting:cutters' %}">
     <span class="cut-tile-icon" aria-hidden="true">&#128101;</span>
     <span class="cut-tile-title">{{ T.tile_cutters }}</span>

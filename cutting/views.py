@@ -12,12 +12,13 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError
 from django.db.models import Prefetch, ProtectedError, Sum
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from . import services
+from . import exports, reports, services
 from .forms import (
     BatchEntryForm, CutterForm, PriceItemCreateForm, PriceItemEditForm, PriceRateForm, RecordEditForm,
     ordered_items,
@@ -421,6 +422,7 @@ def day(request, day=None):
         request, 'day.html',
         day=day,
         heading=T['day_title'].format(date=day.isoformat()),
+        by_cutter=reports.day_summary(day),
         blocks=blocks,
         day_total=day_total,
         previous_day=day - timedelta(days=1),
@@ -472,3 +474,95 @@ def batch_delete(request, pk):
     services.delete_batch(batch)
     messages.success(request, T['batch_deleted'].format(count=count))
     return redirect('cutting:day', work_date)
+
+
+# ─── Reports ──────────────────────────────────────────────────
+
+def this_month():
+    return timezone.localdate().replace(day=1)
+
+
+def month_label(first_day):
+    return first_day.strftime('%Y-%m')
+
+
+def parse_month(value, default):
+    """'2026-10' from the month picker → date(2026, 10, 1)."""
+    try:
+        year, month = value.split('-')
+        return date(int(year), int(month), 1)
+    except (AttributeError, ValueError):
+        return default
+
+
+def next_month(first_day):
+    return (first_day.replace(day=28) + timedelta(days=4)).replace(day=1)
+
+
+@manager_required
+def month_report(request, month=None):
+    if month is None:
+        if 'month' in request.GET:  # the "go to month" box
+            return redirect('cutting:month', parse_month(request.GET['month'], this_month()))
+        month = this_month()
+    T = strings(request)
+    return render_page(
+        request, 'month.html',
+        month=month,
+        heading=T['month_title'].format(month=month_label(month)),
+        summary=reports.month_summary(month),
+        previous_month=(month - timedelta(days=1)).replace(day=1),
+        next_month=next_month(month) if month < this_month() else None,
+        is_current=month == this_month(),
+    )
+
+
+@manager_required
+def cutter_report(request, month, cutter_pk):
+    T = strings(request)
+    cutter = get_object_or_404(Cutter, pk=cutter_pk)
+    return render_page(
+        request, 'cutter_month.html',
+        month=month,
+        heading=T['cutter_month_title'].format(name=cutter.name, month=month_label(month)),
+        data=reports.cutter_month(cutter, month),
+    )
+
+
+@manager_required
+def month_export(request, month):
+    response = HttpResponse(
+        exports.month_workbook_bytes(month, strings(request)),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="fish-cutting-{month_label(month)}.xlsx"'
+    return response
+
+
+def render_payslips(request, month, slips):
+    """The printable payslip sheet (a standalone page, like the employees' payslip)."""
+    lang = get_lang(request)
+    for slip in slips:
+        for group in slip['style_groups']:
+            group['subtotal_label'] = STRINGS[lang]['subtotal'].format(style=group['label'])
+    return render(request, 'cutting/payslip.html', {
+        'T': STRINGS[lang],
+        'lang': lang,
+        'slips': slips,
+        'month_label': month_label(month),
+        'back_url': reverse('cutting:month', args=[month]),
+        'generated': timezone.localtime(),
+    })
+
+
+@manager_required
+def payslip(request, month, cutter_pk):
+    cutter = get_object_or_404(Cutter, pk=cutter_pk)
+    return render_payslips(request, month, [reports.cutter_month(cutter, month)])
+
+
+@manager_required
+def payslips(request, month):
+    """Every payslip for the month, one per page, ready to print in one go."""
+    slips = [reports.cutter_month(cutter, month) for cutter in reports.cutters_paid_in(month)]
+    return render_payslips(request, month, slips)

@@ -33,9 +33,11 @@
 /* ---- Buttons and action rows ---- */
 .btn-sm { padding: 0.4rem 0.8rem !important; font-size: 0.85rem !important; }
 .cut-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
-.cut-actions form { display: inline; margin: 0; }
-/* base.css nudges a panel form's direct-child buttons down; inline action buttons must stay level. */
-.cut-actions form > button, .panel-title form > button { margin-top: 0; }
+.cut-actions form { display: inline-flex; margin: 0; }  /* flex: no baseline gap under the button */
+/* base.css's `.panel form > .button-danger` nudges buttons down 0.5rem; inline action buttons must stay
+   level. Same specificity as that rule, so this (loaded later) wins. */
+.cut-actions form > .button-danger, .cut-actions form > .button-secondary,
+.cut-actions form > .button-primary, .panel-title form > .button-danger { margin-top: 0; }
 .cut-form-actions { margin-top: 0.5rem; }
 
 /* ---- Forms ---- */
@@ -147,6 +149,30 @@
 .table-custom tfoot th { background: var(--color-bg); font-weight: 700; }
 .style-badge.badge-sm { font-size: 0.75rem; padding: 0.1rem 0.5rem; }
 
+/* ---- Reports ---- */
+.section-title { margin: 0.5rem 0 1rem; }
+.table-custom .center { text-align: center; }
+.cut-month-actions { margin-bottom: 1rem; }
+.cut-name { color: var(--color-text); }
+a.cut-name { color: var(--color-primary); font-weight: 600; text-decoration: none; }
+a.cut-name:hover { text-decoration: underline; }
+.cut-day-line + .cut-day-line { margin-top: 0.25rem; }
+.cut-phone-part { display: block; }
+
+/* Day page: what each cutter did and earned */
+.cut-summary { list-style: none; margin: 0; padding: 0; }
+.cut-summary-row { padding: 0.7rem 0; border-bottom: 1px solid var(--color-border); }
+.cut-summary-row:last-child { border-bottom: 0; }
+.cut-summary-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; }
+.cut-summary-head .cut-name { font-weight: 700; font-size: 1.02rem; }
+.cut-summary-total { color: var(--color-primary); font-size: 1.05rem; white-space: nowrap; }
+.cut-summary-lines { list-style: none; margin: 0.3rem 0 0; padding: 0; }
+.cut-summary-lines li {
+    display: flex; justify-content: space-between; gap: 0.75rem;
+    font-size: 0.88rem; color: var(--color-text-muted); padding: 0.12rem 0;
+}
+.cut-summary-lines li span:last-child { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
 /* ---- Phones: stack rows, larger tap targets ---- */
 @media (max-width: 600px) {
     .cut-list-row { flex-direction: column; align-items: flex-start; }
@@ -156,19 +182,21 @@
     .cut-daynav-jump { margin-left: 0; width: 100%; }
     .cut-savebar { margin-left: -0.25rem; margin-right: -0.25rem; }
 
-    /* Day table → one compact card per entry: name + amount, then "통포 7 · 12 × ₩4,000", then actions. */
-    .cut-day-table, .cut-day-table tbody, .cut-day-table tfoot { display: block; border: 0; }
-    .cut-day-table thead { display: none; }
-    .cut-day-table tbody tr {
+    /* Report tables → one compact card per row: name + amount on top, everything else below.
+       Cells marked .phone-hide are summarised in the name cell's .cut-phone-detail instead. */
+    .cut-cards, .cut-cards tbody, .cut-cards tfoot { display: block; border: 0; }
+    .cut-cards thead { display: none; }
+    .cut-cards tbody tr {
         display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 0.4rem 0.75rem;
         padding: 0.75rem 0.25rem; border-bottom: 1px solid var(--color-border);
     }
-    .cut-day-table tbody td { display: block; padding: 0; border: 0; }
-    .cut-day-table .cut-col-item, .cut-day-table .cut-col-boxes, .cut-day-table .cut-col-rate { display: none; }
-    .cut-day-table .cut-col-actions { grid-column: 1 / -1; }
-    .cut-day-table .cut-name { font-weight: 600; }
+    .cut-cards tbody td { display: block; padding: 0; border: 0; grid-column: 1 / -1; }
+    .cut-cards tbody td.cut-col-name { grid-column: 1; grid-row: 1; }
+    .cut-cards tbody td.cut-col-amount { grid-column: 2; grid-row: 1; text-align: right; }
+    .cut-cards .phone-hide { display: none !important; }
+    .cut-cards .cut-name { font-weight: 600; }
     .cut-phone-detail { display: block; }
-    .cut-day-table tfoot tr { display: flex; justify-content: space-between; padding: 0.7rem 0.25rem; }
-    .cut-day-table tfoot th { display: block; padding: 0; border: 0; background: none; }
-    .cut-day-table tfoot th:empty { display: none; }
+    .cut-cards tfoot tr { display: flex; justify-content: space-between; padding: 0.7rem 0.25rem; }
+    .cut-cards tfoot th { display: block; padding: 0; border: 0; background: none; }
+    .cut-cards tfoot th:empty { display: none; }
 }

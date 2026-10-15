@@ -28,6 +28,31 @@
   {% if can_enter %}<a class="button-primary" href="{% url 'cutting:entry' %}?date={{ day|date:'Y-m-d' }}">+ {{ T.enter_for_day }}</a>{% endif %}
 </div>
 
+{% if by_cutter %}
+<section class="panel">
+  <div class="panel-title">{{ T.by_cutter }} <span class="cut-count">{{ by_cutter|length }}</span></div>
+  <ul class="cut-summary">
+    {% for entry in by_cutter %}
+    <li class="cut-summary-row">
+      <div class="cut-summary-head">
+        <span class="cut-name">{{ entry.cutter.name }}</span>
+        <strong class="cut-summary-total">₩{{ entry.total|won }}</strong>
+      </div>
+      <ul class="cut-summary-lines">
+        {% for line in entry.lines %}
+        <li>
+          <span><span class="style-badge badge-sm style-{{ line.style }}">{{ line.style_label }}</span> {{ line.size }} · {{ line.boxes }} × ₩{{ line.unit_price|won }}</span>
+          {% if entry.lines|length > 1 %}<span>₩{{ line.amount|won }}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+<h3 class="section-title">{{ T.entries_heading }}</h3>
+{% endif %}
+
 {% for block in blocks %}
 <section class="panel">
   <div class="panel-title">
@@ -39,7 +64,7 @@
     </form>
   </div>
   <div class="table-wrap">
-    <table class="table-custom compact cut-day-table">
+    <table class="table-custom compact cut-cards">
       <thead>
         <tr>
           <th>{{ T.cutter }}</th><th>{{ T.item_col }}</th>
@@ -54,9 +79,9 @@
             <span class="cut-name">{{ row.record.cutter.name }}</span>
             <span class="cut-phone-detail">{{ row.record.get_style_display }} {{ row.record.size }} · {{ row.record.boxes }} × ₩{{ row.record.unit_price|won }}</span>
           </td>
-          <td class="cut-col-item"><span class="style-badge badge-sm style-{{ row.record.style }}">{{ row.record.get_style_display }}</span> {{ row.record.size }}</td>
-          <td class="num cut-col-boxes">{{ row.record.boxes }}</td>
-          <td class="num cut-col-rate">₩{{ row.record.unit_price|won }}</td>
+          <td class="phone-hide"><span class="style-badge badge-sm style-{{ row.record.style }}">{{ row.record.get_style_display }}</span> {{ row.record.size }}</td>
+          <td class="num phone-hide">{{ row.record.boxes }}</td>
+          <td class="num phone-hide">₩{{ row.record.unit_price|won }}</td>
           <td class="num cut-col-amount"><strong>₩{{ row.record.total|won }}</strong></td>
           <td class="cut-col-actions">
             <div class="cut-actions">
