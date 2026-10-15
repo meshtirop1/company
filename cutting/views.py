@@ -329,6 +329,20 @@ def already_saved(request, T, batch):
     return redirect('cutting:day', batch.work_date)
 
 
+def same_work(batch, form):
+    """True when a valid post repeats exactly what `batch` already holds — a double tap."""
+    if batch.work_date != form.cleaned_data['work_date']:
+        return False
+    saved = sorted(batch.records.values_list('cutter_id', 'item_id', 'boxes'))
+    return saved == sorted((cutter.pk, item.pk, boxes) for cutter, item, boxes in form.rows)
+
+
+def with_fresh_token(post):
+    data = post.copy()
+    data['token'] = str(uuid.uuid4())
+    return data
+
+
 @manager_required
 def entry(request):
     T = strings(request)
@@ -337,20 +351,18 @@ def entry(request):
     items = entry_items()
 
     if request.method == 'POST':
-        token = request.POST.get('token')
-        if batch := saved_batch(token):
-            return already_saved(request, T, batch)
         form = BatchEntryForm(request.POST, T=T, cutters=cutters, items=items)
-        if form.is_valid():
+        spent = saved_batch(request.POST.get('token'))
+        if spent is None and form.is_valid():
             data = form.cleaned_data
             try:
                 batch = services.save_batch(
                     work_date=data['work_date'], rows=form.rows, entered_by=request.user, token=data['token'],
                 )
             except IntegrityError:
-                if batch := saved_batch(token):  # the same form, saved a moment ago
-                    return already_saved(request, T, batch)
-                raise
+                spent = saved_batch(data['token'])  # the same form, saved by a simultaneous request
+                if spent is None:
+                    raise
             except services.NoRate as missing:  # a rate removed while the form was open
                 messages.error(request, T['err_no_rate'].format(item=missing.item, date=missing.day.isoformat()))
             else:
@@ -359,7 +371,19 @@ def entry(request):
                     count=len(form.rows), date=batch.work_date.isoformat(), total=won(total),
                 ))
                 return redirect('cutting:day', batch.work_date)
-        else:
+
+        if spent is not None:
+            # This form's token was used already — most often a form brought back with the Back
+            # button. The very same work again is a double tap. Anything else is new work: it is
+            # never dropped, and never saved unseen — it comes back under a fresh token to confirm.
+            if form.is_valid() and same_work(spent, form):
+                return already_saved(request, T, spent)
+            messages.warning(request, T['err_token_spent'].format(
+                date=spent.work_date.isoformat(), time=timezone.localtime(spent.created_at).strftime('%H:%M'),
+            ))
+            form = BatchEntryForm(with_fresh_token(request.POST), T=T, cutters=cutters, items=items)
+            form.is_valid()  # show any row errors alongside the notice
+        elif form.errors:
             messages.error(request, T['err_batch_rows'])
     else:
         day = min(parse_day(request.GET.get('date'), today), today)
@@ -382,10 +406,8 @@ def entry(request):
     )
 
 
-def entered_by_label(user):
-    if user is None:
-        return '—'
-    return user.get_full_name() or user.username
+def entered_by_label(batch):
+    return batch.entered_by_name or services.user_label(batch.entered_by) or '—'
 
 
 @manager_required
@@ -410,7 +432,7 @@ def day(request, day=None):
         day_total += batch_total
         blocks.append({
             'batch': batch,
-            'entered_by': entered_by_label(batch.entered_by),
+            'entered_by': entered_by_label(batch),
             'total': batch_total,
             'confirm_delete': T['confirm_delete_batch'].format(count=len(rows)),
             'rows': [

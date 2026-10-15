@@ -94,6 +94,8 @@ class CutBatch(models.Model):
     entered_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='+',
     )
+    # Kept as text too, so deleting a supervisor's account can't erase who entered the work.
+    entered_by_name = models.CharField(max_length=150, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -94,7 +94,9 @@
         var boxes = row.querySelector('.cut-boxes');
         var override = row.querySelector('.cut-override');
         boxes.addEventListener('input', function () {
-            if (boxes.value.trim() !== '') include.checked = true;  // typing a number means they worked
+            var count = parseInt(boxes.value, 10);
+            if (count > 0) include.checked = true;  // a number of boxes means they worked
+            else if (boxes.value.trim() === '' || count === 0) include.checked = false;  // blank or 0: they didn't
             refresh();
         });
         include.addEventListener('change', refresh);
@@ -114,7 +116,13 @@
         sending = true;
         submitButton.disabled = true;
     });
-    window.addEventListener('pageshow', function () {  // coming back via the Back button
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted && sending) {
+            // Back to a form that was already sent: open a fresh one rather than reuse it. (The server
+            // also refuses to file new rows under a spent form, but a clean form avoids the detour.)
+            window.location.replace(window.location.href);
+            return;
+        }
         sending = false;
         submitButton.disabled = false;
     });

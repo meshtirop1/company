@@ -13,7 +13,7 @@
 {% include 'cutting/_messages.html' %}
 
 <div class="stat-grid">
-  <div class="stat-card"><div class="label">{{ T.stat_today }}</div><div class="value">{{ today_summary }}</div></div>
+  <a class="stat-card cut-stat-link" href="{% url 'cutting:day_today' %}"><div class="label">{{ T.stat_today }}</div><div class="value">{{ today_summary }}</div></a>
   <div class="stat-card"><div class="label">{{ T.stat_active_cutters }}</div><div class="value">{{ active_cutters }}</div></div>
   <div class="stat-card"><div class="label">{{ T.stat_price_items }}</div><div class="value">{{ priced_items }}</div></div>
 </div>

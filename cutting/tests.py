@@ -2,7 +2,9 @@ import re
 import string
 from datetime import date, timedelta
 from decimal import Decimal
+from pathlib import Path
 
+from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.db import IntegrityError, transaction
 from django.test import SimpleTestCase, TestCase
@@ -475,10 +477,17 @@ class TranslationTests(ManagerTestCase):
             self.assertContains(response, escape(heading), msg_prefix=url)
 
 
+STATIC_TAG = re.compile(r"""\{%\s*static\s+['"]([^'"]+)['"]""")
+
+
 class AssetTests(SimpleTestCase):
-    def test_stylesheet_exists_for_collectstatic(self):
+    def test_every_static_file_the_templates_use_exists(self):
         # Production uses a manifest storage: a {% static %} file that doesn't exist is a 500.
-        self.assertIsNotNone(finders.find('css/cutting.css'))
+        templates = Path(settings.BASE_DIR, 'templates', 'cutting')
+        used = {path for page in templates.glob('*.html') for path in STATIC_TAG.findall(page.read_text('utf-8'))}
+        self.assertTrue({'css/cutting.css', 'js/cutting_entry.js'} <= used)
+        for path in sorted(used):
+            self.assertIsNotNone(finders.find(path), path)
 
     def test_won_filter(self):
         self.assertEqual(won(4500), '4,500')

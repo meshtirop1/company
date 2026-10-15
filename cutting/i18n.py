@@ -124,7 +124,7 @@ STRINGS = {
         'tile_entry_desc': "Record the crew's boxes — everyone in one save.",
         'tile_day': 'Daily view',
         'tile_day_desc': 'What each cutter did and earned, and the entries to correct.',
-        'stat_today': 'Entered today',
+        'stat_today': "Today's work",
         'stat_today_value': '{rows} rows · ₩{total}',
 
         'entry_title': 'Enter work',
@@ -153,6 +153,12 @@ STRINGS = {
         'err_no_rate': 'There is no rate for {item} on {date} — add one on the price list first.',
         'err_style_mismatch': 'Pick a size from the chosen style.',
         'err_cutter_inactive': "{name} was deactivated while this form was open, so their row can't be saved.",
+        'err_cutter_gone': "A ticked cutter was deleted while this form was open, so their row can't be saved.",
+        'err_token_spent': (
+            'This form was already saved for {date} at {time}, so the rows below were NOT saved. '
+            'Check them, then tap Save to add them as a new entry. '
+            'To change the earlier entry, edit it on its day page.'
+        ),
 
         'day_title': 'Day — {date}',
         'previous_day': '← Previous day',
@@ -344,7 +350,7 @@ STRINGS = {
         'tile_entry_desc': '작업자 전원의 박스 수를 한 번에 저장합니다.',
         'tile_day': '일일 현황',
         'tile_day_desc': '작업자별 작업량과 수당, 입력 기록 수정.',
-        'stat_today': '오늘 입력',
+        'stat_today': '오늘 작업',
         'stat_today_value': '{rows}건 · ₩{total}',
 
         'entry_title': '작업 입력',
@@ -373,6 +379,12 @@ STRINGS = {
         'err_no_rate': '{date}에 적용되는 {item} 단가가 없습니다. 단가표에 먼저 추가하세요.',
         'err_style_mismatch': '선택한 손질 방식의 크기를 고르세요.',
         'err_cutter_inactive': '이 화면을 여는 동안 {name} 님이 비활성화되어 해당 행을 저장할 수 없습니다.',
+        'err_cutter_gone': '이 화면을 여는 동안 체크한 작업자가 삭제되어 해당 행을 저장할 수 없습니다.',
+        'err_token_spent': (
+            '이 화면은 이미 {date} 작업으로 {time}에 저장되었습니다. 그래서 아래 행은 저장되지 않았습니다. '
+            '확인한 뒤 저장을 누르면 새 입력으로 추가됩니다. '
+            '앞서 저장한 입력을 고치려면 해당 날짜의 일일 현황에서 수정하세요.'
+        ),
 
         'day_title': '일일 현황 — {date}',
         'previous_day': '← 이전 날',

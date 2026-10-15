@@ -17,6 +17,13 @@ class NoRate(Exception):
         self.day = day
 
 
+def user_label(user):
+    """How a supervisor is shown on work records: full name, else username."""
+    if user is None:
+        return ''
+    return user.get_full_name() or user.username
+
+
 def priced(item, day):
     """The unit price in force for `item` on `day`, or raise NoRate."""
     rate = item.rate_on(day)
@@ -33,7 +40,9 @@ def save_batch(*, work_date, rows, entered_by, token):
     the rate in force on the work date. A reused `token` raises IntegrityError and rolls
     the whole batch back, so the same form can never be saved twice.
     """
-    batch = CutBatch.objects.create(work_date=work_date, entered_by=entered_by, token=token)
+    batch = CutBatch.objects.create(
+        work_date=work_date, entered_by=entered_by, entered_by_name=user_label(entered_by), token=token,
+    )
     records = []
     for cutter, item, boxes in rows:
         unit_price = priced(item, work_date)

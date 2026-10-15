@@ -18,7 +18,7 @@
 {% elif not has_items %}
 <div class="panel"><p class="empty-state">{{ T.no_active_items }}<br><a href="{% url 'cutting:prices' %}">{{ T.tile_prices }} →</a></p></div>
 {% else %}
-<form method="post" id="cut-entry" novalidate>
+<form method="post" id="cut-entry" novalidate autocomplete="off">
   {% csrf_token %}
   {{ form.token }}
   {% if form.non_field_errors or form.token.errors %}

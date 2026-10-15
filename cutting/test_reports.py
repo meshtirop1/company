@@ -202,6 +202,19 @@ class ReportPageTests(ReportData, ManagerTestCase):
         self.assertEqual(workbook.sheetnames, [KO['xl_summary_sheet'], KO['xl_detail_sheet']])
         self.assertEqual(workbook[KO['xl_summary_sheet']]['A4'].value, KO['cutter'])
 
+    def test_entry_and_report_pages_in_korean(self):
+        self.use_korean()
+        pages = {
+            reverse('cutting:entry'): KO['entry_title'],
+            reverse('cutting:day', args=[date(2026, 9, 1)]): KO['day_title'].format(date='2026-09-01'),
+            self.month_url(): KO['month_title'].format(month='2026-09'),
+            self.month_url('cutting:cutter_month', self.kim.pk): KO['cutter_month_title'].format(name='Kim', month='2026-09'),
+        }
+        for url, heading in pages.items():
+            response = self.client.get(url)
+            self.assertContains(response, 'lang="ko"', msg_prefix=url)
+            self.assertContains(response, escape(heading), msg_prefix=url)
+
     def test_hub_links_to_monthly_pay(self):
         self.assertContains(self.client.get(reverse('cutting:hub')), reverse('cutting:month_current'))
 

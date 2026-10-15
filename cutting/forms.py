@@ -313,6 +313,10 @@ class BatchEntryForm(forms.Form):
     def clean(self):
         cleaned = super().clean()
         T = self.T
+        for cutter in self.cutters:
+            if not cleaned.get(f'include_{cutter.pk}'):  # an unticked row is ignored, typos and all
+                self._errors.pop(f'boxes_{cutter.pk}', None)
+                self._errors.pop(f'item_{cutter.pk}', None)
         day = cleaned.get('work_date')
         style = cleaned.get('style')
         default_item = self.items.get(cleaned.get('item') or '')
@@ -341,21 +345,29 @@ class BatchEntryForm(forms.Form):
                 continue
             self.rows.append((cutter, item, boxes))
 
-        for name in self._ticked_inactive_cutters():
+        names, removed = self._ticked_unlisted_cutters()
+        for name in names:
             self.add_error(None, T['err_cutter_inactive'].format(name=name))
+        if removed:
+            self.add_error(None, T['err_cutter_gone'])
         if not self.rows and not self.errors:
             raise ValidationError(T['err_no_rows'])
         return cleaned
 
-    def _ticked_inactive_cutters(self):
-        """Names of cutters ticked on the form but deactivated before it was saved."""
+    def _ticked_unlisted_cutters(self):
+        """Ticked rows whose cutter was deactivated or deleted after the form was opened.
+
+        Returns the names of those still on file, and how many were deleted outright.
+        Either way the batch must not save without them, or their boxes would vanish.
+        """
         listed = {cutter.pk for cutter in self.cutters}
         ticked = set()
         for key, value in self.data.items():
             match = re.fullmatch(r'include_(\d+)', key)
             if match and value and int(match.group(1)) not in listed:
                 ticked.add(int(match.group(1)))
-        return list(Cutter.objects.filter(pk__in=ticked).values_list('name', flat=True))
+        names = dict(Cutter.objects.filter(pk__in=ticked).values_list('pk', 'name'))
+        return list(names.values()), len(ticked - names.keys())
 
 
 class RecordEditForm(forms.Form):

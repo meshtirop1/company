@@ -199,12 +199,59 @@ class SaveBatchTests(EntryTestCase):
 
     def test_a_simultaneous_second_save_is_caught_by_the_database(self):
         token = uuid.uuid4()
-        first = CutBatch.objects.create(work_date=WORK_DAY, token=token)  # saved by the other request
+        first = services.save_batch(work_date=WORK_DAY, rows=[(self.kim, self.tongpo7, 10)],
+                                    entered_by=self.manager, token=token)  # saved by the other request
         with mock.patch('cutting.views.saved_batch', side_effect=[None, first]):  # the race window
             response = self.save_entry({self.kim: 10}, token=token)
         self.assertEqual(CutBatch.objects.count(), 1)
-        self.assertFalse(CutRecord.objects.exists())
+        self.assertEqual(CutRecord.objects.count(), 1)
         self.assertIn(EN['batch_already_saved'], message_texts(response))
+
+    def spent_notice(self, batch):
+        time = timezone.localtime(batch.created_at).strftime('%H:%M')
+        return EN['err_token_spent'].format(date=batch.work_date.isoformat(), time=time)
+
+    def test_new_rows_on_a_form_brought_back_with_back_are_kept_for_saving_not_dropped(self):
+        token = uuid.uuid4()
+        self.save_entry({self.kim: 10, self.lee: 8}, token=token)  # the morning batch
+        morning = CutBatch.objects.get()
+        afternoon = {self.kim: 20, self.lee: (15, self.halbok9)}
+        response = self.save_entry(afternoon, token=token)  # typed into the restored form
+        self.assertEqual(CutBatch.objects.count(), 1)  # not filed without the supervisor seeing it...
+        texts = message_texts(response)
+        self.assertNotIn(EN['batch_already_saved'], texts)  # ...and no false "already saved"
+        self.assertIn(self.spent_notice(morning), texts)
+        form = response.context['form']
+        fresh = form['token'].value()
+        self.assertNotEqual(str(fresh), str(token))
+        self.assertEqual(form[f'boxes_{self.kim.pk}'].value(), '20')  # what they typed is still there
+        self.client.post(reverse('cutting:entry'), self.entry_data(afternoon, token=fresh))  # Save again
+        self.assertEqual(CutBatch.objects.count(), 2)
+        self.assertEqual(CutRecord.objects.get(cutter=self.lee, style='tonghalbok').total, 37500)  # 15 × ₩2,500
+
+    def test_a_simultaneous_save_of_different_rows_is_not_called_a_double_tap(self):
+        token = uuid.uuid4()
+        first = services.save_batch(work_date=WORK_DAY, rows=[(self.kim, self.tongpo7, 10)],
+                                    entered_by=self.manager, token=token)
+        with mock.patch('cutting.views.saved_batch', side_effect=[None, first]):
+            response = self.save_entry({self.kim: 3, self.lee: 4}, token=token)
+        self.assertEqual(CutRecord.objects.count(), 1)
+        self.assertIn(self.spent_notice(first), message_texts(response))
+
+    def test_typos_in_unticked_rows_are_ignored(self):
+        data = self.entry_data({self.kim: 5})
+        data[f'boxes_{self.lee.pk}'] = '0'  # "didn't work"
+        data[f'boxes_{self.park.pk}'] = 'abc'
+        data[f'item_{self.park.pk}'] = '999999'
+        self.client.post(reverse('cutting:entry'), data)
+        self.assertEqual(list(CutRecord.objects.values_list('cutter__name', flat=True)), ['Kim'])
+
+    def test_a_cutter_deleted_while_the_form_was_open_is_refused(self):
+        data = self.entry_data({self.kim: 3, self.lee: 2})
+        Cutter.objects.filter(pk=self.lee.pk).delete()
+        response = self.client.post(reverse('cutting:entry'), data, follow=True)
+        self.assertContains(response, escape(EN['err_cutter_gone']))
+        self.assertFalse(CutRecord.objects.exists())
 
     def test_save_batch_is_all_or_nothing(self):
         unpriced = PriceItem.objects.create(style='tongpo', size='15', sort_order=70)
@@ -302,6 +349,28 @@ class DayPageTests(EntryTestCase):
         self.assertTrue(PriceItem.objects.filter(pk=self.tongpo7.pk).exists())
         self.assertTrue(self.tongpo7.rates.exists())
         self.assertIn(EN['item_in_use'].format(item=self.tongpo7), message_texts(response))
+
+    def test_who_entered_a_batch_survives_their_account_being_deleted(self):
+        supervisor = make_user('sup2', is_admin=True, first_name='Han', last_name='Mira')
+        batch = services.save_batch(work_date=date(2026, 10, 9), entered_by=supervisor, token=uuid.uuid4(),
+                                    rows=[(self.kim, self.tongpo7, 1)])
+        supervisor.delete()
+        batch.refresh_from_db()
+        self.assertIsNone(batch.entered_by)
+        self.assertEqual(batch.entered_by_name, 'Han Mira')
+        self.assertContains(self.client.get(self.day_url(date(2026, 10, 9))), 'Han Mira')
+
+    def test_the_admin_can_look_at_work_records_but_not_change_them(self):
+        record = self.record_of(self.kim)
+        self.client.force_login(make_user('root', is_superuser=True, is_staff=True))
+        self.assertEqual(self.client.get(reverse('admin:cutting_cutrecord_changelist')).status_code, 200)
+        self.assertEqual(self.client.get(reverse('admin:cutting_cutrecord_change', args=[record.pk])).status_code, 200)
+        self.assertEqual(self.client.get(reverse('admin:cutting_cutbatch_change', args=[self.batch.pk])).status_code, 200)
+        for url in (reverse('admin:cutting_cutrecord_add'), reverse('admin:cutting_cutbatch_add')):
+            self.assertEqual(self.client.get(url).status_code, 403, url)
+        delete = reverse('admin:cutting_cutrecord_delete', args=[record.pk])
+        self.assertEqual(self.client.post(delete, {'post': 'yes'}).status_code, 403)
+        self.assertTrue(CutRecord.objects.filter(pk=record.pk).exists())
 
     def test_hub_shows_what_was_entered_today(self):
         services.save_batch(work_date=timezone.localdate(), entered_by=self.manager, token=uuid.uuid4(),
