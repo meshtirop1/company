@@ -12,6 +12,7 @@ handler403 = hours_tracker_views.custom_permission_denied_view
 
 urlpatterns = [
     path('', include('hours_tracker.urls')),
+    path('cutting/', include('cutting.urls')),
     path('set-language/', hours_tracker_views.set_language, name='set_language'),
     path('private/', admin.site.urls),
 

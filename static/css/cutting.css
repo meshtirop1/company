@@ -1,0 +1,90 @@
+/* Fish-cutting pay module — builds on the tokens and components in base.css. */
+
+/* ---- Page furniture ---- */
+.cut-crumb { margin: 0 0 0.25rem; font-size: 0.9rem; }
+.cut-crumb a { color: var(--color-primary); font-weight: 600; text-decoration: none; }
+.cut-crumb a:hover { text-decoration: underline; }
+.cut-lead { color: var(--color-text-muted); max-width: 72ch; line-height: 1.55; margin: 0 0 1.25rem; }
+.cut-panel-intro { margin: -0.25rem 0 1rem; }
+.cut-count {
+    font-size: 0.78rem; font-weight: 600; color: var(--color-primary);
+    background: var(--color-primary-light); border-radius: 999px; padding: 0.1rem 0.6rem;
+}
+.cut-note-box {
+    background: var(--color-primary-light); border-left: 4px solid var(--color-primary);
+    border-radius: var(--radius); padding: 0.75rem 1rem; margin-bottom: 1.25rem; font-size: 0.92rem;
+}
+
+/* ---- Hub tiles ---- */
+.cut-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+.cut-tile {
+    display: flex; flex-direction: column; gap: 0.35rem; padding: 1.25rem 1.35rem;
+    background: var(--color-surface); border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-accent); border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); color: var(--color-text); text-decoration: none;
+    transition: box-shadow 0.15s ease, transform 0.05s ease;
+}
+.cut-tile:hover { box-shadow: 0 4px 14px rgba(30, 58, 95, 0.12); }
+.cut-tile:active { transform: translateY(1px); }
+.cut-tile-icon { font-size: 1.5rem; }
+.cut-tile-title { font-size: 1.05rem; font-weight: 700; color: var(--color-primary); }
+.cut-tile-desc { font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.45; }
+
+/* ---- Buttons and action rows ---- */
+.btn-sm { padding: 0.4rem 0.8rem !important; font-size: 0.85rem !important; }
+.cut-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.cut-actions form { display: inline; margin: 0; }
+.cut-form-actions { margin-top: 0.5rem; }
+
+/* ---- Forms ---- */
+.cut-form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0 1rem; align-items: start; }
+.cut-form-row .input-field { max-width: none; }
+.field-help { display: block; margin-top: 0.3rem; font-size: 0.8rem; color: var(--color-text-muted); }
+.field-error { margin-top: 0.3rem; font-size: 0.85rem; font-weight: 600; color: var(--color-danger); }
+.form-group.has-error .input-field { border-color: var(--color-danger); }
+
+/* ---- Roster ---- */
+.cut-list { list-style: none; margin: 0; padding: 0; }
+.cut-list-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding: 0.75rem 0; border-bottom: 1px solid var(--color-border);
+}
+.cut-list-row:last-child { border-bottom: 0; }
+.cut-list-main { display: flex; flex-direction: column; min-width: 0; }
+.cut-name { font-weight: 600; }
+.cut-note { font-size: 0.85rem; color: var(--color-text-muted); overflow-wrap: anywhere; }
+.cut-list.is-inactive .cut-name { color: var(--color-text-muted); }
+
+/* ---- Style badges ---- */
+.style-badge { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 999px; font-size: 0.95rem; font-weight: 700; }
+.style-tongpo { background: var(--color-primary); color: #fff; }
+.style-tonghalbok { background: var(--color-accent); color: #1f2937; }
+.badge-muted {
+    font-size: 0.72rem; font-weight: 600; color: var(--color-text-muted); vertical-align: middle;
+    background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 999px; padding: 0.05rem 0.5rem;
+}
+
+/* ---- Price list ---- */
+.price-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 0.9rem; }
+.price-item {
+    display: flex; flex-direction: column; gap: 0.6rem; padding: 0.9rem 1rem;
+    background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius);
+    scroll-margin-top: 90px;
+}
+.price-item:target { box-shadow: 0 0 0 3px rgba(200, 164, 92, 0.5); }
+.price-item.is-hidden { background: var(--color-bg); }
+.price-item-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+.price-item-size { font-size: 1.25rem; font-weight: 700; color: var(--color-primary); }
+.price-item-current strong { font-size: 1.15rem; }
+.price-upcoming { font-size: 0.85rem; font-weight: 600; color: var(--color-success); }
+.price-history summary { cursor: pointer; font-size: 0.85rem; font-weight: 600; color: var(--color-text-muted); }
+.price-history[open] summary { margin-bottom: 0.5rem; }
+.table-custom.compact th, .table-custom.compact td { padding: 0.45rem 0.6rem; font-size: 0.85rem; }
+.table-custom tr.is-current td { background: var(--color-primary-light); font-weight: 600; }
+
+/* ---- Phones: stack rows, larger tap targets ---- */
+@media (max-width: 600px) {
+    .cut-list-row { flex-direction: column; align-items: flex-start; }
+    .price-items { grid-template-columns: 1fr; }
+    .btn-sm { padding: 0.6rem 0.95rem !important; }
+}
