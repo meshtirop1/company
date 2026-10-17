@@ -333,7 +333,7 @@ class PeelSummaryTests(PeelData, ManagerTestCase):
 
     def test_a_paid_statement_is_marked(self):
         peeling.mark_paid(self.company, SEPT, user=None, today=AFTER_SEPT)
-        self.assertContains(self.client.get(reverse('cutting:peel_summary', args=[SEPT])), 'A Peeling &#128274;')
+        self.assertContains(self.client.get(reverse('cutting:peel_summary', args=[SEPT])), '>A Peeling</a> &#128274;')
 
     def test_this_months_summary_is_provisional_and_the_home_page_links_to_it(self):
         this_month = timezone.localdate().replace(day=1)
@@ -348,3 +348,27 @@ class PeelSummaryTests(PeelData, ManagerTestCase):
         response = self.client.get(reverse('cutting:peel_summary', args=[SEPT]))
         self.assertContains(response, KO['pl_summary_heading'])
         self.assertContains(response, KO['pl_col_with_them'])
+
+
+class PeelStatementLinkTests(PeelData, ManagerTestCase):
+    """Each company's statement — its own PDF — is one tap away from the list, its page and the summary."""
+
+    def setUp(self):
+        super().setUp()
+        self.build()
+
+    def test_every_company_links_to_its_statement(self):
+        this_month = timezone.localdate().replace(day=1)
+        statement = reverse('cutting:peel_statement', args=[self.company.pk, this_month])
+        for page in (reverse('cutting:peel_home'), reverse('cutting:peel_company', args=[self.company.pk])):
+            with self.subTest(page=page):
+                response = self.client.get(page)
+                self.assertContains(response, f'href="{statement}"')
+                self.assertContains(response, EN['pl_statement_pdf'])
+        summary = self.client.get(reverse('cutting:peel_summary', args=[SEPT]))
+        self.assertContains(summary, reverse('cutting:peel_statement', args=[self.company.pk, SEPT]))
+
+    def test_korean_label(self):
+        self.use_korean()
+        self.assertContains(self.client.get(reverse('cutting:peel_home')), KO['pl_statement_pdf'])
+

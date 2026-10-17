@@ -68,7 +68,7 @@ def peel_home(request):
         (rows if company.is_active else inactive).append(row)
     return render_page(
         request, 'peeling/home.html',
-        rows=rows, inactive=inactive,
+        rows=rows, inactive=inactive, month=month,
         with_them_all=sum(row['totals']['with_them'] for row in rows + inactive),
         owed_all=sum(row['owed'] for row in rows + inactive),
     )
@@ -301,7 +301,7 @@ def render_company(request, company, *, price_form=None):
         tax=tax_label(T, company.tax_mode),
         price_now=T['pl_per_fish'].format(price=won(current.price_per_fish)) if current else T['pl_no_price'],
         prices=prices, price_form=price_form or PeelPriceForm(T=T),
-        statements=statements, page=page,
+        statements=statements, page=page, month=this_month(),
         page_label=T['page_of'].format(page=page.number, pages=page.paginator.num_pages),
         heading=T['pl_company_title'].format(name=company.name),
     )

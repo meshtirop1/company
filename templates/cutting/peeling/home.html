@@ -41,6 +41,7 @@
       <div class="cut-actions">
         <a class="button-primary btn-sm" href="{% url 'cutting:peel_entry' %}?company={{ row.company.pk }}&amp;kind=out">{{ T.pl_give }}</a>
         <a class="button-secondary btn-sm" href="{% url 'cutting:peel_entry' %}?company={{ row.company.pk }}&amp;kind=back">{{ T.pl_back }}</a>
+        <a class="button-secondary btn-sm" href="{% url 'cutting:peel_statement' row.company.pk month %}" target="_blank" rel="noopener">&#128424;&#65039; {{ T.pl_statement_pdf }}</a>
         <a class="button-secondary btn-sm" href="{% url 'cutting:peel_company' row.company.pk %}">{{ T.pl_open }}</a>
       </div>
     </li>

@@ -27,6 +27,7 @@
   <a class="button-secondary" href="{% url 'cutting:peel_entry' %}?company={{ company.pk }}&amp;kind=back">{{ T.pl_back }}</a>
   <a class="button-secondary" href="{% url 'cutting:peel_entry' %}?company={{ company.pk }}&amp;kind=lost">{{ T.pl_kind_lost }}</a>
   {% endif %}
+  <a class="button-secondary" href="{% url 'cutting:peel_statement' company.pk month %}" target="_blank" rel="noopener">&#128424;&#65039; {{ T.pl_statement_pdf }}</a>
   <a class="button-secondary" href="{% url 'cutting:peel_company_edit' company.pk %}">{{ T.pl_edit_company }}</a>
 </div>
 
@@ -37,7 +38,7 @@
     {% for s in statements %}
     <li class="peel-row">
       <div class="peel-row-head">
-        <a class="cut-name" href="{% url 'cutting:peel_statement' company.pk s.first %}">{{ s.label }}</a>
+        <a class="cut-name" href="{% url 'cutting:peel_statement' company.pk s.first %}" target="_blank" rel="noopener">&#128424;&#65039; {{ s.label }}</a>
         {% if s.paid %}<span class="peel-badge is-paid">&#128274; {{ T.pl_paid_badge }}</span>{% endif %}
       </div>
       <div class="peel-figures">
