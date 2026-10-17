@@ -543,6 +543,7 @@ STRINGS = {
         'pl_summary_none': 'No peeling entries this month.',
         'pl_summary_note': 'Given, back and lost are this month only; "still with them" is at the end of the month. Tax: + VAT added, − 3.3% withheld. 🔒 = statement marked paid.',
         'pl_checked_by': 'Checked by (signature)',
+        'pl_statement_pdf': 'Statement (PDF)',
     },
     'ko': {
         'nav': '손질 작업',
@@ -1035,6 +1036,7 @@ STRINGS = {
         'pl_summary_none': '이번 달 껍질 작업 기록이 없습니다.',
         'pl_summary_note': '보냄·돌려받음·분실·파손은 이번 달 수량이며, 업체에 남음은 월말 기준입니다. 세금: + 부가세 별도, − 원천징수 3.3%. 🔒 = 지급 완료된 정산서.',
         'pl_checked_by': '확인자 (서명)',
+        'pl_statement_pdf': '정산서 (PDF)',
     },
 }
 
