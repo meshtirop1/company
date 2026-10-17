@@ -7,6 +7,8 @@
   <h2>카드 지출</h2>
   {% if is_manager %}<a href="{% url 'card_expenses_pdf' %}" class="btn-pdf">&#128424;&#65039; PDF / 인쇄</a>{% endif %}
 </div>
+<p class="cardexp-who">로그인 계정: <strong>{{ request.user.get_full_name|default:request.user.username }}</strong> ({% if request.user.is_superuser %}슈퍼유저{% elif request.user.is_admin %}관리자{% else %}직원{% endif %}) &mdash;
+  {% if is_manager %}관리자는 모든 직원의 지출을 기록하고 볼 수 있습니다.{% else %}본인의 지출만 기록하고 볼 수 있습니다.{% endif %}</p>
 
 {% if messages %}
 <ul class="messages">

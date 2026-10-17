@@ -7,6 +7,8 @@
   <h2>Card Expenses</h2>
   {% if is_manager %}<a href="{% url 'card_expenses_pdf' %}" class="btn-pdf">&#128424;&#65039; PDF / Print</a>{% endif %}
 </div>
+<p class="cardexp-who">Signed in as <strong>{{ request.user.get_full_name|default:request.user.username }}</strong> ({% if request.user.is_superuser %}Superuser{% elif request.user.is_admin %}Admin{% else %}Employee{% endif %}) &mdash;
+  {% if is_manager %}managers can record and see expenses for any employee.{% else %}you can record and see only your own expenses.{% endif %}</p>
 
 {% if messages %}
 <ul class="messages">
