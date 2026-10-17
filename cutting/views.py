@@ -85,7 +85,7 @@ def hub(request):
     )
 
 
-HELP_SECTIONS = (('daily', 3), ('fix', 2), ('month', 3), ('prices', 2), ('deductions', 2))
+HELP_SECTIONS = (('daily', 3), ('fix', 2), ('month', 3), ('prices', 2), ('deductions', 2), ('peeling', 3))
 
 
 @manager_required
@@ -810,6 +810,8 @@ def reprice(request, month):
 LOG_PAGE_SIZE = 50
 RATE_ACTIONS = {AuditAction.RATE_ADD, AuditAction.RATE_EDIT, AuditAction.RATE_DELETE}
 DEDUCTION_ACTIONS = {AuditAction.DEDUCTION_SET, AuditAction.DEDUCTION_DELETE}
+PEEL_ACTIONS = {AuditAction.PEEL_EDIT, AuditAction.PEEL_DELETE, AuditAction.PEEL_PRICE,
+                AuditAction.PEEL_PAID, AuditAction.PEEL_UNPAID}
 STYLE_LABELS = dict(CuttingStyle.choices)
 
 
@@ -828,9 +830,24 @@ def deduction_text(D, data):
     return deductions.rate_summary(D, rate)
 
 
+def peel_text(T, action, data):
+    """A skin-peeling change-log snapshot as text."""
+    if action == AuditAction.PEEL_PRICE:
+        return T['pl_log_price'].format(price=won(data['price']), date=data['effective_from'])
+    if action in (AuditAction.PEEL_PAID, AuditAction.PEEL_UNPAID):
+        return T['pl_log_paid'].format(fish=f"{data['fish']:,}", amount=won(data['amount']), total=won(data['total']))
+    text = T['pl_log_entry'].format(date=data['date'], kind=T[f"pl_kind_{data['kind']}"], fish=f"{data['fish']:,}")
+    if data.get('unit_price') is not None:
+        text += f" × ₩{won(data['unit_price'])} = ₩{won(data['amount'])}"
+    return text
+
+
 def change_texts(T, entry, D=None):
     """The before and after of a change-log entry, as text."""
-    if entry.action in DEDUCTION_ACTIONS:
+    if entry.action in PEEL_ACTIONS:
+        def text(data):
+            return peel_text(T, entry.action, data)
+    elif entry.action in DEDUCTION_ACTIONS:
         def text(data):
             return deduction_text(D, data)
     elif entry.action in RATE_ACTIONS:
@@ -875,6 +892,7 @@ def audit_log(request):
             'entered': entered_text(T, entry),
             'is_rate': entry.action in RATE_ACTIONS,
             'is_deduction': entry.action in DEDUCTION_ACTIONS,
+            'is_peel': entry.action in PEEL_ACTIONS,
         })
     query = f'month={month_label(month)}&' if month else ''
     return render_page(

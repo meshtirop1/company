@@ -1,6 +1,9 @@
 from django.contrib import admin
 
-from .models import AuditEntry, CutBatch, CutRecord, Cutter, CutterDeduction, MonthLock, PriceItem, PriceRate
+from .models import (
+    AuditEntry, CutBatch, CutRecord, Cutter, CutterDeduction, MonthLock, PeelCompany, PeelMovement, PeelPaid,
+    PeelPrice, PriceItem, PriceRate,
+)
 
 
 class ViewOnly:
@@ -91,3 +94,34 @@ class AuditEntryAdmin(ViewOnly, admin.ModelAdmin):
     date_hierarchy = 'at'
     readonly_fields = ['action', 'month', 'work_date', 'cutter_name', 'record_id', 'batch_id', 'before', 'after',
                        'reason', 'user', 'user_name', 'at']
+
+
+# ─── Skin peeling: looked at here, changed on the supervisor pages ───
+
+class PeelPriceInline(ViewOnly, admin.TabularInline):
+    model = PeelPrice
+    extra = 0
+    fields = ['effective_from', 'price_per_fish', 'created_by', 'created_at']
+    readonly_fields = fields
+
+
+@admin.register(PeelCompany)
+class PeelCompanyAdmin(ViewOnly, admin.ModelAdmin):
+    list_display = ['name', 'tax_mode', 'is_active', 'created_at']
+    list_filter = ['is_active', 'tax_mode']
+    search_fields = ['name', 'note']
+    inlines = [PeelPriceInline]
+
+
+@admin.register(PeelMovement)
+class PeelMovementAdmin(ViewOnly, admin.ModelAdmin):
+    list_display = ['date', 'company', 'kind', 'fish', 'unit_price', 'amount', 'entered_by_name']
+    list_filter = ['kind', 'company']
+    date_hierarchy = 'date'
+
+
+@admin.register(PeelPaid)
+class PeelPaidAdmin(ViewOnly, admin.ModelAdmin):
+    list_display = ['company', 'month', 'fish', 'amount', 'tax', 'total', 'paid_by_name', 'paid_at']
+    list_filter = ['company']
+

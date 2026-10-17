@@ -2,7 +2,7 @@ from datetime import date
 
 from django.urls import path, register_converter
 
-from . import views
+from . import peeling_views, views
 
 
 class IsoDateConverter:
@@ -69,4 +69,19 @@ urlpatterns = [
     path('prices/<int:item_pk>/rates/new/', views.rate_add, name='rate_add'),
     path('rates/<int:pk>/edit/', views.rate_edit, name='rate_edit'),
     path('rates/<int:pk>/delete/', views.rate_delete, name='rate_delete'),
+
+    path('peeling/', peeling_views.peel_home, name='peel_home'),
+    path('peeling/new/', peeling_views.peel_entry, name='peel_entry'),
+    path('peeling/entries/<int:pk>/edit/', peeling_views.peel_entry_edit, name='peel_entry_edit'),
+    path('peeling/entries/<int:pk>/delete/', peeling_views.peel_entry_delete, name='peel_entry_delete'),
+    path('peeling/companies/new/', peeling_views.peel_company_new, name='peel_company_new'),
+    path('peeling/companies/<int:pk>/', peeling_views.peel_company, name='peel_company'),
+    path('peeling/companies/<int:pk>/edit/', peeling_views.peel_company_edit, name='peel_company_edit'),
+    path('peeling/companies/<int:pk>/delete/', peeling_views.peel_company_delete, name='peel_company_delete'),
+    path('peeling/companies/<int:pk>/prices/', peeling_views.peel_price_add, name='peel_price_add'),
+    path('peeling/prices/<int:pk>/delete/', peeling_views.peel_price_delete, name='peel_price_delete'),
+    path('peeling/companies/<int:pk>/<yearmonth:month>/', peeling_views.peel_statement, name='peel_statement'),
+    path('peeling/companies/<int:pk>/<yearmonth:month>/paid/', peeling_views.peel_mark_paid,
+         name='peel_mark_paid'),
+    path('peeling/companies/<int:pk>/<yearmonth:month>/reopen/', peeling_views.peel_reopen, name='peel_reopen'),
 ]

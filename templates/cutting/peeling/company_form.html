@@ -1,0 +1,52 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb">
+  {% if company %}<a href="{% url 'cutting:peel_company' company.pk %}">← {{ company.name }}</a>
+  {% else %}<a href="{% url 'cutting:peel_home' %}">← {{ T.pl_title }}</a>{% endif %}
+</p>
+<h2>{{ heading }}</h2>
+{% include 'cutting/_messages.html' %}
+
+<div class="panel">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="cut-form-row">
+      {% include 'cutting/_field.html' with field=form.name %}
+      {% include 'cutting/_field.html' with field=form.note %}
+    </div>
+    {% if form.price_per_fish %}
+    <div class="cut-form-row">
+      {% include 'cutting/_field.html' with field=form.price_per_fish %}
+      {% include 'cutting/_field.html' with field=form.price_from %}
+    </div>
+    {% endif %}
+    {% include 'cutting/_field.html' with field=form.tax_mode %}
+    {% if form.is_active %}
+    <div class="form-check">
+      {{ form.is_active }}
+      <label for="{{ form.is_active.id_for_label }}" class="form-check-label">{{ form.is_active.label }}</label>
+    </div>
+    {% include 'cutting/_errors.html' with field=form.is_active %}
+    {% endif %}
+    <div class="cut-actions cut-form-actions">
+      <button type="submit" class="button-primary">{{ T.save }}</button>
+      <a class="button-secondary" href="{% if company %}{% url 'cutting:peel_company' company.pk %}{% else %}{% url 'cutting:peel_home' %}{% endif %}">{{ T.cancel }}</a>
+    </div>
+  </form>
+</div>
+
+{% if company and can_delete %}
+<form method="post" action="{% url 'cutting:peel_company_delete' company.pk %}" onsubmit="return confirm('{{ confirm_delete|escapejs }}');">
+  {% csrf_token %}
+  <button type="submit" class="button-danger btn-sm">{{ T.pl_delete_company }}</button>
+</form>
+{% endif %}
+{% endblock %}

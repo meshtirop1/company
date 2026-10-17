@@ -1,0 +1,117 @@
+{% extends base_template %}
+{% load static cutting_tags %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:peel_home' %}">← {{ T.pl_title }}</a></p>
+<h2>{{ heading }}</h2>
+{% if company.note %}<p class="cut-lead">{{ company.note }}</p>{% endif %}
+{% include 'cutting/_messages.html' %}
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="label">{{ T.pl_given }}</div><div class="value">{{ totals.out|won }}</div></div>
+  <div class="stat-card"><div class="label">{{ T.pl_brought_back }}</div><div class="value">{{ totals.back|won }}</div></div>
+  <div class="stat-card"><div class="label">{{ T.pl_lost }}</div><div class="value">{{ totals.lost|won }}</div></div>
+  <div class="stat-card peel-stat-held"><div class="label">{{ T.pl_with_them }}</div><div class="value">{{ totals.with_them|won }}</div></div>
+</div>
+<p class="cut-note-box peel-check">{{ check }}</p>
+
+<div class="cut-actions cut-month-actions">
+  {% if company.is_active %}
+  <a class="button-primary" href="{% url 'cutting:peel_entry' %}?company={{ company.pk }}&amp;kind=out">{{ T.pl_give }}</a>
+  <a class="button-secondary" href="{% url 'cutting:peel_entry' %}?company={{ company.pk }}&amp;kind=back">{{ T.pl_back }}</a>
+  <a class="button-secondary" href="{% url 'cutting:peel_entry' %}?company={{ company.pk }}&amp;kind=lost">{{ T.pl_kind_lost }}</a>
+  {% endif %}
+  <a class="button-secondary" href="{% url 'cutting:peel_company_edit' company.pk %}">{{ T.pl_edit_company }}</a>
+</div>
+
+<section class="panel" id="statements">
+  <div class="panel-title">{{ T.pl_statements }}</div>
+  {% if statements %}
+  <ul class="peel-list">
+    {% for s in statements %}
+    <li class="peel-row">
+      <div class="peel-row-head">
+        <a class="cut-name" href="{% url 'cutting:peel_statement' company.pk s.first %}">{{ s.label }}</a>
+        {% if s.paid %}<span class="peel-badge is-paid">&#128274; {{ T.pl_paid_badge }}</span>{% endif %}
+      </div>
+      <div class="peel-figures">
+        <span><span class="muted">{{ T.pl_brought_back }}</span> <strong>{{ s.fish_back|won }}</strong></span>
+        <span><span class="muted">{{ T.pl_total_to_pay_short }}</span> <strong>₩{{ s.total|won }}</strong></span>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty-state">{{ T.pl_no_entries }}</p>
+  {% endif %}
+</section>
+
+<section class="panel" id="prices">
+  <div class="panel-title">{{ T.pl_prices }}</div>
+  <p class="muted peel-panel-intro">{{ T.pl_price_now }}: <strong>{{ price_now }}</strong> · {{ T.pl_tax }}: <strong>{{ tax }}</strong></p>
+  <ul class="peel-list">
+    {% for row in prices %}
+    <li class="peel-row peel-row-compact">
+      <span><span class="muted">{{ T.pl_price_from }}</span> <strong>{{ row.price.effective_from|date:"Y-m-d" }}</strong>
+        {% if row.is_current %}<span class="peel-badge">{{ T.pl_current }}</span>{% elif row.is_upcoming %}<span class="peel-badge">{{ T.pl_upcoming }}</span>{% endif %}</span>
+      <span class="cut-actions">
+        <strong>₩{{ row.price.price_per_fish|won }}</strong>
+        <form method="post" action="{% url 'cutting:peel_price_delete' row.price.pk %}" onsubmit="return confirm('{{ row.confirm_delete|escapejs }}');">
+          {% csrf_token %}
+          <button type="submit" class="button-danger btn-sm">{{ T.delete }}</button>
+        </form>
+      </span>
+    </li>
+    {% empty %}
+    <li class="empty-state">{{ T.pl_no_price }}</li>
+    {% endfor %}
+  </ul>
+  <div class="cut-note-box">{{ T.pl_price_note }}</div>
+  <form method="post" action="{% url 'cutting:peel_price_add' company.pk %}" novalidate>
+    {% csrf_token %}
+    <div class="cut-form-row">
+      {% include 'cutting/_field.html' with field=price_form.price_per_fish %}
+      {% include 'cutting/_field.html' with field=price_form.effective_from %}
+    </div>
+    <button type="submit" class="button-primary">{{ T.pl_save_price }}</button>
+  </form>
+</section>
+
+<section class="panel" id="entries">
+  <div class="panel-title">{{ T.pl_entries }}</div>
+  {% if page.object_list %}
+  <ul class="peel-list">
+    {% for row in page.object_list %}
+    <li class="peel-row peel-entry kind-{{ row.movement.kind }}">
+      <div class="peel-row-head">
+        <span><strong>{{ row.movement.date|date:"Y-m-d" }}</strong> · <span class="peel-kind-tag">{{ row.kind }}</span></span>
+        <strong class="peel-fish">{% if row.movement.kind == 'out' %}+{% else %}−{% endif %}{{ row.movement.fish|won }}</strong>
+      </div>
+      <div class="peel-figures">
+        {% if row.movement.kind == 'back' %}<span>{{ row.movement.fish|won }} × ₩{{ row.movement.unit_price|won }} = <strong>₩{{ row.movement.amount|won }}</strong></span>{% endif %}
+        <span><span class="muted">{{ T.pl_held_after }}</span> {{ row.held_after|won }}</span>
+        {% if row.movement.entered_by_name %}<span class="muted">{{ row.movement.entered_by_name }}</span>{% endif %}
+      </div>
+      {% if row.movement.note %}<div class="muted">{{ row.movement.note }}</div>{% endif %}
+      <div class="cut-actions"><a class="button-secondary btn-sm" href="{% url 'cutting:peel_entry_edit' row.movement.pk %}">{{ T.edit }}</a></div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% if page.has_other_pages %}
+  <nav class="cut-daynav cut-pager" aria-label="{{ page_label }}">
+    {% if page.has_previous %}<a class="button-secondary btn-sm" href="?page={{ page.previous_page_number }}#entries">{{ T.newer }}</a>{% endif %}
+    <span class="muted">{{ page_label }}</span>
+    {% if page.has_next %}<a class="button-secondary btn-sm" href="?page={{ page.next_page_number }}#entries">{{ T.older }}</a>{% endif %}
+  </nav>
+  {% endif %}
+  {% else %}
+  <p class="empty-state">{{ T.pl_no_entries }}</p>
+  {% endif %}
+</section>
+{% endblock %}
