@@ -291,3 +291,60 @@ class PeelPageTests(PeelData, ManagerTestCase):
     def test_employees_are_kept_out(self):
         self.client.force_login(make_user('worker', is_employee=True))
         self.assertEqual(self.client.get(reverse('cutting:peel_home')).status_code, 403)
+
+
+class PeelSummaryTests(PeelData, ManagerTestCase):
+    """September across companies:
+      A (+10% VAT): the owner's example — ₩990,000 + ₩99,000 VAT = ₩1,089,000; 1,980 still out.
+      B (3.3% withheld): 4,000 out, 3,000 back at ₩130 = ₩390,000 − ₩12,870 = ₩377,130; 1,000 out.
+      D: 500 given in August and nothing since — still listed, it holds our fish.
+      C: inactive, nothing ever — left out."""
+
+    def setUp(self):
+        super().setUp()
+        self.build(tax_mode=TaxMode.VAT)
+        b = PeelCompany.objects.create(name='B Peeling', tax_mode=TaxMode.WITHHOLD)
+        peeling.set_price(b, day=SEPT, price_per_fish=130)
+        self.add(date(2026, 9, 3), 'out', 4000, company=b)
+        self.add(date(2026, 9, 9), 'back', 3000, company=b)
+        d = PeelCompany.objects.create(name='D Peeling')
+        peeling.set_price(d, day=date(2026, 8, 1), price_per_fish=100)
+        self.add(date(2026, 8, 10), 'out', 500, company=d)
+        PeelCompany.objects.create(name='C Peeling', is_active=False)
+
+    def test_the_summary_figures(self):
+        summary = peeling.month_summary(SEPT)
+        self.assertEqual([row['company'].name for row in summary['rows']], ['A Peeling', 'B Peeling', 'D Peeling'])
+        signed = {row['company'].name: row['signed_tax'] for row in summary['rows']}
+        self.assertEqual(signed, {'A Peeling': 99000, 'B Peeling': -12870, 'D Peeling': 0})
+        self.assertEqual(
+            {key: summary[key] for key in ('out', 'back', 'lost', 'with_them', 'amount', 'signed_tax', 'total')},
+            {'out': 13000, 'back': 10000, 'lost': 20, 'with_them': 3480, 'amount': 1380000,
+             'signed_tax': 86130, 'total': 1466130},
+        )
+
+    def test_the_summary_page(self):
+        response = self.client.get(reverse('cutting:peel_summary', args=[SEPT]))
+        self.assertContains(response, EN['pl_summary_heading'])
+        for text in ('A Peeling', 'B Peeling', 'D Peeling', '+₩99,000', '−₩12,870', '₩1,466,130', '3,480'):
+            self.assertContains(response, text)
+        self.assertNotContains(response, 'C Peeling')
+        self.assertNotContains(response, EN['provisional_note'].split('{')[0])  # September is over
+
+    def test_a_paid_statement_is_marked(self):
+        peeling.mark_paid(self.company, SEPT, user=None, today=AFTER_SEPT)
+        self.assertContains(self.client.get(reverse('cutting:peel_summary', args=[SEPT])), 'A Peeling &#128274;')
+
+    def test_this_months_summary_is_provisional_and_the_home_page_links_to_it(self):
+        this_month = timezone.localdate().replace(day=1)
+        current = self.client.get(reverse('cutting:peel_summary_current'))
+        self.assertRedirects(current, reverse('cutting:peel_summary', args=[this_month]))
+        self.assertContains(self.client.get(reverse('cutting:peel_summary', args=[this_month])),
+                            EN['provisional_note'].split('{')[0])
+        self.assertContains(self.client.get(reverse('cutting:peel_home')), reverse('cutting:peel_summary_current'))
+
+    def test_korean(self):
+        self.use_korean()
+        response = self.client.get(reverse('cutting:peel_summary', args=[SEPT]))
+        self.assertContains(response, KO['pl_summary_heading'])
+        self.assertContains(response, KO['pl_col_with_them'])
