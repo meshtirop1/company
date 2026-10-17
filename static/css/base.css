@@ -476,3 +476,11 @@ main.container input:focus, main.container select:focus, main.container textarea
     .navbar-brand { margin-left: 0; }
     .navbar-toggle { top: 50%; transform: translateY(-50%); }
 }
+
+/* Who is signed in (first item in the menu): plain text, not a link. */
+.nav-item.nav-user { color: var(--color-text-muted); font-size: 0.85rem; padding: 0.5rem 0.75rem; white-space: nowrap; }
+.nav-user .nav-role {
+    display: inline-block; margin-left: 0.25rem; padding: 0.05rem 0.5rem; border-radius: 999px;
+    background: var(--color-primary-light); color: var(--color-primary); font-size: 0.72rem; font-weight: 600;
+}
+

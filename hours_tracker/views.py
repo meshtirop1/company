@@ -1069,8 +1069,12 @@ def csrf_failure(request, reason=''):
     static/js/csrf_refresh.js prevents most of these; this page covers the rest. Nothing was saved.
     """
     logger.warning(f"CSRF failure ({reason}) for path: {request.path}")
-    # A second tap on "Sign in" after the first one already signed the user in.
-    if request.path == reverse('login') and request.user.is_authenticated:
+    # A second tap on "Sign in" after the first one already signed this same person in. Someone
+    # else signing in on a phone still signed in as another account gets the expired page instead,
+    # so they never carry on as the previous person without noticing.
+    posted = (request.POST.get('username') or '').strip().lower()
+    if (request.path == reverse('login') and request.user.is_authenticated
+            and posted == request.user.get_username().lower()):
         return redirect('calendar')
 
     # Offer to reload the page the form was on, but only if it is on this site.

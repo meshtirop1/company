@@ -35,6 +35,8 @@
             </button>
             <ul class="nav-list">
                 {% if user.is_authenticated %}
+                    {# Who this phone is signed in as — a shared phone left on someone else's account shows it here. #}
+                    <li class="nav-item nav-user" title="Signed in as">&#128100; {{ user.get_full_name|default:user.username }} <span class="nav-role">{% if user.is_superuser %}Superuser{% elif user.is_admin %}Admin{% else %}Employee{% endif %}</span></li>
                     {% if user.is_superuser %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'superuser_dashboard' %}">Superuser Dashboard</a>
