@@ -200,6 +200,11 @@ class AuditAction(models.TextChoices):
     RATE_DELETE = 'rate_delete', 'Rate deleted'
     DEDUCTION_SET = 'deduction_set', 'Tax/insurance set'
     DEDUCTION_DELETE = 'deduction_delete', 'Tax/insurance deleted'
+    PEEL_EDIT = 'peel_edit', 'Peeling entry corrected'
+    PEEL_DELETE = 'peel_delete', 'Peeling entry deleted'
+    PEEL_PRICE = 'peel_price', 'Peeling price changed'
+    PEEL_PAID = 'peel_paid', 'Peeling statement paid'
+    PEEL_UNPAID = 'peel_unpaid', 'Peeling statement reopened'
 
 
 class AuditEntry(models.Model):
@@ -230,3 +235,130 @@ class AuditEntry(models.Model):
 
     def __str__(self):
         return f'{timezone.localtime(self.at):%Y-%m-%d %H:%M} {self.action} {self.cutter_name}'.strip()
+
+
+# ─── Skin peeling by outside companies ────────────────────────
+#
+# After drying, fish go to outside companies that peel off the skin and bring back the flesh
+# and the whole skin. They are paid per fish brought back, at their own agreed price.
+# Every write goes through cutting/peeling.py.
+
+class TaxMode(models.TextChoices):
+    """How tax applies to what a peeling company is paid."""
+    NONE = 'none', 'No tax'
+    VAT = 'vat', '+10% VAT'
+    WITHHOLD = 'withhold', '3.3% withheld'
+
+
+class PeelCompany(models.Model):
+    """An outside company that peels the skin off our dried fish."""
+    name = models.CharField(max_length=100)
+    note = models.CharField(max_length=200, blank=True)
+    tax_mode = models.CharField(max_length=10, choices=TaxMode.choices, default=TaxMode.NONE)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(Lower('name'), name='cutting_peelcompany_name_unique_ci'),
+        ]
+
+    def __str__(self):
+        return self.name
+
+    def price_on(self, day):
+        """The price in force on `day`: the latest one starting on or before it, or None.
+        Filters in Python so a prefetched `prices` set is reused."""
+        eligible = [price for price in self.prices.all() if price.effective_from <= day]
+        return max(eligible, key=lambda price: price.effective_from, default=None)
+
+
+class PeelPrice(models.Model):
+    """What a company is paid per fish from `effective_from` until its next price starts.
+    A batch brought back copies the price when it is saved, so changing a price never alters
+    pay already recorded."""
+    company = models.ForeignKey(PeelCompany, on_delete=models.CASCADE, related_name='prices')
+    price_per_fish = models.DecimalField(max_digits=10, decimal_places=0)
+    effective_from = models.DateField()
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='+',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['company', '-effective_from']
+        constraints = [
+            models.UniqueConstraint(fields=['company', 'effective_from'], name='cutting_peelprice_company_date_unique'),
+            models.CheckConstraint(condition=Q(price_per_fish__gt=0), name='cutting_peelprice_price_positive'),
+        ]
+
+    def __str__(self):
+        return f'{self.company}: ₩{self.price_per_fish:,.0f}/fish from {self.effective_from}'
+
+
+class PeelKind(models.TextChoices):
+    OUT = 'out', 'Given to them'
+    BACK = 'back', 'Brought back'
+    LOST = 'lost', 'Lost or damaged'
+
+
+class PeelMovement(models.Model):
+    """Fish given to a peeling company, brought back peeled, or written off as lost or damaged.
+
+    What a company still has = given − brought back − lost. Only fish brought back are paid:
+    such a row copies the company's price for its day into unit_price and amount.
+    `token` is minted when the form is shown, so a double tap can only save it once.
+    """
+    company = models.ForeignKey(PeelCompany, on_delete=models.PROTECT, related_name='movements')
+    date = models.DateField()
+    kind = models.CharField(max_length=4, choices=PeelKind.choices)
+    fish = models.PositiveIntegerField()
+    unit_price = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True)
+    amount = models.DecimalField(max_digits=14, decimal_places=0, default=0)
+    note = models.CharField(max_length=200, blank=True)
+    token = models.UUIDField(unique=True, editable=False)
+    entered_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='+',
+    )
+    entered_by_name = models.CharField(max_length=150, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date', 'created_at', 'pk']
+        indexes = [models.Index(fields=['company', 'date'], name='cutting_peelmove_company_date')]
+        constraints = [
+            models.CheckConstraint(condition=Q(fish__gt=0), name='cutting_peelmove_fish_positive'),
+        ]
+
+    def __str__(self):
+        return f'{self.company} {self.date} {self.kind} {self.fish}'
+
+
+class PeelPaid(models.Model):
+    """A company's month that has been paid. Its entries can't change while it is marked paid,
+    and the statement keeps the figures it was paid with, even if the price or tax setting
+    changes later. Reopening removes the row; the change log keeps the history."""
+    company = models.ForeignKey(PeelCompany, on_delete=models.CASCADE, related_name='paid_months')
+    month = models.DateField()  # always the first day of the month
+    fish = models.PositiveIntegerField()
+    amount = models.DecimalField(max_digits=14, decimal_places=0)
+    tax_mode = models.CharField(max_length=10, choices=TaxMode.choices)
+    tax = models.DecimalField(max_digits=14, decimal_places=0)
+    total = models.DecimalField(max_digits=14, decimal_places=0)
+    paid_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='+',
+    )
+    paid_by_name = models.CharField(max_length=150, blank=True)
+    paid_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-month']
+        constraints = [
+            models.UniqueConstraint(fields=['company', 'month'], name='cutting_peelpaid_company_month_unique'),
+        ]
+
+    def __str__(self):
+        return f'{self.company} {self.month:%Y-%m} paid'

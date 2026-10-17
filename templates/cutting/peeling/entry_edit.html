@@ -1,0 +1,40 @@
+{% extends base_template %}
+{% load static cutting_tags %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:peel_company' company.pk %}#entries">← {{ company.name }}</a></p>
+<h2>{{ heading }}</h2>
+{% include 'cutting/_messages.html' %}
+{% if paid %}<div class="cut-locked" role="note">&#128274; {{ T.pl_entry_paid }}</div>{% endif %}
+
+<div class="panel">
+  <p class="peel-panel-intro"><span class="muted">{{ T.pl_kind }}:</span> <strong>{{ kind }}</strong>
+    {% if movement.kind == 'back' %} · {{ movement.fish|won }} × ₩{{ movement.unit_price|won }} = ₩{{ movement.amount|won }}{% endif %}</p>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="cut-form-row">
+      {% include 'cutting/_field.html' with field=form.date %}
+      {% include 'cutting/_field.html' with field=form.fish %}
+    </div>
+    {% include 'cutting/_field.html' with field=form.note %}
+    {% include 'cutting/_field.html' with field=form.reason %}
+    <div class="cut-actions cut-form-actions">
+      <button type="submit" class="button-primary"{% if paid %} disabled{% endif %}>{{ T.save }}</button>
+      <a class="button-secondary" href="{% url 'cutting:peel_company' company.pk %}#entries">{{ T.cancel }}</a>
+    </div>
+  </form>
+</div>
+
+{% if not paid %}
+<form method="post" action="{% url 'cutting:peel_entry_delete' movement.pk %}" onsubmit="return confirm('{{ confirm_delete|escapejs }}');">
+  {% csrf_token %}
+  <button type="submit" class="button-danger btn-sm">{{ T.delete }}</button>
+</form>
+{% endif %}
+{% endblock %}

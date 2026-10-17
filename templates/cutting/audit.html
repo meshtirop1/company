@@ -34,6 +34,8 @@
     </div>
     {% if row.is_deduction %}
     <div class="cut-log-what"><span class="cut-name">{{ row.entry.cutter_name }}</span></div>
+    {% elif row.is_peel %}
+    <div class="cut-log-what"><span class="cut-name">{{ row.entry.cutter_name }}</span> · {% if row.entry.work_date %}{{ row.entry.work_date|date:'Y-m-d' }}{% else %}{{ row.entry.month|date:'Y-m' }}{% endif %}</div>
     {% elif row.entry.work_date and not row.is_rate %}
     <div class="cut-log-what">
       <a href="{% url 'cutting:day' row.entry.work_date %}">{{ row.entry.work_date|date:'Y-m-d' }}</a>{% if row.entry.cutter_name %} · <span class="cut-name">{{ row.entry.cutter_name }}</span>{% endif %}

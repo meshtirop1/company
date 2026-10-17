@@ -1,0 +1,61 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ T.pl_entry_title }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:peel_home' %}">← {{ T.pl_title }}</a></p>
+<h2>{{ T.pl_entry_title }}</h2>
+{% include 'cutting/_messages.html' %}
+{% include 'cutting/_errors.html' with field=form.token %}
+
+<div class="panel">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.token }}
+    {% include 'cutting/_field.html' with field=form.company %}
+
+    <fieldset class="form-group peel-kinds{% if form.kind.errors %} has-error{% endif %}">
+      <legend>{{ form.kind.label }}</legend>
+      {% for radio in form.kind %}
+      <label class="peel-kind" for="{{ radio.id_for_label }}">
+        {{ radio.tag }}
+        <span>
+          <span class="peel-kind-name">{{ radio.choice_label }}</span>
+          <span class="peel-kind-help">{% if radio.data.value == 'out' %}{{ T.pl_kind_out_help }}{% elif radio.data.value == 'back' %}{{ T.pl_kind_back_help }}{% else %}{{ T.pl_kind_lost_help }}{% endif %}</span>
+        </span>
+      </label>
+      {% endfor %}
+      {% include 'cutting/_errors.html' with field=form.kind %}
+    </fieldset>
+
+    <div class="cut-form-row">
+      {% include 'cutting/_field.html' with field=form.date %}
+      {% include 'cutting/_field.html' with field=form.fish %}
+    </div>
+    {% include 'cutting/_field.html' with field=form.note %}
+    <div class="cut-actions cut-form-actions">
+      <button type="submit" class="button-primary">{{ T.save }}</button>
+      <a class="button-secondary" href="{% url 'cutting:peel_home' %}">{{ T.cancel }}</a>
+    </div>
+  </form>
+</div>
+
+{% if hints %}
+<section class="panel">
+  <div class="panel-title">{{ T.pl_companies }}</div>
+  <ul class="peel-list">
+    {% for hint in hints %}
+    <li class="peel-row peel-row-compact">
+      <span class="cut-name">{{ hint.company.name }}</span>
+      <span class="muted">{% if hint.price %}{{ T.pl_price_short }} ₩{{ hint.price }}{% else %}{{ T.pl_no_price }}{% endif %} · {{ T.pl_with_them }} <strong>{{ hint.with_them }}</strong></span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

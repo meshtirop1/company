@@ -1,0 +1,68 @@
+{% extends base_template %}
+{% load static cutting_tags %}
+
+{% block title %}{{ T.pl_title }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/cutting.css' %}">
+{% endblock %}
+
+{% block content %}
+<p class="cut-crumb"><a href="{% url 'cutting:hub' %}">{{ T.home }}</a></p>
+<h2>{{ T.pl_title }}</h2>
+<p class="cut-lead">{{ T.pl_intro }}</p>
+{% include 'cutting/_messages.html' %}
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="label">{{ T.pl_with_them_all }}</div><div class="value">{{ with_them_all|won }}</div></div>
+  <div class="stat-card"><div class="label">{{ T.pl_owed_month }}</div><div class="value">₩{{ owed_all|won }}</div></div>
+</div>
+
+<div class="cut-actions cut-month-actions">
+  <a class="button-primary" href="{% url 'cutting:peel_entry' %}">&#9998; {{ T.pl_new_entry }}</a>
+  <a class="button-secondary" href="{% url 'cutting:peel_company_new' %}">+ {{ T.pl_add_company }}</a>
+</div>
+
+{% if rows %}
+<section class="panel">
+  <div class="panel-title">{{ T.pl_companies }}</div>
+  <ul class="peel-list">
+    {% for row in rows %}
+    <li class="peel-row">
+      <div class="peel-row-head">
+        <a class="cut-name" href="{% url 'cutting:peel_company' row.company.pk %}">{{ row.company.name }}</a>
+        <span class="muted">{{ row.price }}</span>
+      </div>
+      <div class="peel-figures">
+        <span><span class="muted">{{ T.pl_with_them }}</span> <strong>{{ row.totals.with_them|won }}</strong></span>
+        <span><span class="muted">{{ T.pl_owed_month }}</span> <strong>₩{{ row.owed|won }}</strong></span>
+      </div>
+      <div class="cut-actions">
+        <a class="button-primary btn-sm" href="{% url 'cutting:peel_entry' %}?company={{ row.company.pk }}&amp;kind=out">{{ T.pl_give }}</a>
+        <a class="button-secondary btn-sm" href="{% url 'cutting:peel_entry' %}?company={{ row.company.pk }}&amp;kind=back">{{ T.pl_back }}</a>
+        <a class="button-secondary btn-sm" href="{% url 'cutting:peel_company' row.company.pk %}">{{ T.pl_open }}</a>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% else %}
+<div class="panel"><p class="empty-state">{{ T.pl_no_companies }}</p></div>
+{% endif %}
+
+{% if inactive %}
+<details class="panel peel-inactive">
+  <summary>{{ T.pl_inactive }} ({{ inactive|length }})</summary>
+  <ul class="peel-list">
+    {% for row in inactive %}
+    <li class="peel-row">
+      <div class="peel-row-head">
+        <a class="cut-name" href="{% url 'cutting:peel_company' row.company.pk %}">{{ row.company.name }}</a>
+        <span class="muted">{{ T.pl_with_them }} {{ row.totals.with_them|won }}</span>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</details>
+{% endif %}
+{% endblock %}
