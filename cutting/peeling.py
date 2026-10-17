@@ -15,7 +15,7 @@ from django.db import transaction
 from django.db.models import Count, Sum
 from django.utils import timezone
 
-from .models import AuditAction, PeelKind, PeelMovement, PeelPaid, PeelPrice, TaxMode
+from .models import AuditAction, PeelCompany, PeelKind, PeelMovement, PeelPaid, PeelPrice, TaxMode
 from .reports import month_bounds
 from .services import log, month_of, user_label
 
@@ -253,6 +253,33 @@ def months_with_entries(company):
         .annotate(entries=Count('pk')).order_by('-date__year', '-date__month')
     )
     return [statement(company, date(row['date__year'], row['date__month'], 1)) for row in rows]
+
+
+def signed_tax(figures):
+    """Tax as it changes what we pay: VAT is added (+), withholding is kept back (−)."""
+    return -figures['tax'] if figures['tax_mode'] == TaxMode.WITHHOLD else figures['tax']
+
+
+def month_summary(first_day):
+    """Every company with anything in the month — fish given, back or lost, fish still with them
+    at its end, or a paid statement — with that month's statement figures, and the totals."""
+    rows = []
+    for company in PeelCompany.objects.prefetch_related('prices').order_by('name'):
+        figures = statement(company, first_day)
+        moved = any(figures['month_counts'][kind] for kind in ('out', 'back', 'lost'))
+        if moved or figures['end_counts']['with_them'] or figures['paid']:
+            rows.append({**figures, 'signed_tax': signed_tax(figures)})
+    first, last = month_bounds(first_day)
+    return {
+        'first': first, 'last': last, 'rows': rows,
+        'out': sum(row['month_counts']['out'] for row in rows),
+        'back': sum(row['month_counts']['back'] for row in rows),
+        'lost': sum(row['month_counts']['lost'] for row in rows),
+        'with_them': sum(row['end_counts']['with_them'] for row in rows),
+        'amount': sum((row['amount'] for row in rows), Decimal(0)),
+        'signed_tax': sum((row['signed_tax'] for row in rows), Decimal(0)),
+        'total': sum((row['total'] for row in rows), Decimal(0)),
+    }
 
 
 @transaction.atomic

@@ -1,5 +1,6 @@
 """Supervisor pages for skin peeling by outside companies (see cutting/peeling.py)."""
 import uuid
+from datetime import timedelta
 
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -15,7 +16,7 @@ from .forms import UnlockForm
 from .i18n import STRINGS, get_lang
 from .models import PeelCompany, PeelKind, PeelMovement, PeelPrice, TaxMode
 from .peeling_forms import PeelCompanyForm, PeelEditForm, PeelEntryForm, PeelPriceForm
-from .views import manager_required, month_label, render_page, strings, this_month, won
+from .views import manager_required, month_label, next_month, render_page, strings, this_month, won
 
 ENTRIES_PAGE_SIZE = 50
 
@@ -369,6 +370,27 @@ def peel_statement(request, pk, month):
         'confirm_paid': T['pl_confirm_paid'].format(company=company.name, month=label),
         'reopen_form': UnlockForm(T=T) if paid else None,
         'back_url': reverse('cutting:peel_company', args=[company.pk]),
+        'generated': timezone.localtime(),
+    })
+
+
+@manager_required
+def peel_summary(request, month=None):
+    """Every peeling company's month on one printable page: counts, pay, tax and the totals."""
+    if month is None:
+        return redirect('cutting:peel_summary', this_month())
+    lang = get_lang(request)
+    T = STRINGS[lang]
+    summary = peeling.month_summary(month)
+    label = month_label(month)
+    today = timezone.localdate()
+    return render(request, 'cutting/peeling/summary.html', {
+        'T': T, 'lang': lang, 'month': month, 'month_label': label, **summary,
+        'title': T['pl_summary_title'].format(month=label),
+        'provisional': T['provisional_note'].format(date=today.isoformat()) if today <= summary['last'] else '',
+        'previous_month': (month - timedelta(days=1)).replace(day=1),
+        'next_month': next_month(month) if month < this_month() else None,
+        'back_url': reverse('cutting:peel_home'),
         'generated': timezone.localtime(),
     })
 
