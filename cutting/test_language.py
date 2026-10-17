@@ -106,7 +106,7 @@ class WordingTests(EntryTestCase):
         self.use_korean()
         header = self.client.get(url)['Content-Disposition']
         self.assertIn("filename*=utf-8''", header)
-        self.assertIn(quote('생선손질수당-2026-09.xlsx'), header)
+        self.assertIn(quote('먹태손질수당-2026-09.xlsx'), header)
 
     def test_display_order_errors_say_the_allowed_range(self):
         response = self.post('cutting:prices', data={'style': 'tongpo', 'size': '14', 'sort_order': 'abc',
